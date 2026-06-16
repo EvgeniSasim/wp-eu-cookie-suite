@@ -20,20 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Load autoloader.
+// Load autoloader (Composer preferred; lightweight fallback for production installs).
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	require_once __DIR__ . '/vendor/autoload.php';
 } else {
-	// If the autoloader is missing, the plugin cannot function.
-	add_action(
-		'admin_notices',
-		function () {
-			echo '<div class="notice notice-error"><p>';
-			echo esc_html__( 'WP EU Cookie Suite: Composer dependencies are missing. Please run "composer install" in the plugin directory.', 'wp-eu-cookie-suite' );
-			echo '</p></div>';
-		}
-	);
-	return;
+	require_once __DIR__ . '/includes/autoload.php';
 }
 
 /**

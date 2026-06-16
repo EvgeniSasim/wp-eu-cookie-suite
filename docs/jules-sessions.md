@@ -7,7 +7,7 @@ Branch: `main`
 | # | Task file | Session ID | PR | Status |
 |---|-----------|------------|-----|--------|
 | 0 | scaffold (Cursor) | — | — | done (initial commit) |
-| 1 | jules-task-cc-01-scaffold.md | | | pending |
+| 1 | jules-task-cc-01-scaffold.md | [9071563733185945188](https://jules.google.com/session/9071563733185945188) | [#1](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/1) | merged |
 | 2 | jules-task-cc-02-admin-shell.md | | | pending |
 | 3 | jules-task-cc-03-cookieconsent-frontend.md | | | pending |
 | 4 | jules-task-cc-04-categories-options.md | | | pending |
