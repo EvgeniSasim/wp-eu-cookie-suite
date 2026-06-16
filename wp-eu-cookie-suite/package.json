@@ -1,0 +1,9 @@
+{
+  "name": "wp-eu-cookie-suite",
+  "private": true,
+  "scripts": {
+    "build": "echo \"Build pipeline added in CC-03\"",
+    "dev": "echo \"Dev pipeline added in CC-03\""
+  },
+  "devDependencies": {}
+}
