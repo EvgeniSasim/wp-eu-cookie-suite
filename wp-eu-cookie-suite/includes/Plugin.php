@@ -14,8 +14,18 @@ namespace WPEU\CookieSuite;
  */
 final class Plugin {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var self|null
+	 */
 	private static ?self $instance = null;
 
+	/**
+	 * Get singleton instance.
+	 *
+	 * @return self
+	 */
 	public static function instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -23,44 +33,88 @@ final class Plugin {
 		return self::$instance;
 	}
 
+	/**
+	 * Constructor.
+	 */
 	private function __construct() {}
 
+	/**
+	 * Boot the plugin.
+	 */
 	public function boot(): void {
+		$this->define_constants();
+
 		register_activation_hook( WPEU_CS_FILE, array( $this, 'activate' ) );
+		register_deactivation_hook( WPEU_CS_FILE, array( $this, 'deactivate' ) );
+
 		add_action( 'plugins_loaded', array( $this, 'init' ) );
 	}
 
+	/**
+	 * Define plugin constants.
+	 */
+	private function define_constants(): void {
+		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
+			define( 'WPEU_CS_VERSION', '0.1.0' );
+		}
+		if ( ! defined( 'WPEU_CS_FILE' ) ) {
+			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/wp-eu-cookie-suite.php' );
+		}
+		if ( ! defined( 'WPEU_CS_PATH' ) ) {
+			define( 'WPEU_CS_PATH', plugin_dir_path( WPEU_CS_FILE ) );
+		}
+		if ( ! defined( 'WPEU_CS_URL' ) ) {
+			define( 'WPEU_CS_URL', plugin_dir_url( WPEU_CS_FILE ) );
+		}
+	}
+
+	/**
+	 * Activation hook.
+	 */
 	public function activate(): void {
 		if ( false === get_option( 'wpeu_cs_settings' ) ) {
-			add_option(
+			update_option(
 				'wpeu_cs_settings',
 				array(
 					'blocker_enabled' => true,
-					'eu_strict_mode'  => true,
+					'eu_mode'         => true,
 					'version'         => WPEU_CS_VERSION,
 				)
 			);
 		}
 	}
 
+	/**
+	 * Deactivation hook.
+	 */
+	public function deactivate(): void {
+		// Placeholder for deactivation logic if needed in future.
+	}
+
+	/**
+	 * Initialize the plugin.
+	 */
 	public function init(): void {
 		load_plugin_textdomain( 'wp-eu-cookie-suite', false, dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages' );
 
 		if ( is_admin() ) {
-			add_action(
-				'admin_notices',
-				static function (): void {
-					if ( ! current_user_can( 'manage_options' ) ) {
-						return;
-					}
-					$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-					if ( $screen && 'plugins' === $screen->id ) {
-						echo '<div class="notice notice-info"><p>';
-						echo esc_html__( 'WP EU Cookie Suite: development scaffold — Jules tasks CC-01+ will implement full features.', 'wp-eu-cookie-suite' );
-						echo '</p></div>';
-					}
-				}
-			);
+			add_action( 'admin_notices', array( $this, 'render_coming_soon_notice' ) );
+		}
+	}
+
+	/**
+	 * Render "Coming Soon" notice in admin.
+	 */
+	public function render_coming_soon_notice(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && 'plugins' === $screen->id ) {
+			echo '<div class="notice notice-info"><p>';
+			echo esc_html__( 'WP EU Cookie Suite: Full features coming soon.', 'wp-eu-cookie-suite' );
+			echo '</p></div>';
 		}
 	}
 }
