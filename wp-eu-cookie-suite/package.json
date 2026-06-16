@@ -5,5 +5,7 @@
     "build": "echo \"Build pipeline added in CC-03\"",
     "dev": "echo \"Dev pipeline added in CC-03\""
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vanilla-cookieconsent": "^3.0.0"
+  }
 }
