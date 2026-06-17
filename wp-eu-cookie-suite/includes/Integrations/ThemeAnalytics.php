@@ -27,6 +27,31 @@ final class ThemeAnalytics {
 
 		$field_name = $settings['theme_analytics_field'] ?? 'analytics';
 		add_filter( "acf/format_value/name={$field_name}", array( $this, 'intercept_analytics_field' ), 10, 3 );
+		add_action( 'wp_head', array( $this, 'output_analytics_in_head' ), 99 );
+	}
+
+	/**
+	 * Output ACF analytics snippet in wp_head when statistics consent is granted.
+	 */
+	public function output_analytics_in_head(): void {
+		if ( is_admin() && ! wp_doing_ajax() ) {
+			return;
+		}
+
+		if ( ! function_exists( 'get_field' ) ) {
+			return;
+		}
+
+		$settings   = get_option( 'wpeu_cs_settings', array() );
+		$field_name = $settings['theme_analytics_field'] ?? 'analytics';
+		$analytics  = get_field( $field_name, 'option' );
+
+		if ( empty( $analytics ) || ! is_string( $analytics ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted admin ACF snippet.
+		echo apply_filters( 'wpeu_cs_header_analytics', $analytics );
 	}
 
 	/**
