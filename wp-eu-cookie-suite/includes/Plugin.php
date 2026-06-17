@@ -145,6 +145,7 @@ final class Plugin {
 		$integrations = apply_filters(
 			'wpeu_cs_integrations',
 			array(
+				Integrations\GoogleAnalyticsGuard::class,
 				Integrations\GoogleSiteKit::class,
 				Integrations\ThemeAnalytics::class,
 				Integrations\IframePlaceholder::class,

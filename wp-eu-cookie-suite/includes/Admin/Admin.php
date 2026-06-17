@@ -816,6 +816,28 @@ final class Admin {
 						</label>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Google Analytics cookie guard', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[enabled_integrations][ga_cookie_guard]" value="1" <?php checked( ! isset( $enabled_integrations['ga_cookie_guard'] ) || ! empty( $enabled_integrations['ga_cookie_guard'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Clears _ga cookies and blocks enqueued gtag scripts when statistics consent is not granted.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<?php if ( defined( 'GOOGLESITEKIT_VERSION' ) ) : ?>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Google Site Kit', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[enabled_integrations][google_site_kit]" value="1" <?php checked( ! isset( $enabled_integrations['google_site_kit'] ) || ! empty( $enabled_integrations['google_site_kit'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Block Site Kit analytics tags until statistics consent (works with Consent Mode v2 above).', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<?php endif; ?>
 			</table>
 
 			<h2><?php esc_html_e( 'Third-Party Integrations', 'wp-eu-cookie-suite' ); ?></h2>
