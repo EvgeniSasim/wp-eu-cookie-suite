@@ -1,0 +1,181 @@
+<?php
+/**
+ * Script Blocker class.
+ *
+ * @package WPEU\CookieSuite
+ */
+
+declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Frontend;
+
+/**
+ * Handles blocking and unblocking of third-party scripts.
+ */
+final class ScriptBlocker {
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		add_action( 'template_redirect', array( $this, 'maybe_start_buffer' ) );
+		add_action( 'wp_head', array( $this, 'inject_bootstrap_js' ), 1 );
+	}
+
+	/**
+	 * Start output buffer if necessary.
+	 */
+	public function maybe_start_buffer(): void {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || is_feed() ) {
+			return;
+		}
+
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		if ( empty( $settings['blocker_enabled'] ) ) {
+			return;
+		}
+
+		ob_start( array( $this, 'process_output' ) );
+	}
+
+	/**
+	 * Process HTML output and block scripts.
+	 *
+	 * @param string $output The HTML output.
+	 * @return string The processed HTML.
+	 */
+	public function process_output( string $output ): string {
+		if ( empty( $output ) || ! str_contains( $output, '<script' ) ) {
+			return $output;
+		}
+
+		return preg_replace_callback(
+			'/<script\b[^>]*>(.*?)<\/script>/is',
+			array( $this, 'process_script_tag' ),
+			$output
+		);
+	}
+
+	/**
+	 * Process an individual script tag.
+	 *
+	 * @param array $matches Regex matches.
+	 * @return string Modified script tag.
+	 */
+	private function process_script_tag( array $matches ): string {
+		$full_tag = $matches[0];
+		$content  = $matches[1];
+
+		if ( $this->should_block_script( $full_tag, $content ) && ! wpeu_cs_user_has_consent( 'statistics' ) ) {
+			// Change type to text/plain and add data-category.
+			if ( preg_match( '/type=["\']([^"\']+)["\']/i', $full_tag ) ) {
+				$full_tag = preg_replace( '/type=["\']([^"\']+)["\']/i', 'type="text/plain"', $full_tag );
+			} else {
+				$full_tag = preg_replace( '/^<script/i', '<script type="text/plain"', $full_tag );
+			}
+
+			// Add data-category if not present.
+			if ( ! str_contains( $full_tag, 'data-category=' ) ) {
+				$full_tag = preg_replace( '/^<script/i', '<script data-category="statistics"', $full_tag );
+			}
+		}
+
+		return $full_tag;
+	}
+
+	/**
+	 * Determine if a script should be blocked.
+	 *
+	 * @param string $tag Full script tag.
+	 * @param string $content Script content.
+	 * @return bool True if it should be blocked.
+	 */
+	private function should_block_script( string $tag, string $content ): bool {
+		$src = '';
+		if ( preg_match( '/src=["\']([^"\']+)["\']/i', $tag, $src_matches ) ) {
+			$src = $src_matches[1];
+		}
+
+		// Whitelist WordPress core scripts.
+		if ( ! empty( $src ) ) {
+			$local_host = wp_parse_url( home_url(), PHP_URL_HOST );
+			$src_host   = wp_parse_url( $src, PHP_URL_HOST );
+
+			// If it's a local script, check if it's core.
+			if ( ! $src_host || $src_host === $local_host ) {
+				if ( str_contains( $src, '/wp-includes/' ) || str_contains( $src, '/wp-admin/' ) ) {
+					return false;
+				}
+				if ( str_contains( $src, 'jquery' ) ) {
+					return false;
+				}
+			}
+		}
+
+		// Blocking patterns for GA/GTM.
+		$patterns = array(
+			'googletagmanager.com',
+			'google-analytics.com',
+			'gtag(',
+			'ga(',
+		);
+
+		foreach ( $patterns as $pattern ) {
+			if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Inject bootstrap JS to handle script unblocking.
+	 */
+	public function inject_bootstrap_js(): void {
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		if ( empty( $settings['blocker_enabled'] ) ) {
+			return;
+		}
+		?>
+		<script type="text/javascript">
+			(function() {
+				const activateScripts = function(consentData) {
+					const scripts = document.querySelectorAll('script[type="text/plain"][data-category]');
+					scripts.forEach(function(script) {
+						const category = script.getAttribute('data-category');
+						if (consentData[category]) {
+							const newScript = document.createElement('script');
+							Array.from(script.attributes).forEach(attr => {
+								if (attr.name !== 'type' && attr.name !== 'data-category') {
+									newScript.setAttribute(attr.name, attr.value);
+								}
+							});
+							newScript.type = 'text/javascript';
+							newScript.text = script.text;
+							script.parentNode.insertBefore(newScript, script);
+							script.parentNode.removeChild(script);
+						}
+					});
+				};
+
+				document.addEventListener('wpeu-consent-updated', function(e) {
+					activateScripts(e.detail);
+				});
+
+				// Check on initial load if consent is already there.
+				window.addEventListener('load', function() {
+					if (window.CookieConsent && typeof window.CookieConsent.acceptedCategory === 'function') {
+						const categories = ['necessary', 'preferences', 'statistics', 'marketing'];
+						const consentData = {};
+						categories.forEach(cat => {
+							consentData[cat] = window.CookieConsent.acceptedCategory(cat);
+						});
+						activateScripts(consentData);
+					}
+				});
+			})();
+		</script>
+		<?php
+	}
+}
