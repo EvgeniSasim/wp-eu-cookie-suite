@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace WPEU\CookieSuite\Admin;
 
 use WPEU\CookieSuite\Consent\Categories;
+use WPEU\CookieSuite\Frontend\ScriptRegistry;
 
 /**
  * Admin class.
@@ -78,6 +79,19 @@ final class Admin {
 		} else {
 			$sanitized['enabled_categories'] = array();
 		}
+
+		if ( isset( $input['enabled_services'] ) && is_array( $input['enabled_services'] ) ) {
+			$sanitized['enabled_services'] = array_map(
+				function ( $val ) {
+					return (bool) $val;
+				},
+				$input['enabled_services']
+			);
+		} else {
+			$sanitized['enabled_services'] = array();
+		}
+
+		$sanitized['custom_block_rules'] = isset( $input['custom_block_rules'] ) ? sanitize_textarea_field( $input['custom_block_rules'] ) : '';
 
 		$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
 		$sanitized['cookie_policy_url']  = isset( $input['cookie_policy_url'] ) ? esc_url_raw( $input['cookie_policy_url'] ) : '';
@@ -164,7 +178,7 @@ final class Admin {
 						$this->render_placeholder_tab( 'CC-09' );
 						break;
 					case 'integrations':
-						$this->render_placeholder_tab( 'CC-14' );
+						$this->render_integrations_tab();
 						break;
 					case 'tools':
 						$this->render_placeholder_tab( 'CC-15' );
@@ -254,6 +268,19 @@ final class Admin {
 		$blocker      = $settings['blocker_enabled'] ?? false;
 		$consent_api  = defined( 'WP_CONSENT_API_VERSION' );
 
+		$services_count = 0;
+		if ( ! empty( $settings['enabled_services'] ) ) {
+			$services_count = count( array_filter( $settings['enabled_services'] ) );
+		}
+
+		$custom_rules_count = 0;
+		if ( ! empty( $settings['custom_block_rules'] ) ) {
+			$rules              = explode( "\n", str_replace( "\r", '', $settings['custom_block_rules'] ) );
+			$custom_rules_count = count( array_filter( array_map( 'trim', $rules ) ) );
+		}
+
+		$total_rules = $services_count + $custom_rules_count;
+
 		?>
 		<div class="wpeu-cs-dashboard-cards">
 			<div class="wpeu-cs-card">
@@ -278,7 +305,60 @@ final class Admin {
 					</span>
 				</p>
 			</div>
+
+			<div class="wpeu-cs-card">
+				<h3><?php esc_html_e( 'Active Block Rules', 'wp-eu-cookie-suite' ); ?></h3>
+				<p><?php echo (int) $total_rules; ?></p>
+			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render integrations tab.
+	 */
+	private function render_integrations_tab(): void {
+		$settings         = get_option( 'wpeu_cs_settings', array() );
+		$services         = ScriptRegistry::get_services();
+		$enabled_services = $settings['enabled_services'] ?? array();
+		$custom_rules     = $settings['custom_block_rules'] ?? '';
+
+		?>
+		<form method="post" action="options.php">
+			<?php
+			settings_fields( 'wpeu_cs_settings' );
+			?>
+
+			<h2><?php esc_html_e( 'Service Integrations', 'wp-eu-cookie-suite' ); ?></h2>
+			<p><?php esc_html_e( 'Enable automatic script blocking for these popular services.', 'wp-eu-cookie-suite' ); ?></p>
+
+			<table class="form-table" role="presentation">
+				<?php foreach ( $services as $id => $service ) : ?>
+					<tr>
+						<th scope="row"><?php echo esc_html( $service['label'] ); ?></th>
+						<td>
+							<label class="switch">
+								<input type="checkbox" name="wpeu_cs_settings[enabled_services][<?php echo esc_attr( $id ); ?>]" value="1" <?php checked( ! empty( $enabled_services[ $id ] ) ); ?>>
+								<span class="slider round"></span>
+							</label>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Custom Block Rules', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<textarea name="wpeu_cs_settings[custom_block_rules]" rows="10" cols="50" class="large-text code"><?php echo esc_textarea( $custom_rules ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Enter one pattern per line to block custom scripts. Use -url- prefix to match only the src attribute.', 'wp-eu-cookie-suite' ); ?><br>
+							<?php esc_html_e( 'Example: analytics.js or -url-my-script.js', 'wp-eu-cookie-suite' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<?php submit_button(); ?>
+		</form>
 		<?php
 	}
 
