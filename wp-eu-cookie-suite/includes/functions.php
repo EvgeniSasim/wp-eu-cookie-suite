@@ -18,15 +18,24 @@ function wpeu_cs_user_has_consent( string $category ): bool {
 		return true;
 	}
 
-	$cookie_name = 'cc_cookie';
-	if ( ! isset( $_COOKIE[ $cookie_name ] ) ) {
+	$cookie_name = 'wpeu_' . sanitize_key( $category );
+	if ( isset( $_COOKIE[ $cookie_name ] ) ) {
+		return '1' === $_COOKIE[ $cookie_name ] || 'allow' === $_COOKIE[ $cookie_name ];
+	}
+
+	if ( ! isset( $_COOKIE['wpeu_consent'] ) ) {
 		return false;
 	}
 
-	$consent_data = json_decode( stripslashes( $_COOKIE[ $cookie_name ] ), true );
-	if ( ! is_array( $consent_data ) || ! isset( $consent_data['categories'] ) || ! is_array( $consent_data['categories'] ) ) {
+	$raw          = wp_unslash( $_COOKIE['wpeu_consent'] );
+	$consent_data = json_decode( rawurldecode( $raw ), true );
+	if ( ! is_array( $consent_data ) ) {
+		$consent_data = json_decode( $raw, true );
+	}
+
+	if ( ! is_array( $consent_data ) || ! array_key_exists( $category, $consent_data ) ) {
 		return false;
 	}
 
-	return in_array( $category, $consent_data['categories'], true );
+	return (bool) $consent_data[ $category ];
 }
