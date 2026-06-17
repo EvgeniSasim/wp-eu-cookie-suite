@@ -66,7 +66,9 @@ final class ScriptBlocker {
 		$full_tag = $matches[0];
 		$content  = $matches[1];
 
-		if ( $this->should_block_script( $full_tag, $content ) && ! wpeu_cs_user_has_consent( 'statistics' ) ) {
+		$category = $this->get_block_category( $full_tag, $content );
+
+		if ( $category && ! wpeu_cs_user_has_consent( $category ) ) {
 			// Change type to text/plain and add data-category.
 			if ( preg_match( '/type=["\']([^"\']+)["\']/i', $full_tag ) ) {
 				$full_tag = preg_replace( '/type=["\']([^"\']+)["\']/i', 'type="text/plain"', $full_tag );
@@ -76,7 +78,7 @@ final class ScriptBlocker {
 
 			// Add data-category if not present.
 			if ( ! str_contains( $full_tag, 'data-category=' ) ) {
-				$full_tag = preg_replace( '/^<script/i', '<script data-category="statistics"', $full_tag );
+				$full_tag = preg_replace( '/^<script/i', '<script data-category="' . esc_attr( $category ) . '"', $full_tag );
 			}
 		}
 
@@ -84,13 +86,13 @@ final class ScriptBlocker {
 	}
 
 	/**
-	 * Determine if a script should be blocked.
+	 * Get the consent category for a script if it should be blocked.
 	 *
 	 * @param string $tag Full script tag.
 	 * @param string $content Script content.
-	 * @return bool True if it should be blocked.
+	 * @return string|null Category if it should be blocked, null otherwise.
 	 */
-	private function should_block_script( string $tag, string $content ): bool {
+	private function get_block_category( string $tag, string $content ): ?string {
 		$src = '';
 		if ( preg_match( '/src=["\']([^"\']+)["\']/i', $tag, $src_matches ) ) {
 			$src = $src_matches[1];
@@ -104,29 +106,66 @@ final class ScriptBlocker {
 			// If it's a local script, check if it's core.
 			if ( ! $src_host || $src_host === $local_host ) {
 				if ( str_contains( $src, '/wp-includes/' ) || str_contains( $src, '/wp-admin/' ) ) {
-					return false;
+					return null;
 				}
 				if ( str_contains( $src, 'jquery' ) ) {
-					return false;
+					return null;
 				}
 			}
 		}
 
-		// Blocking patterns for GA/GTM.
-		$patterns = array(
-			'googletagmanager.com',
-			'google-analytics.com',
-			'gtag(',
-			'ga(',
-		);
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		$services = ScriptRegistry::get_services();
 
-		foreach ( $patterns as $pattern ) {
-			if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
-				return true;
+		foreach ( $services as $id => $service ) {
+			// Check if service is enabled.
+			if ( ! empty( $settings['enabled_services'][ $id ] ) ) {
+				foreach ( $service['patterns'] as $pattern ) {
+					if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
+						return $service['category'];
+					}
+				}
 			}
 		}
 
-		return false;
+		// Handle custom block rules.
+		if ( ! empty( $settings['custom_block_rules'] ) ) {
+			$rules = explode( "\n", str_replace( "\r", '', $settings['custom_block_rules'] ) );
+			foreach ( $rules as $rule ) {
+				$rule = trim( $rule );
+				if ( empty( $rule ) ) {
+					continue;
+				}
+
+				// Complianz-style -url- marker.
+				if ( str_starts_with( $rule, '-url-' ) ) {
+					$pattern = substr( $rule, 5 );
+					if ( ! empty( $src ) && str_contains( $src, $pattern ) ) {
+						return 'marketing'; // Default to marketing for custom rules.
+					}
+				} elseif ( str_contains( $src, $rule ) || str_contains( $content, $rule ) ) {
+					return 'marketing';
+				}
+			}
+		}
+
+		// Apply filter for known script tags (array of regex or substring rules).
+		$known_tags = apply_filters( 'wpeu_known_script_tags', array() );
+		foreach ( $known_tags as $key => $value ) {
+			$pattern  = is_string( $key ) ? $key : $value;
+			$category = is_string( $key ) ? $value : 'marketing';
+
+			// Check if pattern is a regex.
+			if ( @preg_match( $pattern, '' ) !== false ) {
+				if ( preg_match( $pattern, $src ) || preg_match( $pattern, $content ) ) {
+					return $category;
+				}
+			} elseif ( str_contains( $src, (string) $pattern ) || str_contains( $content, (string) $pattern ) ) {
+				return $category;
+			}
+		}
+
+		return null;
 	}
 
 	/**
