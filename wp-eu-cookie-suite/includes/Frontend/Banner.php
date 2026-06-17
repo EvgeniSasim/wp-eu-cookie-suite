@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace WPEU\CookieSuite\Frontend;
 
 use WPEU\CookieSuite\Consent\Categories;
+use WPEU\CookieSuite\Consent\BannerTexts;
 
 /**
  * Handles the cookie consent banner on the frontend.
@@ -138,11 +139,14 @@ final class Banner {
 		$cookie_url         = $settings['cookie_policy_url'] ?? '';
 		$eu_mode            = $settings['eu_mode'] ?? true;
 
+		$locale = BannerTexts::get_active_locale();
+		$texts  = BannerTexts::get_strings( $locale );
+
 		$categories_config = array();
 		$sections          = array(
 			array(
-				'title'       => __( 'Cookie usage', 'wp-eu-cookie-suite' ),
-				'description' => __( 'Choose which cookies you allow. You can change these settings at any time.', 'wp-eu-cookie-suite' ),
+				'title'       => $texts['consent_modal_title'],
+				'description' => $texts['consent_modal_description'],
 			),
 		);
 
@@ -157,8 +161,8 @@ final class Banner {
 			);
 
 			$sections[] = array(
-				'title'          => $category['label'],
-				'description'    => $category['description'],
+				'title'          => $texts[ $id . '_label' ] ?? $category['label'],
+				'description'    => $texts[ $id . '_description' ] ?? $category['description'],
 				'linkedCategory' => $id,
 			);
 		}
@@ -191,23 +195,23 @@ final class Banner {
 			),
 			'categories' => $categories_config,
 			'language' => array(
-				'default'      => 'en',
+				'default'      => $locale,
 				'translations' => array(
-					'en' => array(
+					$locale => array(
 						'consentModal' => array(
-							'title'              => __( 'We use cookies', 'wp-eu-cookie-suite' ),
-							'description'        => __( 'We use cookies to ensure you get the best experience on our website. You can accept all, reject non-essential cookies, or manage your preferences.', 'wp-eu-cookie-suite' ),
-							'acceptAllBtn'       => __( 'Accept all', 'wp-eu-cookie-suite' ),
-							'acceptNecessaryBtn' => $show_reject_all ? __( 'Reject all', 'wp-eu-cookie-suite' ) : '',
-							'showPreferencesBtn' => __( 'Manage preferences', 'wp-eu-cookie-suite' ),
+							'title'              => $texts['consent_modal_title'],
+							'description'        => $texts['consent_modal_description'],
+							'acceptAllBtn'       => $texts['accept_all_btn'],
+							'acceptNecessaryBtn' => $show_reject_all ? $texts['accept_necessary_btn'] : '',
+							'showPreferencesBtn' => $texts['show_preferences_btn'],
 							'footer'             => $footer_html,
 						),
 						'preferencesModal' => array(
-							'title'              => __( 'Consent preferences', 'wp-eu-cookie-suite' ),
-							'acceptAllBtn'       => __( 'Accept all', 'wp-eu-cookie-suite' ),
-							'acceptNecessaryBtn' => $show_reject_all ? __( 'Reject all', 'wp-eu-cookie-suite' ) : '',
-							'savePreferencesBtn' => __( 'Save preferences', 'wp-eu-cookie-suite' ),
-							'closeIconLabel'     => __( 'Close', 'wp-eu-cookie-suite' ),
+							'title'              => $texts['preferences_modal_title'],
+							'acceptAllBtn'       => $texts['accept_all_btn'],
+							'acceptNecessaryBtn' => $show_reject_all ? $texts['accept_necessary_btn'] : '',
+							'savePreferencesBtn' => $texts['save_preferences_btn'],
+							'closeIconLabel'     => $texts['close_icon_label'],
 							'sections'           => $sections,
 						),
 					),
