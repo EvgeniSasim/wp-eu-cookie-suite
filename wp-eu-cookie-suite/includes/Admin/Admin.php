@@ -146,68 +146,72 @@ final class Admin {
 	 * @return array Sanitized settings.
 	 */
 	public function sanitize_settings( array $input ): array {
-		$sanitized = array();
-
-		$sanitized['blocker_enabled']        = isset( $input['blocker_enabled'] );
-		$sanitized['eu_mode']                = isset( $input['eu_mode'] );
-		$sanitized['keep_data_on_uninstall'] = isset( $input['keep_data_on_uninstall'] );
-		$sanitized['show_reject_all']        = isset( $input['show_reject_all'] );
-		$sanitized['google_consent_mode']    = isset( $input['google_consent_mode'] );
-
-		if ( isset( $input['enabled_categories'] ) && is_array( $input['enabled_categories'] ) ) {
-			$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $input['enabled_categories'] );
-		} else {
-			$sanitized['enabled_categories'] = array();
-		}
-
-		if ( isset( $input['enabled_services'] ) && is_array( $input['enabled_services'] ) ) {
-			$sanitized['enabled_services'] = array_map(
-				function ( $val ) {
-					return (bool) $val;
-				},
-				$input['enabled_services']
-			);
-		} else {
-			$sanitized['enabled_services'] = array();
-		}
-
-		$sanitized['custom_block_rules'] = isset( $input['custom_block_rules'] ) ? sanitize_textarea_field( $input['custom_block_rules'] ) : '';
-
-		$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
-		$sanitized['cookie_policy_url']  = isset( $input['cookie_policy_url'] ) ? esc_url_raw( $input['cookie_policy_url'] ) : '';
-
-		// Preserve version if already set
 		$old_settings = get_option( 'wpeu_cs_settings', array() );
-		if ( isset( $old_settings['version'] ) ) {
-			$sanitized['version'] = $old_settings['version'];
-		}
+		$sanitized    = $old_settings;
 
-		$sanitized['banner_texts'] = $old_settings['banner_texts'] ?? array();
-		if ( isset( $input['banner_texts'] ) && is_array( $input['banner_texts'] ) ) {
-			foreach ( $input['banner_texts'] as $locale => $texts ) {
-				if ( ! is_array( $texts ) ) {
-					continue;
-				}
-				$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+		$active_tab = $input['active_tab'] ?? '';
+
+		if ( 'banner' === $active_tab ) {
+			$sanitized['enabled_categories'] = array();
+			if ( isset( $input['enabled_categories'] ) && is_array( $input['enabled_categories'] ) ) {
+				$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $input['enabled_categories'] );
 			}
-		}
 
-		if ( isset( $input['banner_ui'] ) && is_array( $input['banner_ui'] ) ) {
-			$sanitized['banner_ui'] = array(
-				'layout'        => sanitize_text_field( $input['banner_ui']['layout'] ?? 'box' ),
-				'position'      => sanitize_text_field( $input['banner_ui']['position'] ?? 'bottom-right' ),
-				'theme'         => sanitize_text_field( $input['banner_ui']['theme'] ?? 'light' ),
-				'primary_color' => sanitize_hex_color( $input['banner_ui']['primary_color'] ?? '#30363c' ) ?: '#30363c',
-				'custom_css'    => wp_strip_all_tags( $input['banner_ui']['custom_css'] ?? '' ),
-			);
-		} else {
-			$sanitized['banner_ui'] = $old_settings['banner_ui'] ?? array(
-				'layout'        => 'box',
-				'position'      => 'bottom-right',
-				'theme'         => 'light',
-				'primary_color' => '#30363c',
-				'custom_css'    => '',
-			);
+			$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
+			$sanitized['cookie_policy_url']  = isset( $input['cookie_policy_url'] ) ? esc_url_raw( $input['cookie_policy_url'] ) : '';
+			$sanitized['show_reject_all']    = isset( $input['show_reject_all'] );
+			$sanitized['eu_mode']            = isset( $input['eu_mode'] );
+
+			if ( isset( $input['banner_texts'] ) && is_array( $input['banner_texts'] ) ) {
+				if ( ! isset( $sanitized['banner_texts'] ) ) {
+					$sanitized['banner_texts'] = array();
+				}
+				foreach ( $input['banner_texts'] as $locale => $texts ) {
+					if ( ! is_array( $texts ) ) {
+						continue;
+					}
+					$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+				}
+			}
+
+			if ( isset( $input['banner_ui'] ) && is_array( $input['banner_ui'] ) ) {
+				$sanitized['banner_ui'] = array(
+					'layout'        => sanitize_text_field( $input['banner_ui']['layout'] ?? 'box' ),
+					'position'      => sanitize_text_field( $input['banner_ui']['position'] ?? 'bottom-right' ),
+					'theme'         => sanitize_text_field( $input['banner_ui']['theme'] ?? 'light' ),
+					'primary_color' => sanitize_hex_color( $input['banner_ui']['primary_color'] ?? '#30363c' ) ?: '#30363c',
+					'custom_css'    => wp_strip_all_tags( $input['banner_ui']['custom_css'] ?? '' ),
+				);
+			}
+		} elseif ( 'integrations' === $active_tab ) {
+			$sanitized['google_consent_mode'] = isset( $input['google_consent_mode'] );
+
+			$sanitized['enabled_services'] = array();
+			if ( isset( $input['enabled_services'] ) && is_array( $input['enabled_services'] ) ) {
+				$sanitized['enabled_services'] = array_map(
+					function ( $val ) {
+						return (bool) $val;
+					},
+					$input['enabled_services']
+				);
+			}
+
+			$sanitized['custom_block_rules'] = isset( $input['custom_block_rules'] ) ? sanitize_textarea_field( $input['custom_block_rules'] ) : '';
+		} elseif ( 'tools' === $active_tab ) {
+			if ( isset( $input['policy_texts'] ) && is_array( $input['policy_texts'] ) ) {
+				if ( ! isset( $sanitized['policy_texts'] ) ) {
+					$sanitized['policy_texts'] = array();
+				}
+				foreach ( $input['policy_texts'] as $locale => $texts ) {
+					if ( ! is_array( $texts ) ) {
+						continue;
+					}
+					$sanitized['policy_texts'][ $locale ] = array(
+						'intro'    => sanitize_textarea_field( $texts['intro'] ?? '' ),
+						'template' => wp_kses_post( $texts['template'] ?? '' ),
+					);
+				}
+			}
 		}
 
 		return $sanitized;
@@ -343,6 +347,7 @@ final class Admin {
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
 
 			<h3><?php printf( esc_html__( 'Banner Settings (%s)', 'wp-eu-cookie-suite' ), esc_html( $locales[ $current_lang ] ) ); ?></h3>
 			<table class="form-table" role="presentation">
@@ -602,6 +607,7 @@ final class Admin {
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="integrations">
 
 			<h2><?php esc_html_e( 'Google', 'wp-eu-cookie-suite' ); ?></h2>
 			<table class="form-table" role="presentation">
@@ -831,8 +837,66 @@ final class Admin {
 	 * Render tools tab.
 	 */
 	private function render_tools_tab(): void {
+		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$locales      = BannerTexts::get_locales();
+		$current_lang = isset( $_GET['lang'] ) && array_key_exists( $_GET['lang'], $locales ) ? $_GET['lang'] : BannerTexts::get_active_locale();
+
+		$policy_texts = $settings['policy_texts'][ $current_lang ] ?? array();
+		$intro        = $policy_texts['intro'] ?? '';
+		$template     = $policy_texts['template'] ?? BannerTexts::get_default_policy_template( $current_lang );
+
 		?>
 		<h2><?php esc_html_e( 'Tools', 'wp-eu-cookie-suite' ); ?></h2>
+
+		<div class="notice notice-info inline">
+			<p><strong><?php esc_html_e( 'Disclaimer:', 'wp-eu-cookie-suite' ); ?></strong> <?php esc_html_e( 'This plugin provides tools for cookie compliance but does not constitute legal advice.', 'wp-eu-cookie-suite' ); ?></p>
+		</div>
+
+		<div class="wpeu-cs-lang-selector">
+			<ul class="subsubsub">
+				<?php
+				$i = 0;
+				foreach ( $locales as $code => $label ) :
+					$url     = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&lang=' . $code );
+					$current = $current_lang === $code ? 'current' : '';
+					echo '<li><a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>' . ( $i < count( $locales ) - 1 ? ' | ' : '' ) . '</li>';
+					$i++;
+				endforeach;
+				?>
+			</ul>
+			<br class="clear">
+		</div>
+
+		<form method="post" action="options.php">
+			<?php settings_fields( 'wpeu_cs_settings' ); ?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+
+			<div class="card">
+				<h3><?php printf( esc_html__( 'Cookie Policy Settings (%s)', 'wp-eu-cookie-suite' ), esc_html( $locales[ $current_lang ] ) ); ?></h3>
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="policy_intro"><?php esc_html_e( 'Policy Intro Text', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td>
+							<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][intro]" id="policy_intro" rows="5" class="large-text"><?php echo esc_textarea( $intro ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'This text is displayed at the beginning of your cookie policy.', 'wp-eu-cookie-suite' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="policy_template"><?php esc_html_e( 'Policy Template', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td>
+							<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][template]" id="policy_template" rows="10" class="large-text code"><?php echo esc_textarea( $template ); ?></textarea>
+							<p class="description">
+								<?php esc_html_e( 'The template for the [wpeu_cookie_policy] shortcode.', 'wp-eu-cookie-suite' ); ?><br>
+								<?php esc_html_e( 'Available placeholders: {{intro}}, {{table}}, {{content}}', 'wp-eu-cookie-suite' ); ?>
+							</p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</div>
+		</form>
+
 		<div class="card">
 			<h3><?php esc_html_e( 'Export Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h3>
 			<p><?php esc_html_e( 'Download your cookie inventory as a CSV file.', 'wp-eu-cookie-suite' ); ?></p>
@@ -844,6 +908,7 @@ final class Admin {
 		</div>
 		<?php
 	}
+
 
 	/**
 	 * Ajax preview action.
