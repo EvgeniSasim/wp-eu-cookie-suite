@@ -90,6 +90,64 @@
 			}
 		}
 
+		// Color Picker
+		$('.wpeu-cs-color-picker').wpColorPicker();
+
+		// Banner Preview
+		const $previewFrame = $('#wpeu-cs-banner-preview');
+		const $refreshBtn = $('#wpeu-cs-refresh-preview');
+		const previewNonce = $('#wpeu_cs_preview_nonce').val();
+
+		function updatePreview() {
+			const settings = {
+				banner_ui: {
+					layout: $('#wpeu-cs-banner-layout').val(),
+					position: $('#wpeu-cs-banner-position').val(),
+					theme: $('#wpeu-cs-banner-theme').val(),
+					primary_color: $('.wpeu-cs-color-picker').val(),
+					custom_css: $('textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').val()
+				},
+				banner_texts: {}
+			};
+
+			// Add current language texts to preview
+			const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
+			settings.banner_texts[lang] = {};
+			$('input[name^="wpeu_cs_settings[banner_texts][' + lang + ']"], textarea[name^="wpeu_cs_settings[banner_texts][' + lang + ']"]').each(function() {
+				const name = $(this).attr('name');
+				const match = name.match(/\[([^\]]+)\]$/);
+				if (match) {
+					settings.banner_texts[lang][match[1]] = $(this).val();
+				}
+			});
+
+			$refreshBtn.prop('disabled', true).text('Updating...');
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'wpeu_cs_preview',
+					nonce: previewNonce,
+					settings: settings
+				},
+				success: function(response) {
+					const doc = $previewFrame[0].contentWindow.document;
+					doc.open();
+					doc.write(response);
+					doc.close();
+				},
+				complete: function() {
+					$refreshBtn.prop('disabled', false).text('Refresh Preview');
+				}
+			});
+		}
+
+		if ($previewFrame.length) {
+			updatePreview();
+			$refreshBtn.on('click', updatePreview);
+		}
+
 		// Import scan results to inventory
 		$(document).on('click', '#wpeu-cs-import-scan', function() {
 			const $btn = $(this);
