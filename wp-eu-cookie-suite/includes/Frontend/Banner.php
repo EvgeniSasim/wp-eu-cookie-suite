@@ -47,6 +47,13 @@ final class Banner {
 			WPEU_CS_VERSION
 		);
 
+		wp_enqueue_style(
+			'wpeu-cs-frontend',
+			WPEU_CS_URL . 'assets/css/frontend.css',
+			array(),
+			WPEU_CS_VERSION
+		);
+
 		wp_enqueue_script(
 			'wpeu-cs-cookieconsent',
 			WPEU_CS_URL . 'assets/js/cookieconsent.bundle.js',

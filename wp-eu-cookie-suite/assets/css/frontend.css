@@ -1,0 +1,43 @@
+/**
+ * Frontend styles for WP EU Cookie Suite.
+ */
+
+.wpeu-cs-iframe-placeholder {
+	position: relative;
+	background: #f6f7f7;
+	border: 1px solid #ccd0d4;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 20px;
+	margin-bottom: 20px;
+	box-sizing: border-box;
+}
+
+.wpeu-cs-iframe-placeholder-content {
+	max-width: 80%;
+}
+
+.wpeu-cs-iframe-placeholder p {
+	margin: 0 0 15px;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font-size: 14px;
+	color: #3c434a;
+}
+
+.wpeu-cs-iframe-placeholder button.wpeu-cs-accept-category {
+	background: var(--cc-btn-primary-bg, #30363c);
+	border: 1px solid var(--cc-btn-primary-border-color, #30363c);
+	color: #fff;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	transition: opacity 0.2s;
+}
+
+.wpeu-cs-iframe-placeholder button.wpeu-cs-accept-category:hover {
+	opacity: 0.9;
+}
