@@ -115,19 +115,11 @@ final class ScriptBlocker {
 		}
 
 		$settings         = get_option( 'wpeu_cs_settings', array() );
-		$services         = ScriptRegistry::get_services();
 		$enabled_services = $settings['enabled_services'] ?? null;
 
-		foreach ( $services as $id => $service ) {
-			if ( null !== $enabled_services && empty( $enabled_services[ $id ] ) ) {
-				continue;
-			}
-				foreach ( $service['patterns'] as $pattern ) {
-					if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
-						return $service['category'];
-					}
-				}
-			}
+		$category = ScriptRegistry::find_category_for_script( $src, $content, $enabled_services );
+		if ( null !== $category ) {
+			return $category;
 		}
 
 		// Handle custom block rules.

@@ -21,7 +21,7 @@ Branch: `main`
 | 12 | jules-task-cc-12-banner-customizer.md | [9423596550467606091](https://jules.google.com/session/9423596550467606091) | [#11](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/11) | merged |
 | 13 | jules-task-cc-13-legal-shortcodes.md | [10804725820254881360](https://jules.google.com/session/10804725820254881360) | [#12](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/12) | merged |
 | 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | [#13](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/13) | merged |
-| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | | in progress |
+| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#14](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/14) (cursor manual) | merged |
 
 ## Команды
 
@@ -32,10 +32,12 @@ export JULES_BRANCH=main
 JULES_TASK=jules-task-cc-01-scaffold.md python3 scripts/jules_create_sessions.py
 ```
 
-## Ревью-чеклист (Cursor)
+## Ревью-чеклист (Cursor) — roadmap complete
 
-- [ ] Один PR = одна задача, без лишнего scope
-- [ ] PSR-4, `wp-eu-cookie-suite` text domain
-- [ ] Нет секретов в коде
-- [ ] PHPCS-friendly (escaping, nonces)
-- [ ] Соответствие north-star для этой фазы
+- [x] Один PR = одна задача, без лишнего scope
+- [x] PSR-4, `wp-eu-cookie-suite` text domain
+- [x] Нет секретов в коде
+- [x] PHPCS-friendly (escaping, nonces)
+- [x] Соответствие north-star для этой фазы
+- [x] PHPUnit + import/export JSON (CC-15)
+- [x] Hotfix: parse error в ScriptBlocker.php (CC-14 regression)

@@ -12,6 +12,7 @@ namespace WPEU\CookieSuite\Admin;
 use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Consent\BannerTexts;
 use WPEU\CookieSuite\Frontend\ScriptRegistry;
+use WPEU\CookieSuite\Admin\SettingsTransfer;
 
 /**
  * Admin class.
@@ -76,6 +77,16 @@ final class Admin {
 				check_admin_referer( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' );
 				$this->handle_csv_export();
 				break;
+
+			case 'wpeu_cs_export_json':
+				check_admin_referer( 'wpeu_cs_export_json', 'wpeu_cs_export_json_nonce' );
+				$this->handle_json_export();
+				break;
+
+			case 'wpeu_cs_import_json':
+				check_admin_referer( 'wpeu_cs_import_json', 'wpeu_cs_import_json_nonce' );
+				$this->handle_json_import();
+				break;
 		}
 	}
 
@@ -107,6 +118,54 @@ final class Admin {
 		}
 
 		fclose( $output );
+		exit;
+	}
+
+	/**
+	 * Handle JSON settings export.
+	 */
+	private function handle_json_export(): void {
+		$payload = SettingsTransfer::export();
+		$json    = wp_json_encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
+
+		if ( false === $json ) {
+			wp_die( esc_html__( 'Could not encode export data.', 'wp-eu-cookie-suite' ) );
+		}
+
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=wpeu-cookie-suite-' . gmdate( 'Y-m-d' ) . '.json' );
+		header( 'Content-Length: ' . strlen( $json ) );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download.
+		echo $json;
+		exit;
+	}
+
+	/**
+	 * Handle JSON settings import.
+	 */
+	private function handle_json_import(): void {
+		if ( empty( $_FILES['wpeu_cs_import_file']['tmp_name'] ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=import_error' ) );
+			exit;
+		}
+
+		$raw = file_get_contents( wp_unslash( $_FILES['wpeu_cs_import_file']['tmp_name'] ) );
+		if ( false === $raw ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=import_error' ) );
+			exit;
+		}
+
+		$data = json_decode( $raw, true );
+		$valid = SettingsTransfer::validate( $data );
+		if ( is_wp_error( $valid ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=import_invalid' ) );
+			exit;
+		}
+
+		$sanitized = SettingsTransfer::sanitize_imported_settings( $data['settings'] );
+		update_option( 'wpeu_cs_settings', $sanitized );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=imported' ) );
 		exit;
 	}
 
@@ -903,6 +962,23 @@ final class Admin {
 		?>
 		<h2><?php esc_html_e( 'Tools', 'wp-eu-cookie-suite' ); ?></h2>
 
+		<?php
+		$message = isset( $_GET['message'] ) ? sanitize_key( wp_unslash( $_GET['message'] ) ) : '';
+		if ( 'imported' === $message ) :
+			?>
+			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings imported successfully.', 'wp-eu-cookie-suite' ); ?></p></div>
+			<?php
+		elseif ( 'import_invalid' === $message ) :
+			?>
+			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Import failed: invalid or incompatible export file.', 'wp-eu-cookie-suite' ); ?></p></div>
+			<?php
+		elseif ( 'import_error' === $message ) :
+			?>
+			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Import failed: could not read the uploaded file.', 'wp-eu-cookie-suite' ); ?></p></div>
+			<?php
+		endif;
+		?>
+
 		<div class="notice notice-info inline">
 			<p><strong><?php esc_html_e( 'Disclaimer:', 'wp-eu-cookie-suite' ); ?></strong> <?php esc_html_e( 'This plugin provides tools for cookie compliance but does not constitute legal advice.', 'wp-eu-cookie-suite' ); ?></p>
 		</div>
@@ -959,6 +1035,27 @@ final class Admin {
 				<?php wp_nonce_field( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' ); ?>
 				<input type="hidden" name="action" value="wpeu_cs_export_csv">
 				<?php submit_button( __( 'Download CSV', 'wp-eu-cookie-suite' ), 'primary', 'submit', false ); ?>
+			</form>
+		</div>
+
+		<div class="card">
+			<h3><?php esc_html_e( 'Export Settings', 'wp-eu-cookie-suite' ); ?></h3>
+			<p><?php esc_html_e( 'Download banner texts, integrations, script registry, and all plugin settings as JSON for backup or migration to another site.', 'wp-eu-cookie-suite' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+				<?php wp_nonce_field( 'wpeu_cs_export_json', 'wpeu_cs_export_json_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_export_json">
+				<?php submit_button( __( 'Download JSON', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
+			</form>
+		</div>
+
+		<div class="card">
+			<h3><?php esc_html_e( 'Import Settings', 'wp-eu-cookie-suite' ); ?></h3>
+			<p><?php esc_html_e( 'Upload a JSON export from another site. Cookie inventory is not replaced — only plugin settings are updated.', 'wp-eu-cookie-suite' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>" enctype="multipart/form-data">
+				<?php wp_nonce_field( 'wpeu_cs_import_json', 'wpeu_cs_import_json_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_import_json">
+				<input type="file" name="wpeu_cs_import_file" accept="application/json,.json" required>
+				<?php submit_button( __( 'Import JSON', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php
