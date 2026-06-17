@@ -1,8 +1,8 @@
-# North Star — WP EU Cookie Suite
+# Спецификация продукта — WP EU Cookie Suite
 
 ## Цель
 
-Один WordPress-плагин для **разных сайтов** (агентства, клиенты BSB): юридически корректный cookie consent в EU без Complianz Premium.
+Публичный WordPress-плагин для **любых сайтов**: юридически корректный cookie consent в EU/EEA/UK без Complianz Premium. Распространение через wordpress.org; без привязки к конкретному клиенту, теме или агентству.
 
 ## Обязательные возможности (MVP → v1)
 
@@ -20,7 +20,7 @@
 - Реестр известных сервисов: GA4, GTM, Meta Pixel, Hotjar, Clarity, Maps, YouTube, Vimeo
 - Кастомные URL/regex в админке
 - Placeholder для iframe (YouTube, Maps)
-- ACF `analytics` / theme injections — хук `wp_head` с отложенной выдачей
+- ACF options / theme injections — хук `wp_head` с отложенной выдачей
 
 ### 3. WP Consent API + Google Consent Mode v2
 
@@ -77,7 +77,7 @@ wp-eu-cookie-suite/
 
 ## Критерии приёмки v1
 
-1. На чистом WP + тема: без согласия нет `_ga`, после Accept statistics — есть
+1. На чистом WP + произвольная тема: без согласия нет `_ga`, после Accept statistics — есть
 2. GTM/gtag не выполняется до statistics consent
 3. Баннер DE + EN переключается с Polylang
 4. Сканер находит `_ga` после тестовой страницы с GA snippet
@@ -85,4 +85,4 @@ wp-eu-cookie-suite/
 
 ## Задачи Jules
 
-См. `prompts/jules-task-cc-roadmap.md` — 15 сессий по одному PR.
+См. `prompts/jules-task-cc-roadmap.md` — сессии по одному PR.

@@ -81,7 +81,7 @@ vendor/bin/phpunit
 | Код | [Jules](https://jules.google.com) |
 
 Roadmap: [prompts/jules-task-cc-roadmap.md](prompts/jules-task-cc-roadmap.md)  
-North Star: [docs/north-star-spec.md](docs/north-star-spec.md)  
+Спецификация: [docs/product-spec.md](docs/product-spec.md)  
 Трекер сессий: [docs/jules-sessions.md](docs/jules-sessions.md)
 
 ## Лицензия

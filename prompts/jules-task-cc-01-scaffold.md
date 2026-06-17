@@ -3,7 +3,7 @@
 ```markdown
 You are implementing task CC-01 for the WordPress plugin **WP EU Cookie Suite** in this repository.
 
-Read first: `docs/north-star-spec.md`, `docs/architecture.md`, `AGENTS.md`.
+Read first: `docs/product-spec.md`, `docs/architecture.md`, `AGENTS.md`.
 
 ## Goal
 Replace the minimal stub with a production-ready plugin scaffold.

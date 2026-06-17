@@ -29,7 +29,7 @@ Branch: `main`
 |---|-----------|------------|-----|--------|
 | 16 | jules-task-cc-16-dynamic-languages.md | [7316212288513132930](https://jules.google.com/session/7316212288513132930) | | in progress |
 | 17 | jules-task-cc-17-iframe-buffer.md | | | pending |
-| 18 | jules-task-cc-18-ga-guard.md | | | pending |
+| 18 | jules-task-cc-18-ga-guard.md | — | [#18](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/18) | merged (Cursor) |
 | 19 | jules-task-cc-19-consent-ux.md | | | pending |
 | 20 | jules-task-cc-20-ci.md | | | pending |
 
@@ -48,6 +48,6 @@ JULES_TASK=jules-task-cc-01-scaffold.md python3 scripts/jules_create_sessions.py
 - [x] PSR-4, `wp-eu-cookie-suite` text domain
 - [x] Нет секретов в коде
 - [x] PHPCS-friendly (escaping, nonces)
-- [x] Соответствие north-star для этой фазы
+- [x] Соответствие product-spec для этой фазы
 - [x] PHPUnit + import/export JSON (CC-15)
 - [x] Hotfix: parse error в ScriptBlocker.php (CC-14 regression)
