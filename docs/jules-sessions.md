@@ -11,7 +11,7 @@ Branch: `main`
 | 2 | jules-task-cc-02-admin-shell.md | [6993865298522113828](https://jules.google.com/session/6993865298522113828) | [#2](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/2) | merged |
 | 3 | jules-task-cc-03-cookieconsent-frontend.md | [3101285059705518251](https://jules.google.com/session/3101285059705518251) | — (manual merge) | merged |
 | 4 | jules-task-cc-04-categories-options.md | [17778466866209283685](https://jules.google.com/session/17778466866209283685) | [#3](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/3) | merged |
-| 5 | jules-task-cc-05-script-blocker.md | | | in progress |
+| 5 | jules-task-cc-05-script-blocker.md | [18367515720455886313](https://jules.google.com/session/18367515720455886313) | | in progress |
 | 6 | jules-task-cc-06-script-registry.md | | | pending |
 | 7 | jules-task-cc-07-wp-consent-api.md | | | pending |
 | 8 | jules-task-cc-08-google-consent-mode.md | | | pending |
