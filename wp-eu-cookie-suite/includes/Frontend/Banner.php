@@ -145,8 +145,8 @@ final class Banner {
 		$categories_config = array();
 		$sections          = array(
 			array(
-				'title'       => $texts['consent_modal_title'],
-				'description' => $texts['consent_modal_description'],
+				'title'       => $texts['preferences_intro_title'],
+				'description' => $texts['preferences_intro_description'],
 			),
 		);
 
