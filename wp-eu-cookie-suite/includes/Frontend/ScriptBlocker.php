@@ -198,10 +198,35 @@ final class ScriptBlocker {
 							script.parentNode.removeChild(script);
 						}
 					});
+
+					const placeholders = document.querySelectorAll('.wpeu-cs-iframe-placeholder[data-category]');
+					placeholders.forEach(function(placeholder) {
+						const category = placeholder.getAttribute('data-category');
+						if (consentData[category]) {
+							const hiddenIframe = placeholder.querySelector('.wpeu-cs-hidden-iframe');
+							if (hiddenIframe) {
+								const originalTag = atob(hiddenIframe.textContent);
+								const container = document.createElement('div');
+								container.innerHTML = originalTag;
+								const iframe = container.firstChild;
+								placeholder.parentNode.insertBefore(iframe, placeholder);
+								placeholder.parentNode.removeChild(placeholder);
+							}
+						}
+					});
 				};
 
 				document.addEventListener('wpeu-consent-updated', function(e) {
 					activateScripts(e.detail);
+				});
+
+				document.addEventListener('click', function(e) {
+					if (e.target.classList.contains('wpeu-cs-accept-category')) {
+						const category = e.target.getAttribute('data-category');
+						if (category && window.CookieConsent && typeof window.CookieConsent.acceptCategory === 'function') {
+							window.CookieConsent.acceptCategory(category);
+						}
+					}
 				});
 
 				// Check on initial load if consent is already there.

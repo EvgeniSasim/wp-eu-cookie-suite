@@ -141,7 +141,22 @@ final class Plugin {
 
 		new Consent\WpConsentBridge();
 		new Consent\GoogleConsentMode();
-		new Integrations\GoogleSiteKit();
+
+		$integrations = apply_filters(
+			'wpeu_cs_integrations',
+			array(
+				Integrations\GoogleSiteKit::class,
+				Integrations\ThemeAnalytics::class,
+				Integrations\IframePlaceholder::class,
+				Integrations\ContactForm7::class,
+			)
+		);
+
+		foreach ( $integrations as $integration ) {
+			if ( class_exists( $integration ) ) {
+				new $integration();
+			}
+		}
 
 		if ( is_admin() ) {
 			new Admin\Admin();

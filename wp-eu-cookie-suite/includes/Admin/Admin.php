@@ -196,6 +196,18 @@ final class Admin {
 				);
 			}
 
+			$sanitized['enabled_integrations'] = array();
+			if ( isset( $input['enabled_integrations'] ) && is_array( $input['enabled_integrations'] ) ) {
+				$sanitized['enabled_integrations'] = array_map(
+					function ( $val ) {
+						return (bool) $val;
+					},
+					$input['enabled_integrations']
+				);
+			}
+
+			$sanitized['theme_analytics_field'] = isset( $input['theme_analytics_field'] ) ? sanitize_text_field( $input['theme_analytics_field'] ) : 'analytics';
+
 			$sanitized['custom_block_rules'] = isset( $input['custom_block_rules'] ) ? sanitize_textarea_field( $input['custom_block_rules'] ) : '';
 		} elseif ( 'tools' === $active_tab ) {
 			if ( isset( $input['policy_texts'] ) && is_array( $input['policy_texts'] ) ) {
@@ -596,11 +608,13 @@ final class Admin {
 	 * Render integrations tab.
 	 */
 	private function render_integrations_tab(): void {
-		$settings         = get_option( 'wpeu_cs_settings', array() );
-		$services         = ScriptRegistry::get_services();
-		$enabled_services = $settings['enabled_services'] ?? array();
-		$custom_rules     = $settings['custom_block_rules'] ?? '';
-		$google_gcm       = $settings['google_consent_mode'] ?? true;
+		$settings             = get_option( 'wpeu_cs_settings', array() );
+		$services             = ScriptRegistry::get_services();
+		$enabled_services     = $settings['enabled_services'] ?? array();
+		$enabled_integrations = $settings['enabled_integrations'] ?? array();
+		$custom_rules         = $settings['custom_block_rules'] ?? '';
+		$google_gcm           = $settings['google_consent_mode'] ?? true;
+		$analytics_field      = $settings['theme_analytics_field'] ?? 'analytics';
 
 		?>
 		<form method="post" action="options.php">
@@ -622,7 +636,48 @@ final class Admin {
 				</tr>
 			</table>
 
-			<h2><?php esc_html_e( 'Service Integrations', 'wp-eu-cookie-suite' ); ?></h2>
+			<h2><?php esc_html_e( 'Third-Party Integrations', 'wp-eu-cookie-suite' ); ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Theme Analytics (ACF)', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[enabled_integrations][theme_analytics]" value="1" <?php checked( ! empty( $enabled_integrations['theme_analytics'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Intercept ACF option field for analytics.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'ACF Analytics Field Name', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[theme_analytics_field]" value="<?php echo esc_attr( $analytics_field ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'The name of the ACF field used for analytics/tracking code.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Iframe Placeholders', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[enabled_integrations][iframe_placeholder]" value="1" <?php checked( ! empty( $enabled_integrations['iframe_placeholder'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Replace YouTube, Vimeo, and Google Maps iframes with placeholders.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Contact Form 7 reCAPTCHA', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[enabled_integrations][cf7_recaptcha]" value="1" <?php checked( ! empty( $enabled_integrations['cf7_recaptcha'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Only load reCAPTCHA scripts after marketing consent.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<h2><?php esc_html_e( 'Service Blocker', 'wp-eu-cookie-suite' ); ?></h2>
 			<p><?php esc_html_e( 'Enable automatic script blocking for these popular services.', 'wp-eu-cookie-suite' ); ?></p>
 
 			<table class="form-table" role="presentation">
