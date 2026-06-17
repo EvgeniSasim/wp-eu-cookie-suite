@@ -4,7 +4,4 @@ vendor/
 .DS_Store
 .idea/
 .vscode/
-wp-eu-cookie-suite/assets/js/*.bundle.js
-wp-eu-cookie-suite/assets/css/cookieconsent*.css
 composer.lock
-package-lock.json

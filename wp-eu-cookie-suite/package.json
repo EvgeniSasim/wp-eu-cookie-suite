@@ -2,10 +2,11 @@
   "name": "wp-eu-cookie-suite",
   "private": true,
   "scripts": {
-    "build": "echo \"Build pipeline added in CC-03\"",
-    "dev": "echo \"Dev pipeline added in CC-03\""
+    "build": "esbuild assets/js/src/cookieconsent.js --bundle --minify --outfile=assets/js/cookieconsent.bundle.js --loader:.css=css && cp assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css 2>/dev/null || mv assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css",
+    "dev": "esbuild assets/js/src/cookieconsent.js --bundle --outfile=assets/js/cookieconsent.bundle.js --watch"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "vanilla-cookieconsent": "^3.0.0"
   }
 }

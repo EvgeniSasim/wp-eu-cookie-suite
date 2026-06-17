@@ -31,6 +31,16 @@ North Star: [docs/north-star-spec.md](docs/north-star-spec.md)
 ln -s "$(pwd)/wp-eu-cookie-suite" /path/to/wp-content/plugins/wp-eu-cookie-suite
 ```
 
+### Build
+
+```bash
+cd wp-eu-cookie-suite
+npm install
+npm run build
+```
+
+Built assets (`cookieconsent.bundle.js`, `cookieconsent.bundle.css`) are committed for WordPress installs without Node.js.
+
 ## Лицензия
 
 GPL-2.0-or-later
