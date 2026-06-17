@@ -99,23 +99,6 @@ final class Plugin {
 
 		if ( is_admin() ) {
 			new Admin\Admin();
-			add_action( 'admin_notices', array( $this, 'render_coming_soon_notice' ) );
-		}
-	}
-
-	/**
-	 * Render "Coming Soon" notice in admin.
-	 */
-	public function render_coming_soon_notice(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( $screen && 'plugins' === $screen->id ) {
-			echo '<div class="notice notice-info"><p>';
-			echo esc_html__( 'WP EU Cookie Suite: Full features coming soon.', 'wp-eu-cookie-suite' );
-			echo '</p></div>';
 		}
 	}
 }

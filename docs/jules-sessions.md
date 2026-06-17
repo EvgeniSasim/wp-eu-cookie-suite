@@ -8,8 +8,8 @@ Branch: `main`
 |---|-----------|------------|-----|--------|
 | 0 | scaffold (Cursor) | — | — | done (initial commit) |
 | 1 | jules-task-cc-01-scaffold.md | [9071563733185945188](https://jules.google.com/session/9071563733185945188) | [#1](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/1) | merged |
-| 2 | jules-task-cc-02-admin-shell.md | [6993865298522113828](https://jules.google.com/session/6993865298522113828) | | in progress |
-| 3 | jules-task-cc-03-cookieconsent-frontend.md | | | pending |
+| 2 | jules-task-cc-02-admin-shell.md | [6993865298522113828](https://jules.google.com/session/6993865298522113828) | [#2](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/2) | merged |
+| 3 | jules-task-cc-03-cookieconsent-frontend.md | [3101285059705518251](https://jules.google.com/session/3101285059705518251) | | in progress |
 | 4 | jules-task-cc-04-categories-options.md | | | pending |
 | 5 | jules-task-cc-05-script-blocker.md | | | pending |
 | 6 | jules-task-cc-06-script-registry.md | | | pending |

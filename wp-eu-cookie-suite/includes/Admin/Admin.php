@@ -154,16 +154,16 @@ final class Admin {
 						$this->render_placeholder_tab( 'CC-03' );
 						break;
 					case 'cookies':
-						$this->render_placeholder_tab( 'CC-04' );
+						$this->render_placeholder_tab( 'CC-10' );
 						break;
 					case 'scanner':
-						$this->render_placeholder_tab( 'CC-06' );
+						$this->render_placeholder_tab( 'CC-09' );
 						break;
 					case 'integrations':
-						$this->render_placeholder_tab( 'CC-07' );
+						$this->render_placeholder_tab( 'CC-14' );
 						break;
 					case 'tools':
-						$this->render_placeholder_tab( 'CC-10' );
+						$this->render_placeholder_tab( 'CC-15' );
 						break;
 				}
 				?>
