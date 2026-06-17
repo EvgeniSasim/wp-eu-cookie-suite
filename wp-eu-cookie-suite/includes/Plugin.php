@@ -135,6 +135,8 @@ final class Plugin {
 	 * Initialize the plugin.
 	 */
 	public function init(): void {
+		$this->create_tables();
+
 		load_plugin_textdomain( 'wp-eu-cookie-suite', false, dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages' );
 
 		new Consent\WpConsentBridge();
