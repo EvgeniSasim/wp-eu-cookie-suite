@@ -192,13 +192,23 @@ final class Admin {
 			}
 		}
 
-		$sanitized['banner_ui'] = array(
-			'layout'        => sanitize_text_field( $input['banner_ui']['layout'] ?? 'box' ),
-			'position'      => sanitize_text_field( $input['banner_ui']['position'] ?? 'bottom-right' ),
-			'theme'         => sanitize_text_field( $input['banner_ui']['theme'] ?? 'light' ),
-			'primary_color' => sanitize_hex_color( $input['banner_ui']['primary_color'] ?? '#30363c' ) ?: '#30363c',
-			'custom_css'    => wp_strip_all_tags( $input['banner_ui']['custom_css'] ?? '' ),
-		);
+		if ( isset( $input['banner_ui'] ) && is_array( $input['banner_ui'] ) ) {
+			$sanitized['banner_ui'] = array(
+				'layout'        => sanitize_text_field( $input['banner_ui']['layout'] ?? 'box' ),
+				'position'      => sanitize_text_field( $input['banner_ui']['position'] ?? 'bottom-right' ),
+				'theme'         => sanitize_text_field( $input['banner_ui']['theme'] ?? 'light' ),
+				'primary_color' => sanitize_hex_color( $input['banner_ui']['primary_color'] ?? '#30363c' ) ?: '#30363c',
+				'custom_css'    => wp_strip_all_tags( $input['banner_ui']['custom_css'] ?? '' ),
+			);
+		} else {
+			$sanitized['banner_ui'] = $old_settings['banner_ui'] ?? array(
+				'layout'        => 'box',
+				'position'      => 'bottom-right',
+				'theme'         => 'light',
+				'primary_color' => '#30363c',
+				'custom_css'    => '',
+			);
+		}
 
 		return $sanitized;
 	}
@@ -862,6 +872,8 @@ final class Admin {
 			return $settings;
 		} );
 
+		$banner = new \WPEU\CookieSuite\Frontend\Banner();
+
 		?>
 		<!DOCTYPE html>
 		<html <?php language_attributes(); ?>>
@@ -879,7 +891,6 @@ final class Admin {
 		<body>
 			<div id="wpeu-cs-preview-content">
 				<?php
-				$banner = new \WPEU\CookieSuite\Frontend\Banner();
 				$banner->render_config();
 				?>
 			</div>
