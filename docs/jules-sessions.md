@@ -21,17 +21,21 @@ Branch: `main`
 | 12 | jules-task-cc-12-banner-customizer.md | [9423596550467606091](https://jules.google.com/session/9423596550467606091) | [#11](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/11) | merged |
 | 13 | jules-task-cc-13-legal-shortcodes.md | [10804725820254881360](https://jules.google.com/session/10804725820254881360) | [#12](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/12) | merged |
 | 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | [#13](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/13) | merged |
-| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#15](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/15) (cursor manual) | merged |
+| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#15](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/15) (Cursor) | merged — Jules [#14](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/14) duplicate, session superseded |
 
-## Фаза 2 (production)
+## Фаза 2 (production & wordpress.org)
 
 | # | Task file | Session ID | PR | Status |
 |---|-----------|------------|-----|--------|
-| 16 | jules-task-cc-16-dynamic-languages.md | [7316212288513132930](https://jules.google.com/session/7316212288513132930) | | in progress |
-| 17 | jules-task-cc-17-iframe-buffer.md | | | pending |
+| 16 | jules-task-cc-16-dynamic-languages.md | [7316212288513132930](https://jules.google.com/session/7316212288513132930) | [#16](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/16) | merged |
+| 16.1 | jules-task-cc-16-1-admin-preview-ui.md | | | pending (Cursor hotfix in stash) |
+| 17 | jules-task-cc-17-iframe-buffer.md | [14920897654020325449](https://jules.google.com/session/14920897654020325449) | [#17](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/17) | merged |
 | 18 | jules-task-cc-18-ga-guard.md | — | [#18](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/18) | merged (Cursor) |
-| 19 | jules-task-cc-19-consent-ux.md | | | pending |
+| 19 | jules-task-cc-19-consent-ux.md | | | pending — blocked by Jules CC-15 session IN_PROGRESS |
+| 23 | jules-task-cc-23-custom-categories.md | | | pending (after CC-19) |
 | 20 | jules-task-cc-20-ci.md | | | pending |
+| 21 | jules-task-cc-21-consent-records.md | | | pending (after CC-23) |
+| 22 | jules-task-cc-22-wordpress-org-release.md | | | pending |
 
 ## Команды
 
