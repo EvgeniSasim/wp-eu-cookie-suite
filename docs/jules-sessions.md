@@ -21,7 +21,7 @@ Branch: `main`
 | 12 | jules-task-cc-12-banner-customizer.md | [9423596550467606091](https://jules.google.com/session/9423596550467606091) | [#11](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/11) | merged |
 | 13 | jules-task-cc-13-legal-shortcodes.md | [10804725820254881360](https://jules.google.com/session/10804725820254881360) | [#12](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/12) | merged |
 | 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | [#13](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/13) | merged |
-| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#14](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/14) (cursor manual) | merged |
+| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#15](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/15) (cursor manual) | merged |
 
 ## Команды
 
