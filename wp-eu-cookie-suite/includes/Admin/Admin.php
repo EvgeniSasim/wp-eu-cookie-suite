@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Admin;
 
+use WPEU\CookieSuite\Consent\Categories;
+
 /**
  * Admin class.
  */
@@ -66,17 +68,19 @@ final class Admin {
 	public function sanitize_settings( array $input ): array {
 		$sanitized = array();
 
-		if ( isset( $input['blocker_enabled'] ) ) {
-			$sanitized['blocker_enabled'] = (bool) $input['blocker_enabled'];
+		$sanitized['blocker_enabled']        = isset( $input['blocker_enabled'] );
+		$sanitized['eu_mode']                = isset( $input['eu_mode'] );
+		$sanitized['keep_data_on_uninstall'] = isset( $input['keep_data_on_uninstall'] );
+		$sanitized['show_reject_all']        = isset( $input['show_reject_all'] );
+
+		if ( isset( $input['enabled_categories'] ) && is_array( $input['enabled_categories'] ) ) {
+			$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $input['enabled_categories'] );
+		} else {
+			$sanitized['enabled_categories'] = array();
 		}
 
-		if ( isset( $input['eu_mode'] ) ) {
-			$sanitized['eu_mode'] = (bool) $input['eu_mode'];
-		}
-
-		if ( isset( $input['keep_data_on_uninstall'] ) ) {
-			$sanitized['keep_data_on_uninstall'] = (bool) $input['keep_data_on_uninstall'];
-		}
+		$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
+		$sanitized['cookie_policy_url']  = isset( $input['cookie_policy_url'] ) ? esc_url_raw( $input['cookie_policy_url'] ) : '';
 
 		// Preserve version if already set
 		$old_settings = get_option( 'wpeu_cs_settings', array() );
@@ -151,7 +155,7 @@ final class Admin {
 						$this->render_dashboard_tab();
 						break;
 					case 'banner':
-						$this->render_placeholder_tab( 'CC-03' );
+						$this->render_banner_tab();
 						break;
 					case 'cookies':
 						$this->render_placeholder_tab( 'CC-10' );
@@ -169,6 +173,75 @@ final class Admin {
 				?>
 			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render banner tab.
+	 */
+	private function render_banner_tab(): void {
+		$settings           = get_option( 'wpeu_cs_settings', array() );
+		$all_categories     = Categories::get_all();
+		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
+		$privacy_url        = $settings['privacy_policy_url'] ?? '';
+		$cookie_url         = $settings['cookie_policy_url'] ?? '';
+		$show_reject_all    = $settings['show_reject_all'] ?? true;
+		$eu_mode            = $settings['eu_mode'] ?? true;
+
+		?>
+		<form method="post" action="options.php">
+			<?php
+			settings_fields( 'wpeu_cs_settings' );
+			?>
+
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<?php foreach ( $all_categories as $id => $category ) : ?>
+							<?php if ( 'necessary' === $id ) continue; ?>
+							<label>
+								<input type="checkbox" name="wpeu_cs_settings[enabled_categories][]" value="<?php echo esc_attr( $id ); ?>" <?php checked( in_array( $id, $enabled_categories, true ) ); ?>>
+								<?php echo esc_html( $category['label'] ); ?>
+							</label><br>
+						<?php endforeach; ?>
+						<p class="description"><?php esc_html_e( 'Select which consent categories to display in the banner.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Privacy Policy URL', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="url" name="wpeu_cs_settings[privacy_policy_url]" value="<?php echo esc_url( $privacy_url ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Cookie Policy URL', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="url" name="wpeu_cs_settings[cookie_policy_url]" value="<?php echo esc_url( $cookie_url ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Show "Reject All"', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="wpeu_cs_settings[show_reject_all]" value="1" <?php checked( $show_reject_all ); ?>>
+							<?php esc_html_e( 'Show the "Reject All" button in the banner.', 'wp-eu-cookie-suite' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Strict EU Mode', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="wpeu_cs_settings[eu_mode]" value="1" <?php checked( $eu_mode ); ?>>
+							<?php esc_html_e( 'Enable strict EU mode (block all non-necessary cookies until consent).', 'wp-eu-cookie-suite' ); ?>
+						</label>
+					</td>
+				</tr>
+			</table>
+
+			<?php submit_button(); ?>
+		</form>
 		<?php
 	}
 
