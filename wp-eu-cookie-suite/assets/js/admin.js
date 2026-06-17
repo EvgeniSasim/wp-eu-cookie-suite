@@ -11,17 +11,17 @@
 		const $resultsWrapper = $('#wpeu-cs-scan-results-wrapper');
 		const nonce = $('#wpeu_cs_scanner_nonce').val();
 
-		if (!$startBtn.length) return;
+		if ($startBtn.length) {
+			$startBtn.on('click', function() {
+				$startBtn.prop('disabled', true);
+				$startBtn.siblings('.spinner').addClass('is-active');
+				$progress.show();
+				$progressBar.css('width', '0%');
+				$status.text('Initializing scan...');
 
-		$startBtn.on('click', function() {
-			$startBtn.prop('disabled', true);
-			$startBtn.siblings('.spinner').addClass('is-active');
-			$progress.show();
-			$progressBar.css('width', '0%');
-			$status.text('Initializing scan...');
-
-			getUrls();
-		});
+				getUrls();
+			});
+		}
 
 		function getUrls() {
 			$.ajax({
@@ -99,6 +99,7 @@
 		const previewNonce = $('#wpeu_cs_preview_nonce').val();
 
 		function updatePreview() {
+			const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
 			const settings = {
 				banner_ui: {
 					layout: $('#wpeu-cs-banner-layout').val(),
@@ -107,11 +108,16 @@
 					primary_color: $('.wpeu-cs-color-picker').val(),
 					custom_css: $('textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').val()
 				},
-				banner_texts: {}
+				banner_texts: {},
+				enabled_categories: [],
+				show_reject_all: $('input[name="wpeu_cs_settings[show_reject_all]"]').is(':checked'),
+				eu_mode: $('input[name="wpeu_cs_settings[eu_mode]"]').is(':checked')
 			};
 
-			// Add current language texts to preview
-			const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
+			$('input[name="wpeu_cs_settings[enabled_categories][]"]:checked').each(function() {
+				settings.enabled_categories.push($(this).val());
+			});
+
 			settings.banner_texts[lang] = {};
 			$('input[name^="wpeu_cs_settings[banner_texts][' + lang + ']"], textarea[name^="wpeu_cs_settings[banner_texts][' + lang + ']"]').each(function() {
 				const name = $(this).attr('name');
@@ -121,11 +127,16 @@
 				}
 			});
 
+			if (!$previewFrame.length || !previewNonce) {
+				return;
+			}
+
 			$refreshBtn.prop('disabled', true).text('Updating...');
 
 			$.ajax({
 				url: ajaxurl,
 				type: 'POST',
+				dataType: 'html',
 				data: {
 					action: 'wpeu_cs_preview',
 					nonce: previewNonce,
@@ -143,9 +154,12 @@
 			});
 		}
 
-		if ($previewFrame.length) {
+		if ($previewFrame.length && previewNonce) {
 			updatePreview();
-			$refreshBtn.on('click', updatePreview);
+			if ($refreshBtn.length) {
+				$refreshBtn.on('click', updatePreview);
+			}
+			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', updatePreview);
 		}
 
 		// Import scan results to inventory

@@ -23,6 +23,16 @@ Branch: `main`
 | 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | [#13](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/13) | merged |
 | 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | [#15](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/15) (cursor manual) | merged |
 
+## Фаза 2 (production)
+
+| # | Task file | Session ID | PR | Status |
+|---|-----------|------------|-----|--------|
+| 16 | jules-task-cc-16-dynamic-languages.md | | | pending |
+| 17 | jules-task-cc-17-iframe-buffer.md | | | pending |
+| 18 | jules-task-cc-18-ga-guard.md | | | pending |
+| 19 | jules-task-cc-19-consent-ux.md | | | pending |
+| 20 | jules-task-cc-20-ci.md | | | pending |
+
 ## Команды
 
 ```bash

@@ -26,6 +26,16 @@
 | 14 | jules-task-cc-14-integrations.md | `jules/cc-14-integrations` |
 | 15 | jules-task-cc-15-tests.md | `jules/cc-15-tests` |
 
+## Фаза 2 — production (BSB + multi-site)
+
+| # | Файл | Ветка PR | Приоритет |
+|---|------|----------|-----------|
+| 16 | jules-task-cc-16-dynamic-languages.md | `jules/cc-16-languages` | P0 — языки без правок кода |
+| 17 | jules-task-cc-17-iframe-buffer.md | `jules/cc-17-iframe-buffer` | P0 — Google Maps в теме BSB |
+| 18 | jules-task-cc-18-ga-guard.md | `jules/cc-18-ga-guard` | P0 — _ga cookies, gtag fallback |
+| 19 | jules-task-cc-19-consent-ux.md | `jules/cc-19-consent-ux` | P1 — cookie settings link, toggles |
+| 20 | jules-task-cc-20-ci.md | `jules/cc-20-ci` | P1 — CI + preview regression |
+
 ## Запуск
 
 ```bash

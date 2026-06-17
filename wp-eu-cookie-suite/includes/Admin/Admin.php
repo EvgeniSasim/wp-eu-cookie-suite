@@ -1077,17 +1077,34 @@ final class Admin {
 		}
 
 		// Mock settings for preview
-		add_filter( 'option_wpeu_cs_settings', function ( $settings ) {
-			if ( isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ) {
-				if ( isset( $_POST['settings']['banner_ui'] ) ) {
-					$settings['banner_ui'] = $_POST['settings']['banner_ui'];
+		add_filter(
+			'option_wpeu_cs_settings',
+			function ( $settings ) {
+				if ( ! isset( $_POST['settings'] ) || ! is_array( $_POST['settings'] ) ) {
+					return $settings;
 				}
-				if ( isset( $_POST['settings']['banner_texts'] ) ) {
-					$settings['banner_texts'] = $_POST['settings']['banner_texts'];
+
+				$post = wp_unslash( $_POST['settings'] );
+
+				if ( isset( $post['banner_ui'] ) && is_array( $post['banner_ui'] ) ) {
+					$settings['banner_ui'] = $post['banner_ui'];
 				}
+				if ( isset( $post['banner_texts'] ) && is_array( $post['banner_texts'] ) ) {
+					$settings['banner_texts'] = $post['banner_texts'];
+				}
+				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
+					$settings['enabled_categories'] = array_map( 'sanitize_text_field', $post['enabled_categories'] );
+				}
+				if ( array_key_exists( 'show_reject_all', $post ) ) {
+					$settings['show_reject_all'] = (bool) $post['show_reject_all'];
+				}
+				if ( array_key_exists( 'eu_mode', $post ) ) {
+					$settings['eu_mode'] = (bool) $post['eu_mode'];
+				}
+
+				return $settings;
 			}
-			return $settings;
-		} );
+		);
 
 		$banner = new \WPEU\CookieSuite\Frontend\Banner();
 
