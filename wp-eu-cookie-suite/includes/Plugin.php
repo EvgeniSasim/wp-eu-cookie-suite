@@ -110,7 +110,7 @@ final class Plugin {
 			name varchar(255) NOT NULL,
 			domain varchar(255) NOT NULL,
 			category varchar(50) NOT NULL,
-			description text DEFAULT '',
+			description text,
 			duration varchar(100) DEFAULT '',
 			service varchar(100) DEFAULT '',
 			detected_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
