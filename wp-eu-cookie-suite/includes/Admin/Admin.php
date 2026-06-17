@@ -109,7 +109,8 @@ final class Admin {
 		$label = sanitize_text_field( $_POST['wpeu_cs_new_lang_label'] ?? '' );
 
 		if ( strlen( $code ) < 2 || strlen( $code ) > 5 ) {
-			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . ( $_POST['active_tab'] ?? 'banner' ) . '&message=invalid_code' ) );
+			$tab = sanitize_key( (string) ( $_POST['active_tab'] ?? 'banner' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&message=invalid_code' ) );
 			exit;
 		}
 
@@ -133,7 +134,8 @@ final class Admin {
 
 		update_option( 'wpeu_cs_settings', $settings );
 
-		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . ( $_POST['active_tab'] ?? 'banner' ) . '&lang=' . $code . '&message=lang_added' ) );
+		$tab = sanitize_key( (string) ( $_POST['active_tab'] ?? 'banner' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&lang=' . $code . '&message=lang_added' ) );
 		exit;
 	}
 
@@ -151,7 +153,7 @@ final class Admin {
 
 		update_option( 'wpeu_cs_settings', $settings );
 
-		$tab = $_GET['tab'] ?? 'banner';
+		$tab = sanitize_key( (string) ( $_GET['tab'] ?? 'banner' ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&message=lang_removed' ) );
 		exit;
 	}
