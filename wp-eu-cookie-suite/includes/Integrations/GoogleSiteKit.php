@@ -22,8 +22,26 @@ final class GoogleSiteKit {
 			return;
 		}
 
+		if ( ! $this->is_integration_enabled() ) {
+			return;
+		}
+
 		add_filter( 'googlesitekit_analytics-4_tag_block_on_consent', array( $this, 'block_analytics_tag' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'dequeue_without_consent' ), 9999 );
+	}
+
+	/**
+	 * Whether Site Kit integration is enabled (default on when Site Kit is active).
+	 */
+	private function is_integration_enabled(): bool {
+		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$integrations = $settings['enabled_integrations'] ?? array();
+
+		if ( ! array_key_exists( 'google_site_kit', $integrations ) ) {
+			return true;
+		}
+
+		return ! empty( $integrations['google_site_kit'] );
 	}
 
 	/**

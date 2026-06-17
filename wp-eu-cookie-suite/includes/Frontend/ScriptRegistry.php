@@ -31,7 +31,11 @@ final class ScriptRegistry {
 					'analytics.js',
 					'ga.js',
 					'gtag(',
+					"gtag('config'",
 					'ga(',
+					'googletagmanager.com/gtag/js',
+					'google_gtagjs',
+					'googlesitekit',
 				),
 			),
 			'gtm'              => array(
@@ -40,6 +44,8 @@ final class ScriptRegistry {
 				'patterns' => array(
 					'googletagmanager.com',
 					'gtm.js',
+					'doubleclick.net',
+					'googleadservices.com',
 				),
 			),
 			'facebook-pixel'   => array(
@@ -72,6 +78,7 @@ final class ScriptRegistry {
 				'patterns' => array(
 					'maps.google.com',
 					'maps.googleapis.com',
+					'maps.gstatic.com',
 				),
 			),
 			'youtube'          => array(
