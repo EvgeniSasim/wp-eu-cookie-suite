@@ -2,28 +2,18 @@
 
 WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): баннер на [vanilla-cookieconsent](https://cookieconsent.orestbida.com/), блокировка скриптов, сканер cookies, мультиязычность, WP Consent API.
 
-## Разработка
+## Возможности
 
-| Роль | Кто |
-|------|-----|
-| Архитектура, ревью, постановка задач | Cursor (Auto) |
-| Код | [Jules](https://jules.google.com) |
+- Баннер и модал настроек (CookieConsent v3)
+- Категории: necessary, preferences, statistics, marketing
+- Блокировка скриптов и iframe-placeholder (YouTube, Vimeo, Maps)
+- Google Consent Mode v2 + интеграция с Google Site Kit
+- WP Consent API (polyfill, если плагин не установлен)
+- Сканер cookies и инвентарь в БД
+- EN/DE тексты баннера и политики
+- Экспорт/импорт настроек (JSON) и CSV инвентаря
 
-### Jules
-
-```bash
-export JULES_SOURCE=sources/github/EvgeniSasim/wp-eu-cookie-suite
-export JULES_BRANCH=main
-JULES_TASK=jules-task-cc-01-scaffold.md python3 scripts/jules_create_sessions.py
-```
-
-Токен: `JULES_API_KEY` из `~/business/.env`.
-
-Roadmap: [prompts/jules-task-cc-roadmap.md](prompts/jules-task-cc-roadmap.md)  
-North Star: [docs/north-star-spec.md](docs/north-star-spec.md)  
-Трекер сессий: [docs/jules-sessions.md](docs/jules-sessions.md)
-
-## Установка (dev)
+## Установка
 
 Скопируйте `wp-eu-cookie-suite/` в `wp-content/plugins/` или симлинк:
 
@@ -31,7 +21,9 @@ North Star: [docs/north-star-spec.md](docs/north-star-spec.md)
 ln -s "$(pwd)/wp-eu-cookie-suite" /path/to/wp-content/plugins/wp-eu-cookie-suite
 ```
 
-### Build
+Активируйте плагин в админке WordPress. При первой активации создаётся таблица `wp_wpeu_cookies` и настройки по умолчанию.
+
+### Build (опционально)
 
 ```bash
 cd wp-eu-cookie-suite
@@ -39,11 +31,58 @@ npm install
 npm run build
 ```
 
-Built assets (`cookieconsent.bundle.js`, `cookieconsent.bundle.css`) are committed for WordPress installs without Node.js.
+Собранные assets (`cookieconsent.bundle.js`, `cookieconsent.bundle.css`) уже в репозитории — Node.js на сервере не обязателен.
 
-### Google Consent Mode
+### Тесты
 
-When enabled under **Integrations**, the plugin injects default `denied` consent for Google tags and updates after banner choices. Compatible with Google Site Kit via `googlesitekit_analytics-4_tag_block_on_consent`.
+```bash
+composer install
+bin/install-wp-tests.sh wordpress_test root '' localhost latest
+vendor/bin/phpunit
+```
+
+Требуется MySQL с тестовой БД. Переменная `WP_TESTS_DIR` переопределяет путь к WordPress test suite.
+
+## Compliance
+
+Плагин предоставляет технические средства для cookie compliance (баннер, блокировка, документация), но **не является юридической консультацией**. Ответственность за тексты политик и соответствие законодательству лежит на владельце сайта.
+
+Рекомендуется:
+
+1. Опубликовать privacy policy и cookie policy (шорткод `[wpeu_cookie_policy]`)
+2. Включить EU mode (opt-in) для посетителей из ЕС
+3. Проверить блокировку GA/GTM/Pixel до согласия
+4. Вести актуальный cookie inventory (сканер + ручные правки)
+
+## Миграция с Complianz (ручной чеклист)
+
+Автоматической миграции нет — перенос настроек выполняется вручную:
+
+1. Установите WP EU Cookie Suite на staging, **не удаляйте** Complianz до проверки
+2. Сопоставьте категории: Functional → Necessary, Statistics → Statistics, Marketing → Marketing
+3. Скопируйте custom script rules из Complianz в **Integrations → Custom block rules**
+4. Настройте URL privacy/cookie policy в табе Banner
+5. Замените шорткоды политики на `[wpeu_cookie_policy]` / `[wpeu_cookie_declaration]`
+6. Запустите Scanner, импортируйте результаты в inventory
+7. Проверьте баннер, GCM, Site Kit, формы (reCAPTCHA → marketing)
+8. После успешной проверки деактивируйте Complianz
+
+Экспорт/импорт JSON в табе **Tools** переносит настройки между инстансами WP EU Cookie Suite (не из Complianz).
+
+## Google Consent Mode
+
+При включении в **Integrations** плагин выставляет default `denied` для Google tags и обновляет после выбора в баннере. Совместим с Google Site Kit через `googlesitekit_analytics-4_tag_block_on_consent`.
+
+## Разработка
+
+| Роль | Кто |
+|------|-----|
+| Архитектура, ревью, постановка задач | Cursor (Auto) |
+| Код | [Jules](https://jules.google.com) |
+
+Roadmap: [prompts/jules-task-cc-roadmap.md](prompts/jules-task-cc-roadmap.md)  
+North Star: [docs/north-star-spec.md](docs/north-star-spec.md)  
+Трекер сессий: [docs/jules-sessions.md](docs/jules-sessions.md)
 
 ## Лицензия
 

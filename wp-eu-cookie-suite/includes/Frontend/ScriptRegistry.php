@@ -93,4 +93,28 @@ final class ScriptRegistry {
 			),
 		);
 	}
+
+	/**
+	 * Find consent category for a script by matching registry patterns.
+	 *
+	 * @param string     $src              Script src attribute.
+	 * @param string     $content          Inline script content.
+	 * @param array|null $enabled_services Enabled service map from settings.
+	 * @return string|null Category slug or null if no match.
+	 */
+	public static function find_category_for_script( string $src, string $content, ?array $enabled_services = null ): ?string {
+		foreach ( self::get_services() as $id => $service ) {
+			if ( null !== $enabled_services && empty( $enabled_services[ $id ] ) ) {
+				continue;
+			}
+
+			foreach ( $service['patterns'] as $pattern ) {
+				if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
+					return $service['category'];
+				}
+			}
+		}
+
+		return null;
+	}
 }
