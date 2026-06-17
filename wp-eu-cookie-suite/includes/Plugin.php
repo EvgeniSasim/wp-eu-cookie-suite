@@ -106,6 +106,8 @@ final class Plugin {
 	public function init(): void {
 		load_plugin_textdomain( 'wp-eu-cookie-suite', false, dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages' );
 
+		new Consent\WpConsentBridge();
+
 		if ( is_admin() ) {
 			new Admin\Admin();
 		} else {
