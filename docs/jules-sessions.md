@@ -15,8 +15,8 @@ Branch: `main`
 | 6 | jules-task-cc-06-script-registry.md | [9673288998111504244](https://jules.google.com/session/9673288998111504244) | [#5](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/5) | merged |
 | 7 | jules-task-cc-07-wp-consent-api.md | [3819341942527512964](https://jules.google.com/session/3819341942527512964) | [#6](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/6) | merged |
 | 8 | jules-task-cc-08-google-consent-mode.md | [6702638541194870689](https://jules.google.com/session/6702638541194870689) | — (manual, Jules blocked) | merged |
-| 9 | jules-task-cc-09-cookie-scanner.md | [5158379038047431724](https://jules.google.com/session/5158379038047431724) | | in progress |
-| 10 | jules-task-cc-10-cookie-inventory.md | | | pending |
+| 9 | jules-task-cc-09-cookie-scanner.md | [5158379038047431724](https://jules.google.com/session/5158379038047431724) | [#7](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/7) | merged |
+| 10 | jules-task-cc-10-cookie-inventory.md | [16281992910030111432](https://jules.google.com/session/16281992910030111432) | | in progress |
 | 11 | jules-task-cc-11-multilingual.md | | | pending |
 | 12 | jules-task-cc-12-banner-customizer.md | | | pending |
 | 13 | jules-task-cc-13-legal-shortcodes.md | | | pending |
