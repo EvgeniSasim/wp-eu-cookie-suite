@@ -29,7 +29,7 @@ final class Banner {
 	 * Enqueue assets.
 	 */
 	public function enqueue_assets(): void {
-		if ( is_admin() || is_login() ) {
+		if ( ( is_admin() && ! defined( 'WPEU_CS_PREVIEW' ) ) || is_login() ) {
 			return;
 		}
 
@@ -60,7 +60,7 @@ final class Banner {
 	 * Render CookieConsent configuration.
 	 */
 	public function render_config(): void {
-		if ( is_admin() || is_login() ) {
+		if ( ( is_admin() && ! defined( 'WPEU_CS_PREVIEW' ) ) || is_login() ) {
 			return;
 		}
 
@@ -68,8 +68,30 @@ final class Banner {
 			return;
 		}
 
-		$config = $this->get_config();
+		$config    = $this->get_config();
+		$settings  = get_option( 'wpeu_cs_settings', array() );
+		$banner_ui = $settings['banner_ui'] ?? array();
+		$theme     = $banner_ui['theme'] ?? 'light';
+		$primary   = $banner_ui['primary_color'] ?? '#30363c';
+		$custom_css = $banner_ui['custom_css'] ?? '';
+
+		if ( 'dark' === $theme ) {
+			?>
+			<script type="text/javascript">
+				document.documentElement.classList.add('cc--darkmode');
+			</script>
+			<?php
+		}
 		?>
+		<style type="text/css">
+			:root {
+				--cc-btn-primary-bg: <?php echo esc_html( $primary ); ?>;
+				--cc-btn-primary-border-color: <?php echo esc_html( $primary ); ?>;
+				--cc-toggle-on-bg: <?php echo esc_html( $primary ); ?>;
+				--cc-link-color: <?php echo esc_html( $primary ); ?>;
+			}
+			<?php echo $custom_css; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		</style>
 		<script type="text/javascript">
 			window.addEventListener('load', function () {
 				const cc = window.CookieConsent;
@@ -139,6 +161,10 @@ final class Banner {
 		$cookie_url         = $settings['cookie_policy_url'] ?? '';
 		$eu_mode            = $settings['eu_mode'] ?? true;
 
+		$banner_ui = $settings['banner_ui'] ?? array();
+		$layout    = $banner_ui['layout'] ?? 'box';
+		$position  = str_replace( '-', ' ', $banner_ui['position'] ?? 'bottom-right' );
+
 		$locale = BannerTexts::get_active_locale();
 		$texts  = BannerTexts::get_strings( $locale );
 
@@ -181,8 +207,8 @@ final class Banner {
 			'mode'       => $eu_mode ? 'opt-in' : 'opt-out',
 			'guiOptions' => array(
 				'consentModal' => array(
-					'layout'             => 'box',
-					'position'           => 'bottom right',
+					'layout'             => $layout,
+					'position'           => $position,
 					'flipButtons'        => false,
 					'equalWeightButtons' => true,
 				),

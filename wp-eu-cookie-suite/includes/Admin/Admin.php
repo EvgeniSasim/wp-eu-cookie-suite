@@ -31,6 +31,7 @@ final class Admin {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_wpeu_cs_preview', array( $this, 'ajax_preview' ) );
 	}
 
 	/**
@@ -191,6 +192,14 @@ final class Admin {
 			}
 		}
 
+		$sanitized['banner_ui'] = array(
+			'layout'        => sanitize_text_field( $input['banner_ui']['layout'] ?? 'box' ),
+			'position'      => sanitize_text_field( $input['banner_ui']['position'] ?? 'bottom-right' ),
+			'theme'         => sanitize_text_field( $input['banner_ui']['theme'] ?? 'light' ),
+			'primary_color' => sanitize_hex_color( $input['banner_ui']['primary_color'] ?? '#30363c' ) ?: '#30363c',
+			'custom_css'    => wp_strip_all_tags( $input['banner_ui']['custom_css'] ?? '' ),
+		);
+
 		return $sanitized;
 	}
 
@@ -204,17 +213,19 @@ final class Admin {
 			return;
 		}
 
+		wp_enqueue_style( 'wp-color-picker' );
+
 		wp_enqueue_style(
 			'wpeu-cs-admin',
 			WPEU_CS_URL . 'assets/css/admin.css',
-			array(),
+			array( 'wp-color-picker' ),
 			WPEU_CS_VERSION
 		);
 
 		wp_enqueue_script(
 			'wpeu-cs-admin',
 			WPEU_CS_URL . 'assets/js/admin.js',
-			array( 'jquery' ),
+			array( 'jquery', 'wp-color-picker' ),
 			WPEU_CS_VERSION,
 			true
 		);
@@ -290,6 +301,13 @@ final class Admin {
 		$cookie_url         = $settings['cookie_policy_url'] ?? '';
 		$show_reject_all    = $settings['show_reject_all'] ?? true;
 		$eu_mode            = $settings['eu_mode'] ?? true;
+
+		$banner_ui          = $settings['banner_ui'] ?? array();
+		$layout             = $banner_ui['layout'] ?? 'box';
+		$position           = $banner_ui['position'] ?? 'bottom-right';
+		$theme              = $banner_ui['theme'] ?? 'light';
+		$primary_color      = $banner_ui['primary_color'] ?? '#30363c';
+		$custom_css         = $banner_ui['custom_css'] ?? '';
 
 		$locales        = BannerTexts::get_locales();
 		$current_lang   = isset( $_GET['lang'] ) && array_key_exists( $_GET['lang'], $locales ) ? $_GET['lang'] : 'en';
@@ -434,6 +452,64 @@ final class Admin {
 					</tr>
 				<?php endforeach; ?>
 			</table>
+
+			<hr>
+			<h3><?php esc_html_e( 'Appearance', 'wp-eu-cookie-suite' ); ?></h3>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Layout', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<select name="wpeu_cs_settings[banner_ui][layout]" id="wpeu-cs-banner-layout">
+							<option value="box" <?php selected( $layout, 'box' ); ?>><?php esc_html_e( 'Box', 'wp-eu-cookie-suite' ); ?></option>
+							<option value="bar" <?php selected( $layout, 'bar' ); ?>><?php esc_html_e( 'Bar', 'wp-eu-cookie-suite' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Position', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<select name="wpeu_cs_settings[banner_ui][position]" id="wpeu-cs-banner-position">
+							<option value="bottom-left" <?php selected( $position, 'bottom-left' ); ?>><?php esc_html_e( 'Bottom Left', 'wp-eu-cookie-suite' ); ?></option>
+							<option value="bottom-center" <?php selected( $position, 'bottom-center' ); ?>><?php esc_html_e( 'Bottom Center', 'wp-eu-cookie-suite' ); ?></option>
+							<option value="bottom-right" <?php selected( $position, 'bottom-right' ); ?>><?php esc_html_e( 'Bottom Right', 'wp-eu-cookie-suite' ); ?></option>
+							<option value="center" <?php selected( $position, 'center' ); ?>><?php esc_html_e( 'Center', 'wp-eu-cookie-suite' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Theme', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<select name="wpeu_cs_settings[banner_ui][theme]" id="wpeu-cs-banner-theme">
+							<option value="light" <?php selected( $theme, 'light' ); ?>><?php esc_html_e( 'Light', 'wp-eu-cookie-suite' ); ?></option>
+							<option value="dark" <?php selected( $theme, 'dark' ); ?>><?php esc_html_e( 'Dark', 'wp-eu-cookie-suite' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Primary Color', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_ui][primary_color]" value="<?php echo esc_attr( $primary_color ); ?>" class="wpeu-cs-color-picker">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Custom CSS', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<textarea name="wpeu_cs_settings[banner_ui][custom_css]" rows="5" class="large-text code"><?php echo esc_textarea( $custom_css ); ?></textarea>
+					</td>
+				</tr>
+			</table>
+
+			<div class="wpeu-cs-preview-container">
+				<h3><?php esc_html_e( 'Live Preview', 'wp-eu-cookie-suite' ); ?></h3>
+				<div class="wpeu-cs-preview-frame-wrapper" style="border: 1px solid #ccd0d4; background: #f6f7f7;">
+					<iframe id="wpeu-cs-banner-preview" src="about:blank" width="100%" height="400" frameborder="0"></iframe>
+				</div>
+				<p>
+					<button type="button" id="wpeu-cs-refresh-preview" class="button button-secondary"><?php esc_html_e( 'Refresh Preview', 'wp-eu-cookie-suite' ); ?></button>
+				</p>
+			</div>
+
+			<input type="hidden" id="wpeu_cs_preview_nonce" value="<?php echo esc_attr( wp_create_nonce( 'wpeu-cs-preview' ) ); ?>">
 
 			<?php submit_button(); ?>
 		</form>
@@ -757,6 +833,68 @@ final class Admin {
 			</form>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Ajax preview action.
+	 */
+	public function ajax_preview(): void {
+		check_ajax_referer( 'wpeu-cs-preview', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
+			define( 'WPEU_CS_PREVIEW', true );
+		}
+
+		// Mock settings for preview
+		add_filter( 'option_wpeu_cs_settings', function ( $settings ) {
+			if ( isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ) {
+				if ( isset( $_POST['settings']['banner_ui'] ) ) {
+					$settings['banner_ui'] = $_POST['settings']['banner_ui'];
+				}
+				if ( isset( $_POST['settings']['banner_texts'] ) ) {
+					$settings['banner_texts'] = $_POST['settings']['banner_texts'];
+				}
+			}
+			return $settings;
+		} );
+
+		?>
+		<!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php bloginfo( 'charset' ); ?>">
+			<?php
+			wp_head();
+			?>
+			<style>
+				body { background: #f0f0f1 !important; margin: 0; padding: 0; min-height: 400px; }
+				#cc-main { position: relative !important; z-index: 1 !important; }
+				.cc--resizer { display: none !important; }
+			</style>
+		</head>
+		<body>
+			<div id="wpeu-cs-preview-content">
+				<?php
+				$banner = new \WPEU\CookieSuite\Frontend\Banner();
+				$banner->render_config();
+				?>
+			</div>
+			<?php wp_footer(); ?>
+			<script>
+				window.addEventListener('load', function() {
+					if (window.CookieConsent) {
+						window.CookieConsent.show(true);
+					}
+				});
+			</script>
+		</body>
+		</html>
+		<?php
+		exit;
 	}
 
 	/**

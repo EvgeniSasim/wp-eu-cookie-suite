@@ -187,3 +187,27 @@ input:checked + .slider:before {
 .column-detected_at {
     width: 120px;
 }
+
+/* Banner Preview */
+.wpeu-cs-preview-container {
+    margin-top: 30px;
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+.wpeu-cs-preview-frame-wrapper {
+    margin: 15px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.wpeu-cs-preview-container h3 {
+    margin-top: 0;
+}
+
+/* Color picker adjustment */
+.wp-picker-container {
+    vertical-align: middle;
+}
