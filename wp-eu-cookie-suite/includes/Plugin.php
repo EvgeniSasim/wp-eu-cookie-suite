@@ -101,6 +101,7 @@ final class Plugin {
 			new Admin\Admin();
 		} else {
 			new Frontend\Banner();
+			new Frontend\ScriptBlocker();
 		}
 	}
 }
