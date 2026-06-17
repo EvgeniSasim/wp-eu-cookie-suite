@@ -109,6 +109,10 @@ final class SettingsTransfer {
 			$sanitized['custom_block_rules'] = sanitize_textarea_field( (string) $settings['custom_block_rules'] );
 		}
 
+		if ( isset( $settings['language_labels'] ) && is_array( $settings['language_labels'] ) ) {
+			$sanitized['language_labels'] = array_map( 'sanitize_text_field', $settings['language_labels'] );
+		}
+
 		if ( isset( $settings['banner_ui'] ) && is_array( $settings['banner_ui'] ) ) {
 			$sanitized['banner_ui'] = array(
 				'layout'        => sanitize_text_field( $settings['banner_ui']['layout'] ?? 'box' ),

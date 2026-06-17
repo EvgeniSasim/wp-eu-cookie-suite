@@ -23,44 +23,44 @@ final class BannerTexts {
 	public static function get_defaults( string $locale = 'en' ): array {
 		$defaults = array(
 			'en' => array(
-				'consent_modal_title'       => __( 'We use cookies', 'wp-eu-cookie-suite' ),
-				'consent_modal_description' => __( 'We use cookies to ensure you get the best experience on our website. You can accept all, reject non-essential cookies, or manage your preferences.', 'wp-eu-cookie-suite' ),
-				'preferences_modal_title'   => __( 'Consent preferences', 'wp-eu-cookie-suite' ),
-				'preferences_intro_title'   => __( 'Cookie usage', 'wp-eu-cookie-suite' ),
+				'consent_modal_title'           => __( 'We use cookies', 'wp-eu-cookie-suite' ),
+				'consent_modal_description'     => __( 'We use cookies to ensure you get the best experience on our website. You can accept all, reject non-essential cookies, or manage your preferences.', 'wp-eu-cookie-suite' ),
+				'preferences_modal_title'       => __( 'Consent preferences', 'wp-eu-cookie-suite' ),
+				'preferences_intro_title'       => __( 'Cookie usage', 'wp-eu-cookie-suite' ),
 				'preferences_intro_description' => __( 'Choose which cookies you allow. You can change these settings at any time.', 'wp-eu-cookie-suite' ),
-				'accept_all_btn'            => __( 'Accept all', 'wp-eu-cookie-suite' ),
-				'accept_necessary_btn'      => __( 'Reject all', 'wp-eu-cookie-suite' ),
-				'show_preferences_btn'      => __( 'Manage preferences', 'wp-eu-cookie-suite' ),
-				'save_preferences_btn'      => __( 'Save preferences', 'wp-eu-cookie-suite' ),
-				'close_icon_label'          => __( 'Close', 'wp-eu-cookie-suite' ),
-				'necessary_label'           => __( 'Strictly Necessary', 'wp-eu-cookie-suite' ),
-				'necessary_description'     => __( 'These cookies are essential for the website to function properly.', 'wp-eu-cookie-suite' ),
-				'preferences_label'         => __( 'Preferences', 'wp-eu-cookie-suite' ),
-				'preferences_description'   => __( 'These cookies allow the website to remember choices you make.', 'wp-eu-cookie-suite' ),
-				'statistics_label'          => __( 'Statistics', 'wp-eu-cookie-suite' ),
-				'statistics_description'    => __( 'These cookies help us understand how visitors interact with the website.', 'wp-eu-cookie-suite' ),
-				'marketing_label'           => __( 'Marketing', 'wp-eu-cookie-suite' ),
-				'marketing_description'     => __( 'These cookies are used to track visitors across websites to display relevant ads.', 'wp-eu-cookie-suite' ),
+				'accept_all_btn'                => __( 'Accept all', 'wp-eu-cookie-suite' ),
+				'accept_necessary_btn'          => __( 'Reject all', 'wp-eu-cookie-suite' ),
+				'show_preferences_btn'          => __( 'Manage preferences', 'wp-eu-cookie-suite' ),
+				'save_preferences_btn'          => __( 'Save preferences', 'wp-eu-cookie-suite' ),
+				'close_icon_label'              => __( 'Close', 'wp-eu-cookie-suite' ),
+				'necessary_label'               => __( 'Strictly Necessary', 'wp-eu-cookie-suite' ),
+				'necessary_description'         => __( 'These cookies are essential for the website to function properly.', 'wp-eu-cookie-suite' ),
+				'preferences_label'             => __( 'Preferences', 'wp-eu-cookie-suite' ),
+				'preferences_description'       => __( 'These cookies allow the website to remember choices you make.', 'wp-eu-cookie-suite' ),
+				'statistics_label'              => __( 'Statistics', 'wp-eu-cookie-suite' ),
+				'statistics_description'        => __( 'These cookies help us understand how visitors interact with the website.', 'wp-eu-cookie-suite' ),
+				'marketing_label'               => __( 'Marketing', 'wp-eu-cookie-suite' ),
+				'marketing_description'         => __( 'These cookies are used to track visitors across websites to display relevant ads.', 'wp-eu-cookie-suite' ),
 			),
 			'de' => array(
-				'consent_modal_title'       => __( 'Wir verwenden Cookies', 'wp-eu-cookie-suite' ),
-				'consent_modal_description' => __( 'Wir verwenden Cookies, um sicherzustellen, dass Sie das beste Erlebnis auf unserer Website erhalten. Sie können alle akzeptieren, nicht essenzielle Cookies ablehnen oder Ihre Einstellungen verwalten.', 'wp-eu-cookie-suite' ),
-				'preferences_modal_title'   => __( 'Einwilligungspräferenzen', 'wp-eu-cookie-suite' ),
-				'preferences_intro_title'   => __( 'Cookie-Nutzung', 'wp-eu-cookie-suite' ),
+				'consent_modal_title'           => __( 'Wir verwenden Cookies', 'wp-eu-cookie-suite' ),
+				'consent_modal_description'     => __( 'Wir verwenden Cookies, um sicherzustellen, dass Sie das beste Erlebnis auf unserer Website erhalten. Sie können alle akzeptieren, nicht essenzielle Cookies ablehnen oder Ihre Einstellungen verwalten.', 'wp-eu-cookie-suite' ),
+				'preferences_modal_title'       => __( 'Einwilligungspräferenzen', 'wp-eu-cookie-suite' ),
+				'preferences_intro_title'       => __( 'Cookie-Nutzung', 'wp-eu-cookie-suite' ),
 				'preferences_intro_description' => __( 'Wählen Sie, welche Cookies Sie zulassen. Sie können diese Einstellungen jederzeit ändern.', 'wp-eu-cookie-suite' ),
-				'accept_all_btn'            => __( 'Alle akzeptieren', 'wp-eu-cookie-suite' ),
-				'accept_necessary_btn'      => __( 'Alle ablehnen', 'wp-eu-cookie-suite' ),
-				'show_preferences_btn'      => __( 'Einstellungen verwalten', 'wp-eu-cookie-suite' ),
-				'save_preferences_btn'      => __( 'Einstellungen speichern', 'wp-eu-cookie-suite' ),
-				'close_icon_label'          => __( 'Schließen', 'wp-eu-cookie-suite' ),
-				'necessary_label'           => __( 'Unbedingt erforderlich', 'wp-eu-cookie-suite' ),
-				'necessary_description'     => __( 'Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich.', 'wp-eu-cookie-suite' ),
-				'preferences_label'         => __( 'Präferenzen', 'wp-eu-cookie-suite' ),
-				'preferences_description'   => __( 'Diese Cookies ermöglichen es der Website, sich an von Ihnen getroffene Entscheidungen zu erinnern.', 'wp-eu-cookie-suite' ),
-				'statistics_label'          => __( 'Statistiken', 'wp-eu-cookie-suite' ),
-				'statistics_description'    => __( 'Diese Cookies helfen uns zu verstehen, wie Besucher mit der Website interagieren.', 'wp-eu-cookie-suite' ),
-				'marketing_label'           => __( 'Marketing', 'wp-eu-cookie-suite' ),
-				'marketing_description'     => __( 'Diese Cookies werden verwendet, um Besucher über Websites hinweg zu verfolgen, um relevante Anzeigen anzuzeigen.', 'wp-eu-cookie-suite' ),
+				'accept_all_btn'                => __( 'Alle akzeptieren', 'wp-eu-cookie-suite' ),
+				'accept_necessary_btn'          => __( 'Alle ablehnen', 'wp-eu-cookie-suite' ),
+				'show_preferences_btn'          => __( 'Einstellungen verwalten', 'wp-eu-cookie-suite' ),
+				'save_preferences_btn'          => __( 'Einstellungen speichern', 'wp-eu-cookie-suite' ),
+				'close_icon_label'              => __( 'Schließen', 'wp-eu-cookie-suite' ),
+				'necessary_label'               => __( 'Unbedingt erforderlich', 'wp-eu-cookie-suite' ),
+				'necessary_description'         => __( 'Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich.', 'wp-eu-cookie-suite' ),
+				'preferences_label'             => __( 'Präferenzen', 'wp-eu-cookie-suite' ),
+				'preferences_description'       => __( 'Diese Cookies ermöglichen es der Website, sich an von Ihnen getroffene Entscheidungen zu erinnern.', 'wp-eu-cookie-suite' ),
+				'statistics_label'              => __( 'Statistiken', 'wp-eu-cookie-suite' ),
+				'statistics_description'        => __( 'Diese Cookies helfen uns zu verstehen, wie Besucher mit der Website interagieren.', 'wp-eu-cookie-suite' ),
+				'marketing_label'               => __( 'Marketing', 'wp-eu-cookie-suite' ),
+				'marketing_description'         => __( 'Diese Cookies werden verwendet, um Besucher über Websites hinweg zu verfolgen, um relevante Anzeigen anzuzeigen.', 'wp-eu-cookie-suite' ),
 			),
 		);
 
@@ -120,10 +120,69 @@ final class BannerTexts {
 	 * @return array<string, string>
 	 */
 	public static function get_locales(): array {
-		return array(
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		$locales  = array(
 			'en' => __( 'English', 'wp-eu-cookie-suite' ),
 			'de' => __( 'German', 'wp-eu-cookie-suite' ),
 		);
+
+		// 1. Site locale
+		$site_locale = substr( get_locale(), 0, 2 );
+		if ( ! isset( $locales[ $site_locale ] ) ) {
+			$locales[ $site_locale ] = strtoupper( $site_locale );
+		}
+
+		// 2. Polylang
+		if ( function_exists( 'pll_languages_list' ) ) {
+			$pll_locales = pll_languages_list();
+			if ( is_array( $pll_locales ) ) {
+				foreach ( $pll_locales as $code ) {
+					if ( ! isset( $locales[ $code ] ) ) {
+						$locales[ $code ] = strtoupper( $code );
+					}
+				}
+			}
+		}
+
+		// 3. WPML
+		if ( function_exists( 'icl_get_languages' ) ) {
+			$wpml_locales = icl_get_languages();
+			if ( is_array( $wpml_locales ) ) {
+				foreach ( $wpml_locales as $lang ) {
+					$code = $lang['language_code'] ?? '';
+					if ( $code && ! isset( $locales[ $code ] ) ) {
+						$locales[ $code ] = $lang['native_name'] ?? strtoupper( $code );
+					}
+				}
+			}
+		}
+
+		// 4. Saved in settings
+		$saved_banner_locales = array_keys( $settings['banner_texts'] ?? array() );
+		$saved_policy_locales = array_keys( $settings['policy_texts'] ?? array() );
+		$all_saved            = array_unique( array_merge( $saved_banner_locales, $saved_policy_locales ) );
+
+		foreach ( $all_saved as $code ) {
+			if ( ! isset( $locales[ $code ] ) ) {
+				$locales[ $code ] = strtoupper( $code );
+			}
+		}
+
+		// 5. Custom labels from settings
+		if ( isset( $settings['language_labels'] ) && is_array( $settings['language_labels'] ) ) {
+			foreach ( $settings['language_labels'] as $code => $label ) {
+				$locales[ $code ] = $label;
+			}
+		}
+
+		ksort( $locales );
+
+		/**
+		 * Filter the final list of locales.
+		 *
+		 * @param array<string, string> $locales Array of locale code => label.
+		 */
+		return (array) apply_filters( 'wpeu_cs_locales', $locales );
 	}
 
 	/**
