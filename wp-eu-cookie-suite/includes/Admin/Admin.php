@@ -176,7 +176,7 @@ final class Admin {
 						$this->render_placeholder_tab( 'CC-10' );
 						break;
 					case 'scanner':
-						$this->render_placeholder_tab( 'CC-09' );
+						$this->render_scanner_tab();
 						break;
 					case 'integrations':
 						$this->render_integrations_tab();
@@ -380,6 +380,80 @@ final class Admin {
 
 			<?php submit_button(); ?>
 		</form>
+		<?php
+	}
+
+	/**
+	 * Render scanner tab.
+	 */
+	private function render_scanner_tab(): void {
+		$results = get_option( 'wpeu_cs_scan_results', array() );
+		$categories = Categories::get_all();
+
+		?>
+		<div class="wpeu-cs-scanner-container">
+			<h2><?php esc_html_e( 'Cookie Scanner', 'wp-eu-cookie-suite' ); ?></h2>
+			<p><?php esc_html_e( 'Scan your website to detect cookies and third-party scripts.', 'wp-eu-cookie-suite' ); ?></p>
+
+			<div class="wpeu-cs-scanner-actions">
+				<button type="button" id="wpeu-cs-start-scan" class="button button-primary">
+					<?php esc_html_e( 'Start Scan', 'wp-eu-cookie-suite' ); ?>
+				</button>
+				<span class="spinner" style="float: none; margin-top: 0;"></span>
+			</div>
+
+			<div id="wpeu-cs-scan-progress" class="wpeu-cs-scan-progress" style="display: none;">
+				<div class="wpeu-cs-progress-bar">
+					<div class="wpeu-cs-progress-fill" style="width: 0%;"></div>
+				</div>
+				<p class="wpeu-cs-progress-status"></p>
+			</div>
+
+			<div id="wpeu-cs-scan-results-wrapper">
+				<?php $this->render_scan_results_table( $results, $categories ); ?>
+			</div>
+
+			<input type="hidden" id="wpeu_cs_scanner_nonce" value="<?php echo esc_attr( wp_create_nonce( 'wpeu-cs-scanner' ) ); ?>">
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render scan results table.
+	 *
+	 * @param array $results    Scan results.
+	 * @param array $categories All categories.
+	 */
+	public function render_scan_results_table( array $results, array $categories ): void {
+		if ( empty( $results['cookies'] ) && empty( $results['scripts'] ) ) {
+			echo '<p class="wpeu-cs-no-results">' . esc_html__( 'No scan results found. Start a scan to find cookies and scripts.', 'wp-eu-cookie-suite' ) . '</p>';
+			return;
+		}
+
+		?>
+		<h3><?php esc_html_e( 'Detected Items', 'wp-eu-cookie-suite' ); ?></h3>
+		<table class="wp-list-table widefat fixed striped">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Name / Domain', 'wp-eu-cookie-suite' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'wp-eu-cookie-suite' ); ?></th>
+					<th><?php esc_html_e( 'Detected Category', 'wp-eu-cookie-suite' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( array_merge( $results['cookies'] ?? array(), $results['scripts'] ?? array() ) as $item ) : ?>
+					<tr>
+						<td><strong><?php echo esc_html( $item['name'] ); ?></strong></td>
+						<td><?php echo esc_html( ucfirst( $item['type'] ) ); ?></td>
+						<td>
+							<span class="wpeu-cs-tag wpeu-cs-tag-<?php echo esc_attr( $item['category'] ); ?>">
+								<?php echo esc_html( $categories[ $item['category'] ]['label'] ?? $item['category'] ); ?>
+							</span>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
 		<?php
 	}
 
