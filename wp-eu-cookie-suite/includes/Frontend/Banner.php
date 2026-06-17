@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Frontend;
 
+use WPEU\CookieSuite\Consent\Categories;
+
 /**
  * Handles the cookie consent banner on the frontend.
  */
@@ -77,7 +79,7 @@ final class Banner {
 				cc.run(<?php echo wp_json_encode( $config ); ?>);
 
 				const syncWpeuCookies = function () {
-					const categories = ['necessary', 'preferences', 'statistics', 'marketing'];
+					const categories = Object.keys(cc.getConfig().categories);
 					const consentData = {};
 
 					categories.forEach(function (cat) {
@@ -103,7 +105,51 @@ final class Banner {
 	 * @return array<string, mixed>
 	 */
 	private function get_config(): array {
+		$settings           = get_option( 'wpeu_cs_settings', array() );
+		$all_categories     = Categories::get_all();
+		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
+		$show_reject_all    = $settings['show_reject_all'] ?? true;
+		$privacy_url        = $settings['privacy_policy_url'] ?? '';
+		$cookie_url         = $settings['cookie_policy_url'] ?? '';
+		$eu_mode            = $settings['eu_mode'] ?? true;
+
+		$categories_config = array();
+		$sections          = array(
+			array(
+				'title'       => __( 'Cookie usage', 'wp-eu-cookie-suite' ),
+				'description' => __( 'Choose which cookies you allow. You can change these settings at any time.', 'wp-eu-cookie-suite' ),
+			),
+		);
+
+		foreach ( $all_categories as $id => $category ) {
+			if ( 'necessary' !== $id && ! in_array( $id, $enabled_categories, true ) ) {
+				continue;
+			}
+
+			$categories_config[ $id ] = array(
+				'readOnly' => $category['read_only'] ?? false,
+				'enabled'  => $category['enabled'] ?? false,
+			);
+
+			$sections[] = array(
+				'title'          => $category['label'],
+				'description'    => $category['description'],
+				'linkedCategory' => $id,
+			);
+		}
+
+		$footer_links = array();
+		if ( ! empty( $privacy_url ) ) {
+			$footer_links[] = '<a href="' . esc_url( $privacy_url ) . '">' . __( 'Privacy Policy', 'wp-eu-cookie-suite' ) . '</a>';
+		}
+		if ( ! empty( $cookie_url ) ) {
+			$footer_links[] = '<a href="' . esc_url( $cookie_url ) . '">' . __( 'Cookie Policy', 'wp-eu-cookie-suite' ) . '</a>';
+		}
+
+		$footer_html = implode( ' | ', $footer_links );
+
 		return array(
+			'mode'       => $eu_mode ? 'opt-in' : 'opt-out',
 			'guiOptions' => array(
 				'consentModal' => array(
 					'layout'             => 'box',
@@ -118,15 +164,7 @@ final class Banner {
 					'equalWeightButtons' => true,
 				),
 			),
-			'categories' => array(
-				'necessary'   => array(
-					'readOnly' => true,
-					'enabled'  => true,
-				),
-				'preferences' => array(),
-				'statistics'  => array(),
-				'marketing'   => array(),
-			),
+			'categories' => $categories_config,
 			'language' => array(
 				'default'      => 'en',
 				'translations' => array(
@@ -135,42 +173,17 @@ final class Banner {
 							'title'              => __( 'We use cookies', 'wp-eu-cookie-suite' ),
 							'description'        => __( 'We use cookies to ensure you get the best experience on our website. You can accept all, reject non-essential cookies, or manage your preferences.', 'wp-eu-cookie-suite' ),
 							'acceptAllBtn'       => __( 'Accept all', 'wp-eu-cookie-suite' ),
-							'acceptNecessaryBtn' => __( 'Reject all', 'wp-eu-cookie-suite' ),
+							'acceptNecessaryBtn' => $show_reject_all ? __( 'Reject all', 'wp-eu-cookie-suite' ) : '',
 							'showPreferencesBtn' => __( 'Manage preferences', 'wp-eu-cookie-suite' ),
-							'footer'             => '',
+							'footer'             => $footer_html,
 						),
 						'preferencesModal' => array(
 							'title'              => __( 'Consent preferences', 'wp-eu-cookie-suite' ),
 							'acceptAllBtn'       => __( 'Accept all', 'wp-eu-cookie-suite' ),
-							'acceptNecessaryBtn' => __( 'Reject all', 'wp-eu-cookie-suite' ),
+							'acceptNecessaryBtn' => $show_reject_all ? __( 'Reject all', 'wp-eu-cookie-suite' ) : '',
 							'savePreferencesBtn' => __( 'Save preferences', 'wp-eu-cookie-suite' ),
 							'closeIconLabel'     => __( 'Close', 'wp-eu-cookie-suite' ),
-							'sections'           => array(
-								array(
-									'title'       => __( 'Cookie usage', 'wp-eu-cookie-suite' ),
-									'description' => __( 'Choose which cookies you allow. You can change these settings at any time.', 'wp-eu-cookie-suite' ),
-								),
-								array(
-									'title'          => __( 'Strictly necessary', 'wp-eu-cookie-suite' ),
-									'description'    => __( 'Required for the website to function. These cannot be disabled.', 'wp-eu-cookie-suite' ),
-									'linkedCategory' => 'necessary',
-								),
-								array(
-									'title'          => __( 'Preferences', 'wp-eu-cookie-suite' ),
-									'description'    => __( 'Remember your settings and choices.', 'wp-eu-cookie-suite' ),
-									'linkedCategory' => 'preferences',
-								),
-								array(
-									'title'          => __( 'Statistics', 'wp-eu-cookie-suite' ),
-									'description'    => __( 'Help us understand how visitors use our website.', 'wp-eu-cookie-suite' ),
-									'linkedCategory' => 'statistics',
-								),
-								array(
-									'title'          => __( 'Marketing', 'wp-eu-cookie-suite' ),
-									'description'    => __( 'Used to deliver relevant ads and measure campaign performance.', 'wp-eu-cookie-suite' ),
-									'linkedCategory' => 'marketing',
-								),
-							),
+							'sections'           => $sections,
 						),
 					),
 				),
