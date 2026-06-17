@@ -150,5 +150,7 @@ final class Plugin {
 			new Frontend\Banner();
 			new Frontend\ScriptBlocker();
 		}
+
+		new Frontend\Shortcodes();
 	}
 }

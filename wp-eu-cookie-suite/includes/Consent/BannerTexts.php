@@ -125,4 +125,17 @@ final class BannerTexts {
 			'de' => __( 'German', 'wp-eu-cookie-suite' ),
 		);
 	}
+
+	/**
+	 * Get default policy template.
+	 *
+	 * @param string $locale Locale.
+	 * @return string
+	 */
+	public static function get_default_policy_template( string $locale ): string {
+		if ( 'de' === $locale ) {
+			return "<h2>Cookie-Richtlinie</h2>\n{{intro}}\n<h3>Verwendete Cookies</h3>\n{{table}}\n{{content}}";
+		}
+		return "<h2>Cookie Policy</h2>\n{{intro}}\n<h3>Cookies used on our website</h3>\n{{table}}\n{{content}}";
+	}
 }
