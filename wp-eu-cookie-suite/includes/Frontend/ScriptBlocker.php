@@ -31,7 +31,10 @@ final class ScriptBlocker {
 		}
 
 		$settings = get_option( 'wpeu_cs_settings', array() );
-		if ( empty( $settings['blocker_enabled'] ) ) {
+		$blocker  = ! empty( $settings['blocker_enabled'] );
+		$iframes  = ! empty( $settings['enabled_integrations']['iframe_placeholder'] );
+
+		if ( ! $blocker && ! $iframes ) {
 			return;
 		}
 
@@ -45,15 +48,26 @@ final class ScriptBlocker {
 	 * @return string The processed HTML.
 	 */
 	public function process_output( string $output ): string {
-		if ( empty( $output ) || ! str_contains( $output, '<script' ) ) {
+		if ( empty( $output ) ) {
 			return $output;
 		}
 
-		return preg_replace_callback(
-			'/<script\b[^>]*>(.*?)<\/script>/is',
-			array( $this, 'process_script_tag' ),
-			$output
-		);
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		$blocker  = ! empty( $settings['blocker_enabled'] );
+
+		if ( $blocker && str_contains( $output, '<script' ) ) {
+			$output = preg_replace_callback(
+				'/<script\b[^>]*>(.*?)<\/script>/is',
+				array( $this, 'process_script_tag' ),
+				$output
+			);
+		}
+
+		if ( str_contains( $output, '<iframe' ) ) {
+			$output = IframeProcessor::process_iframes( $output );
+		}
+
+		return $output;
 	}
 
 	/**
@@ -167,7 +181,10 @@ final class ScriptBlocker {
 	 */
 	public function inject_bootstrap_js(): void {
 		$settings = get_option( 'wpeu_cs_settings', array() );
-		if ( empty( $settings['blocker_enabled'] ) ) {
+		$blocker  = ! empty( $settings['blocker_enabled'] );
+		$iframes  = ! empty( $settings['enabled_integrations']['iframe_placeholder'] );
+
+		if ( ! $blocker && ! $iframes ) {
 			return;
 		}
 		?>
