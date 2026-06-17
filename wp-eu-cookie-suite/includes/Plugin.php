@@ -98,6 +98,7 @@ final class Plugin {
 		load_plugin_textdomain( 'wp-eu-cookie-suite', false, dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages' );
 
 		if ( is_admin() ) {
+			new Admin\Admin();
 			add_action( 'admin_notices', array( $this, 'render_coming_soon_notice' ) );
 		}
 	}
