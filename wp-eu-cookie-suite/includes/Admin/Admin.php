@@ -73,6 +73,7 @@ final class Admin {
 		$sanitized['eu_mode']                = isset( $input['eu_mode'] );
 		$sanitized['keep_data_on_uninstall'] = isset( $input['keep_data_on_uninstall'] );
 		$sanitized['show_reject_all']        = isset( $input['show_reject_all'] );
+		$sanitized['google_consent_mode']    = isset( $input['google_consent_mode'] );
 
 		if ( isset( $input['enabled_categories'] ) && is_array( $input['enabled_categories'] ) ) {
 			$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $input['enabled_categories'] );
@@ -328,12 +329,26 @@ final class Admin {
 		$services         = ScriptRegistry::get_services();
 		$enabled_services = $settings['enabled_services'] ?? array();
 		$custom_rules     = $settings['custom_block_rules'] ?? '';
+		$google_gcm       = $settings['google_consent_mode'] ?? true;
 
 		?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
+
+			<h2><?php esc_html_e( 'Google', 'wp-eu-cookie-suite' ); ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Google Consent Mode v2', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="wpeu_cs_settings[google_consent_mode]" value="1" <?php checked( $google_gcm ); ?>>
+							<?php esc_html_e( 'Send default denied consent to gtag before analytics/marketing tags load.', 'wp-eu-cookie-suite' ); ?>
+						</label>
+					</td>
+				</tr>
+			</table>
 
 			<h2><?php esc_html_e( 'Service Integrations', 'wp-eu-cookie-suite' ); ?></h2>
 			<p><?php esc_html_e( 'Enable automatic script blocking for these popular services.', 'wp-eu-cookie-suite' ); ?></p>

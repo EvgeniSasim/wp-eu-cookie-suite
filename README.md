@@ -41,6 +41,10 @@ npm run build
 
 Built assets (`cookieconsent.bundle.js`, `cookieconsent.bundle.css`) are committed for WordPress installs without Node.js.
 
+### Google Consent Mode
+
+When enabled under **Integrations**, the plugin injects default `denied` consent for Google tags and updates after banner choices. Compatible with Google Site Kit via `googlesitekit_analytics-4_tag_block_on_consent`.
+
 ## Лицензия
 
 GPL-2.0-or-later

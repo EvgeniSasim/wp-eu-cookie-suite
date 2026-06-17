@@ -86,8 +86,9 @@ final class Plugin {
 					'eu_mode'            => true,
 					'enabled_services'   => $enabled,
 					'enabled_categories' => array( 'preferences', 'statistics', 'marketing' ),
-					'show_reject_all'    => true,
-					'version'            => WPEU_CS_VERSION,
+					'show_reject_all'      => true,
+					'google_consent_mode'  => true,
+					'version'              => WPEU_CS_VERSION,
 				)
 			);
 		}
@@ -107,6 +108,8 @@ final class Plugin {
 		load_plugin_textdomain( 'wp-eu-cookie-suite', false, dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages' );
 
 		new Consent\WpConsentBridge();
+		new Consent\GoogleConsentMode();
+		new Integrations\GoogleSiteKit();
 
 		if ( is_admin() ) {
 			new Admin\Admin();
