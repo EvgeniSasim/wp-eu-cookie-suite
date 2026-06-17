@@ -19,7 +19,7 @@ Branch: `main`
 | 10 | jules-task-cc-10-cookie-inventory.md | [16281992910030111432](https://jules.google.com/session/16281992910030111432) | [#9](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/9) | merged |
 | 11 | jules-task-cc-11-multilingual.md | [15758632919316872286](https://jules.google.com/session/15758632919316872286) | [#10](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/10) | merged |
 | 12 | jules-task-cc-12-banner-customizer.md | [9423596550467606091](https://jules.google.com/session/9423596550467606091) | [#11](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/11) | merged |
-| 13 | jules-task-cc-13-legal-shortcodes.md | | | in progress |
+| 13 | jules-task-cc-13-legal-shortcodes.md | [10804725820254881360](https://jules.google.com/session/10804725820254881360) | | in progress |
 | 14 | jules-task-cc-14-integrations.md | | | pending |
 | 15 | jules-task-cc-15-tests.md | | | pending |
 
