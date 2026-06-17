@@ -45,15 +45,23 @@ final class ScriptBlocker {
 	 * @return string The processed HTML.
 	 */
 	public function process_output( string $output ): string {
-		if ( empty( $output ) || ! str_contains( $output, '<script' ) ) {
+		if ( empty( $output ) ) {
 			return $output;
 		}
 
-		return preg_replace_callback(
-			'/<script\b[^>]*>(.*?)<\/script>/is',
-			array( $this, 'process_script_tag' ),
-			$output
-		);
+		if ( str_contains( $output, '<script' ) ) {
+			$output = preg_replace_callback(
+				'/<script\b[^>]*>(.*?)<\/script>/is',
+				array( $this, 'process_script_tag' ),
+				$output
+			);
+		}
+
+		if ( str_contains( $output, '<iframe' ) ) {
+			$output = IframeProcessor::process_iframes( $output );
+		}
+
+		return $output;
 	}
 
 	/**
