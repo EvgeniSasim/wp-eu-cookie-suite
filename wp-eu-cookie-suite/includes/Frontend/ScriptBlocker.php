@@ -114,12 +114,14 @@ final class ScriptBlocker {
 			}
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
-		$services = ScriptRegistry::get_services();
+		$settings         = get_option( 'wpeu_cs_settings', array() );
+		$services         = ScriptRegistry::get_services();
+		$enabled_services = $settings['enabled_services'] ?? null;
 
 		foreach ( $services as $id => $service ) {
-			// Check if service is enabled.
-			if ( ! empty( $settings['enabled_services'][ $id ] ) ) {
+			if ( null !== $enabled_services && empty( $enabled_services[ $id ] ) ) {
+				continue;
+			}
 				foreach ( $service['patterns'] as $pattern ) {
 					if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
 						return $service['category'];

@@ -73,12 +73,21 @@ final class Plugin {
 	 */
 	public function activate(): void {
 		if ( false === get_option( 'wpeu_cs_settings' ) ) {
+			$services = Frontend\ScriptRegistry::get_services();
+			$enabled  = array();
+			foreach ( array_keys( $services ) as $service_id ) {
+				$enabled[ $service_id ] = true;
+			}
+
 			update_option(
 				'wpeu_cs_settings',
 				array(
-					'blocker_enabled' => true,
-					'eu_mode'         => true,
-					'version'         => WPEU_CS_VERSION,
+					'blocker_enabled'    => true,
+					'eu_mode'            => true,
+					'enabled_services'   => $enabled,
+					'enabled_categories' => array( 'preferences', 'statistics', 'marketing' ),
+					'show_reject_all'    => true,
+					'version'            => WPEU_CS_VERSION,
 				)
 			);
 		}
