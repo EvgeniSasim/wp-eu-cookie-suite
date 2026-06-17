@@ -27,7 +27,7 @@ Branch: `main`
 
 | # | Task file | Session ID | PR | Status |
 |---|-----------|------------|-----|--------|
-| 16 | jules-task-cc-16-dynamic-languages.md | | | pending |
+| 16 | jules-task-cc-16-dynamic-languages.md | [7316212288513132930](https://jules.google.com/session/7316212288513132930) | | in progress |
 | 17 | jules-task-cc-17-iframe-buffer.md | | | pending |
 | 18 | jules-task-cc-18-ga-guard.md | | | pending |
 | 19 | jules-task-cc-19-consent-ux.md | | | pending |
