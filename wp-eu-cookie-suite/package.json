@@ -2,7 +2,7 @@
   "name": "wp-eu-cookie-suite",
   "private": true,
   "scripts": {
-    "build": "esbuild assets/js/src/cookieconsent.js --bundle --minify --outfile=assets/js/cookieconsent.bundle.js --loader:.css=css && cp assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css 2>/dev/null || mv assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css",
+    "build": "esbuild assets/js/src/cookieconsent.js --bundle --minify --outfile=assets/js/cookieconsent.bundle.js --loader:.css=css --outdir=assets/js && mv assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css",
     "dev": "esbuild assets/js/src/cookieconsent.js --bundle --outfile=assets/js/cookieconsent.bundle.js --watch"
   },
   "devDependencies": {
