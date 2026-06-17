@@ -75,12 +75,13 @@ final class Banner {
 			return;
 		}
 
-		$config    = $this->get_config();
-		$settings  = get_option( 'wpeu_cs_settings', array() );
-		$banner_ui = $settings['banner_ui'] ?? array();
-		$theme     = $banner_ui['theme'] ?? 'light';
-		$primary   = $banner_ui['primary_color'] ?? '#30363c';
-		$custom_css = $banner_ui['custom_css'] ?? '';
+		$config       = $this->get_config();
+		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$banner_ui    = $settings['banner_ui'] ?? array();
+		$theme        = $banner_ui['theme'] ?? 'light';
+		$primary      = sanitize_hex_color( $banner_ui['primary_color'] ?? '' ) ?: '#30363c';
+		$custom_css   = $banner_ui['custom_css'] ?? '';
+		$is_preview   = defined( 'WPEU_CS_PREVIEW' );
 
 		if ( 'dark' === $theme ) {
 			?>
@@ -106,10 +107,10 @@ final class Banner {
 					return;
 				}
 
-				// WP Consent API Polyfill
-				if (typeof window.wp_set_consent !== 'function') {
+				const isPreview = <?php echo $is_preview ? 'true' : 'false'; ?>;
+
+				if (!isPreview && typeof window.wp_set_consent !== 'function') {
 					window.wp_set_consent = function (category, status) {
-						// Polyfill for wp_set_consent if not provided by wp-consent-api
 						console.debug('WP Consent API (polyfill):', category, status);
 						document.dispatchEvent(new CustomEvent('wp_api_set_consent', {
 							detail: {
@@ -120,7 +121,16 @@ final class Banner {
 					};
 				}
 
+				if (isPreview && typeof cc.reset === 'function') {
+					cc.reset(true);
+				}
+
 				cc.run(<?php echo wp_json_encode( $config ); ?>);
+
+				if (isPreview && typeof cc.show === 'function') {
+					cc.show(true);
+					return;
+				}
 
 				const syncWpeuCookies = function () {
 					const categories = Object.keys(cc.getConfig().categories);
@@ -169,8 +179,8 @@ final class Banner {
 		$eu_mode            = $settings['eu_mode'] ?? true;
 
 		$banner_ui = $settings['banner_ui'] ?? array();
-		$layout    = $banner_ui['layout'] ?? 'box';
-		$position  = str_replace( '-', ' ', $banner_ui['position'] ?? 'bottom-right' );
+		$layout    = in_array( $banner_ui['layout'] ?? 'box', array( 'box', 'bar' ), true ) ? $banner_ui['layout'] : 'box';
+		$position  = self::map_consent_modal_position( (string) ( $banner_ui['position'] ?? 'bottom-right' ) );
 
 		$locale = BannerTexts::get_active_locale();
 		$texts  = BannerTexts::get_strings( $locale );
@@ -210,7 +220,7 @@ final class Banner {
 
 		$footer_html = implode( ' | ', $footer_links );
 
-		return array(
+		$config = array(
 			'mode'       => $eu_mode ? 'opt-in' : 'opt-out',
 			'guiOptions' => array(
 				'consentModal' => array(
@@ -251,5 +261,62 @@ final class Banner {
 				),
 			),
 		);
+
+		if ( defined( 'WPEU_CS_PREVIEW' ) ) {
+			$config['autoShow'] = false;
+			$config['cookie']   = array(
+				'name'             => 'wpeu_cs_preview_cc',
+				'expiresAfterDays' => 1,
+			);
+		}
+
+		return $config;
+	}
+
+	/**
+	 * Map admin position slug to CookieConsent modal position.
+	 *
+	 * @param string $position Admin position value.
+	 * @return string
+	 */
+	private static function map_consent_modal_position( string $position ): string {
+		$normalized = strtolower( str_replace( ' ', '-', trim( $position ) ) );
+
+		$map = array(
+			'bottom-left'   => 'bottom left',
+			'bottom-center' => 'bottom center',
+			'bottom-right'  => 'bottom right',
+			'center'        => 'middle center',
+			'middle-center' => 'middle center',
+			'top-left'      => 'top left',
+			'top-center'    => 'top center',
+			'top-right'     => 'top right',
+		);
+
+		if ( isset( $map[ $normalized ] ) ) {
+			return $map[ $normalized ];
+		}
+
+		$spaced = str_replace( '-', ' ', $normalized );
+		$valid  = array(
+			'top',
+			'bottom',
+			'middle',
+			'top left',
+			'top center',
+			'top right',
+			'middle left',
+			'middle center',
+			'middle right',
+			'bottom left',
+			'bottom center',
+			'bottom right',
+		);
+
+		if ( in_array( $spaced, $valid, true ) ) {
+			return $spaced;
+		}
+
+		return 'bottom right';
 	}
 }

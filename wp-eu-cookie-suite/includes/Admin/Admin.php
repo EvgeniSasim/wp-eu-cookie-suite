@@ -574,7 +574,7 @@ final class Admin {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Primary Color', 'wp-eu-cookie-suite' ); ?></th>
 					<td>
-						<input type="text" name="wpeu_cs_settings[banner_ui][primary_color]" value="<?php echo esc_attr( $primary_color ); ?>" class="wpeu-cs-color-picker">
+						<input type="text" id="wpeu-cs-banner-primary-color" name="wpeu_cs_settings[banner_ui][primary_color]" value="<?php echo esc_attr( $primary_color ); ?>" class="wpeu-cs-color-picker">
 					</td>
 				</tr>
 				<tr>
@@ -1087,12 +1087,19 @@ final class Admin {
 				$post = wp_unslash( $_POST['settings'] );
 
 				if ( isset( $post['banner_ui'] ) && is_array( $post['banner_ui'] ) ) {
-					$settings['banner_ui'] = $post['banner_ui'];
+					$ui                      = $post['banner_ui'];
+					$settings['banner_ui'] = array(
+						'layout'        => in_array( $ui['layout'] ?? 'box', array( 'box', 'bar' ), true ) ? $ui['layout'] : 'box',
+						'position'      => sanitize_text_field( $ui['position'] ?? 'bottom-right' ),
+						'theme'         => in_array( $ui['theme'] ?? 'light', array( 'light', 'dark' ), true ) ? $ui['theme'] : 'light',
+						'primary_color' => sanitize_hex_color( $ui['primary_color'] ?? '' ) ?: '#30363c',
+						'custom_css'    => wp_strip_all_tags( $ui['custom_css'] ?? '' ),
+					);
 				}
 				if ( isset( $post['banner_texts'] ) && is_array( $post['banner_texts'] ) ) {
 					$settings['banner_texts'] = $post['banner_texts'];
 				}
-				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
+				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) && ! empty( $post['enabled_categories'] ) ) {
 					$settings['enabled_categories'] = array_map( 'sanitize_text_field', $post['enabled_categories'] );
 				}
 				if ( array_key_exists( 'show_reject_all', $post ) ) {
@@ -1117,8 +1124,9 @@ final class Admin {
 			wp_head();
 			?>
 			<style>
-				body { background: #f0f0f1 !important; margin: 0; padding: 0; min-height: 400px; }
+				body { background: #f0f0f1 !important; margin: 0; padding: 0; min-height: 400px; overflow: visible; }
 				#cc-main { position: relative !important; z-index: 1 !important; }
+				#cc-main .cm { position: relative !important; }
 				.cc--resizer { display: none !important; }
 			</style>
 		</head>
@@ -1129,13 +1137,6 @@ final class Admin {
 				?>
 			</div>
 			<?php wp_footer(); ?>
-			<script>
-				window.addEventListener('load', function() {
-					if (window.CookieConsent) {
-						window.CookieConsent.show(true);
-					}
-				});
-			</script>
 		</body>
 		</html>
 		<?php

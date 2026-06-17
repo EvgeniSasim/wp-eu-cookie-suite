@@ -90,13 +90,20 @@
 			}
 		}
 
-		// Color Picker
-		$('.wpeu-cs-color-picker').wpColorPicker();
-
-		// Banner Preview
+		// Color Picker + Banner Preview
 		const $previewFrame = $('#wpeu-cs-banner-preview');
 		const $refreshBtn = $('#wpeu-cs-refresh-preview');
 		const previewNonce = $('#wpeu_cs_preview_nonce').val();
+		let previewTimer = null;
+
+		function getPrimaryColor() {
+			const $input = $('#wpeu-cs-banner-primary-color, .wpeu-cs-color-picker').first();
+			if (!$input.length) {
+				return '#30363c';
+			}
+			const value = $input.val();
+			return value && /^#([A-Fa-f0-9]{3}){1,2}$/.test(value) ? value : '#30363c';
+		}
 
 		function updatePreview() {
 			const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
@@ -105,7 +112,7 @@
 					layout: $('#wpeu-cs-banner-layout').val(),
 					position: $('#wpeu-cs-banner-position').val(),
 					theme: $('#wpeu-cs-banner-theme').val(),
-					primary_color: $('.wpeu-cs-color-picker').val(),
+					primary_color: getPrimaryColor(),
 					custom_css: $('textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').val()
 				},
 				banner_texts: {},
@@ -131,7 +138,9 @@
 				return;
 			}
 
-			$refreshBtn.prop('disabled', true).text('Updating...');
+			if ($refreshBtn.length) {
+				$refreshBtn.prop('disabled', true).text('Updating...');
+			}
 
 			$.ajax({
 				url: ajaxurl,
@@ -143,26 +152,46 @@
 					settings: settings
 				},
 				success: function(response) {
-					const doc = $previewFrame[0].contentWindow.document;
+					const iframe = $previewFrame[0];
+					const doc = iframe.contentWindow.document;
 					doc.open();
 					doc.write(response);
 					doc.close();
 				},
+				error: function() {
+					const doc = $previewFrame[0].contentWindow.document;
+					doc.open();
+					doc.write('<p style="padding:1em;color:#b32d2e;">Preview failed to load.</p>');
+					doc.close();
+				},
 				complete: function() {
-					$refreshBtn.prop('disabled', false).text('Refresh Preview');
+					if ($refreshBtn.length) {
+						$refreshBtn.prop('disabled', false).text('Refresh Preview');
+					}
 				}
 			});
 		}
+
+		function schedulePreviewUpdate() {
+			clearTimeout(previewTimer);
+			previewTimer = setTimeout(updatePreview, 250);
+		}
+
+		$('.wpeu-cs-color-picker').wpColorPicker({
+			change: schedulePreviewUpdate,
+			clear: schedulePreviewUpdate
+		});
 
 		if ($previewFrame.length && previewNonce) {
 			updatePreview();
 			if ($refreshBtn.length) {
 				$refreshBtn.on('click', updatePreview);
 			}
-			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', updatePreview);
+			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', schedulePreviewUpdate);
+			$('textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').on('input', schedulePreviewUpdate);
 		}
 
-		// Import scan results to inventory
+		// Scanner-only: import scan results
 		$(document).on('click', '#wpeu-cs-import-scan', function() {
 			const $btn = $(this);
 			$btn.prop('disabled', true);
