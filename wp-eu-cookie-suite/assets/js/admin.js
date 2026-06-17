@@ -89,5 +89,36 @@
 				}, 1000);
 			}
 		}
+
+		// Import scan results to inventory
+		$(document).on('click', '#wpeu-cs-import-scan', function() {
+			const $btn = $(this);
+			$btn.prop('disabled', true);
+			$btn.siblings('.spinner').addClass('is-active');
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'wpeu_cs_import_scan',
+					nonce: nonce
+				},
+				success: function(response) {
+					if (response.success) {
+						alert(response.data.message);
+						window.location.href = window.location.href.replace('tab=scanner', 'tab=cookies');
+					} else {
+						alert(response.data.message || 'Error importing items.');
+						$btn.prop('disabled', false);
+						$btn.siblings('.spinner').removeClass('is-active');
+					}
+				},
+				error: function() {
+					alert('Network error while importing items.');
+					$btn.prop('disabled', false);
+					$btn.siblings('.spinner').removeClass('is-active');
+				}
+			});
+		});
 	});
 })(jQuery);

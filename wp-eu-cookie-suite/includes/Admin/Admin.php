@@ -28,7 +28,84 @@ final class Admin {
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_init', array( $this, 'handle_actions' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+	}
+
+	/**
+	 * Handle admin actions (CRUD, export, etc).
+	 */
+	public function handle_actions(): void {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$page = $_GET['page'] ?? '';
+		if ( self::PAGE_SLUG !== $page ) {
+			return;
+		}
+
+		$action = $_REQUEST['action'] ?? '';
+		if ( ! $action ) {
+			return;
+		}
+
+		$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+
+		switch ( $action ) {
+			case 'wpeu_cs_save_cookie':
+				check_admin_referer( 'wpeu_cs_save_cookie', 'wpeu_cs_cookie_nonce' );
+				$cookie_data = $_POST['cookie'] ?? array();
+				if ( ! empty( $cookie_data['name'] ) ) {
+					$repository->upsert( array_map( 'sanitize_text_field', $cookie_data ) );
+					wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies&message=saved' ) );
+					exit;
+				}
+				break;
+
+			case 'delete':
+				$id = isset( $_GET['id'] ) ? (int) $_GET['id'] : 0;
+				check_admin_referer( 'wpeu_cs_delete_cookie_' . $id );
+				$repository->delete( $id );
+				wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies&message=deleted' ) );
+				exit;
+
+			case 'wpeu_cs_export_csv':
+				check_admin_referer( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' );
+				$this->handle_csv_export();
+				break;
+		}
+	}
+
+	/**
+	 * Handle CSV export.
+	 */
+	private function handle_csv_export(): void {
+		$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+		$cookies    = $repository->all();
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=wpeu-cookies-' . date( 'Y-m-d' ) . '.csv' );
+
+		$output = fopen( 'php://output', 'w' );
+		fputcsv( $output, array( 'Name', 'Domain', 'Category', 'Service', 'Duration', 'Description' ) );
+
+		foreach ( $cookies as $cookie ) {
+			fputcsv(
+				$output,
+				array(
+					$cookie['name'],
+					$cookie['domain'],
+					$cookie['category'],
+					$cookie['service'],
+					$cookie['duration'],
+					$cookie['description'],
+				)
+			);
+		}
+
+		fclose( $output );
+		exit;
 	}
 
 	/**
@@ -173,7 +250,7 @@ final class Admin {
 						$this->render_banner_tab();
 						break;
 					case 'cookies':
-						$this->render_placeholder_tab( 'CC-10' );
+						$this->render_cookies_tab();
 						break;
 					case 'scanner':
 						$this->render_scanner_tab();
@@ -182,7 +259,7 @@ final class Admin {
 						$this->render_integrations_tab();
 						break;
 					case 'tools':
-						$this->render_placeholder_tab( 'CC-15' );
+						$this->render_tools_tab();
 						break;
 				}
 				?>
@@ -410,6 +487,14 @@ final class Admin {
 			</div>
 
 			<div id="wpeu-cs-scan-results-wrapper">
+				<?php if ( ! empty( $results['cookies'] ) || ! empty( $results['scripts'] ) ) : ?>
+					<div class="wpeu-cs-scan-actions-secondary">
+						<button type="button" id="wpeu-cs-import-scan" class="button button-secondary">
+							<?php esc_html_e( 'Import to Inventory', 'wp-eu-cookie-suite' ); ?>
+						</button>
+						<span class="spinner" style="float: none; margin-top: 0;"></span>
+					</div>
+				<?php endif; ?>
 				<?php $this->render_scan_results_table( $results, $categories ); ?>
 			</div>
 
@@ -454,6 +539,120 @@ final class Admin {
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		<?php
+	}
+
+	/**
+	 * Render cookies tab.
+	 */
+	private function render_cookies_tab(): void {
+		$action = $_GET['action'] ?? '';
+		$id     = isset( $_GET['id'] ) ? (int) $_GET['id'] : 0;
+
+		if ( 'edit' === $action || 'add' === $action ) {
+			$this->render_cookie_form( $id );
+			return;
+		}
+
+		$table = new CookieListTable();
+		$table->prepare_items();
+
+		?>
+		<div class="wpeu-cs-cookies-header">
+			<h2><?php esc_html_e( 'Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h2>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies&action=add' ) ); ?>" class="page-title-action">
+				<?php esc_html_e( 'Add New', 'wp-eu-cookie-suite' ); ?>
+			</a>
+		</div>
+
+		<form method="get">
+			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+			<input type="hidden" name="tab" value="cookies">
+			<?php $table->search_box( __( 'Search Cookies', 'wp-eu-cookie-suite' ), 'search-id' ); ?>
+			<?php $table->display(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Render cookie form.
+	 *
+	 * @param int $id Cookie ID for editing.
+	 */
+	private function render_cookie_form( int $id = 0 ): void {
+		$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+		$cookie     = $id ? $repository->get( $id ) : null;
+		$categories = Categories::get_all();
+
+		$title = $id ? __( 'Edit Cookie', 'wp-eu-cookie-suite' ) : __( 'Add New Cookie', 'wp-eu-cookie-suite' );
+		?>
+		<h2><?php echo esc_html( $title ); ?></h2>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies' ) ); ?>">
+			<?php wp_nonce_field( 'wpeu_cs_save_cookie', 'wpeu_cs_cookie_nonce' ); ?>
+			<input type="hidden" name="action" value="wpeu_cs_save_cookie">
+			<input type="hidden" name="cookie[id]" value="<?php echo (int) $id; ?>">
+
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="cookie_name"><?php esc_html_e( 'Name', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td><input type="text" name="cookie[name]" id="cookie_name" value="<?php echo esc_attr( $cookie['name'] ?? '' ); ?>" class="regular-text" required></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="cookie_domain"><?php esc_html_e( 'Domain', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td><input type="text" name="cookie[domain]" id="cookie_domain" value="<?php echo esc_attr( $cookie['domain'] ?? '' ); ?>" class="regular-text"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="cookie_category"><?php esc_html_e( 'Category', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td>
+						<select name="cookie[category]" id="cookie_category">
+							<?php foreach ( $categories as $cat_id => $category ) : ?>
+								<option value="<?php echo esc_attr( $cat_id ); ?>" <?php selected( $cookie['category'] ?? 'necessary', $cat_id ); ?>>
+									<?php echo esc_html( $category['label'] ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="cookie_service"><?php esc_html_e( 'Service', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td><input type="text" name="cookie[service]" id="cookie_service" value="<?php echo esc_attr( $cookie['service'] ?? '' ); ?>" class="regular-text"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="cookie_duration"><?php esc_html_e( 'Duration', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td><input type="text" name="cookie[duration]" id="cookie_duration" value="<?php echo esc_attr( $cookie['duration'] ?? '' ); ?>" class="regular-text"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="cookie_description"><?php esc_html_e( 'Description', 'wp-eu-cookie-suite' ); ?></label></th>
+					<td><textarea name="cookie[description]" id="cookie_description" rows="5" cols="50" class="large-text"><?php echo esc_textarea( $cookie['description'] ?? '' ); ?></textarea></td>
+				</tr>
+			</table>
+
+			<?php submit_button(); ?>
+		</form>
+		<p>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies' ) ); ?>">
+				&larr; <?php esc_html_e( 'Back to Inventory', 'wp-eu-cookie-suite' ); ?>
+			</a>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render tools tab.
+	 */
+	private function render_tools_tab(): void {
+		?>
+		<h2><?php esc_html_e( 'Tools', 'wp-eu-cookie-suite' ); ?></h2>
+		<div class="card">
+			<h3><?php esc_html_e( 'Export Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h3>
+			<p><?php esc_html_e( 'Download your cookie inventory as a CSV file.', 'wp-eu-cookie-suite' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+				<?php wp_nonce_field( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_export_csv">
+				<?php submit_button( __( 'Download CSV', 'wp-eu-cookie-suite' ), 'primary', 'submit', false ); ?>
+			</form>
+		</div>
 		<?php
 	}
 

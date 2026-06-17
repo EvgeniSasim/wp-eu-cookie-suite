@@ -159,3 +159,31 @@ input:checked + .slider:before {
     color: #646970;
     padding: 20px 0;
 }
+
+/* Cookies Inventory */
+.wpeu-cs-cookies-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.wpeu-cs-cookies-header h2 {
+    margin: 0;
+}
+
+.wpeu-cs-scan-actions-secondary {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Table fixes */
+.column-category {
+    width: 150px;
+}
+
+.column-detected_at {
+    width: 120px;
+}

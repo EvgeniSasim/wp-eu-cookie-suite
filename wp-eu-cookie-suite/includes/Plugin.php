@@ -72,6 +72,8 @@ final class Plugin {
 	 * Activation hook.
 	 */
 	public function activate(): void {
+		$this->create_tables();
+
 		if ( false === get_option( 'wpeu_cs_settings' ) ) {
 			$services = Frontend\ScriptRegistry::get_services();
 			$enabled  = array();
@@ -92,6 +94,34 @@ final class Plugin {
 				)
 			);
 		}
+	}
+
+	/**
+	 * Create database tables.
+	 */
+	private function create_tables(): void {
+		global $wpdb;
+
+		$table_name      = $wpdb->prefix . 'wpeu_cookies';
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE $table_name (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			name varchar(255) NOT NULL,
+			domain varchar(255) NOT NULL,
+			category varchar(50) NOT NULL,
+			description text DEFAULT '',
+			duration varchar(100) DEFAULT '',
+			service varchar(100) DEFAULT '',
+			detected_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			source varchar(255) DEFAULT '',
+			PRIMARY KEY  (id),
+			KEY name (name),
+			KEY category (category)
+		) $charset_collate;";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
 	}
 
 	/**
