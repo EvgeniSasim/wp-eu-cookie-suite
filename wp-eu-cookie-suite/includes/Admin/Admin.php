@@ -87,7 +87,75 @@ final class Admin {
 				check_admin_referer( 'wpeu_cs_import_json', 'wpeu_cs_import_json_nonce' );
 				$this->handle_json_import();
 				break;
+
+			case 'wpeu_cs_add_language':
+				check_admin_referer( 'wpeu_cs_add_language', 'wpeu_cs_add_lang_nonce' );
+				$this->handle_add_language();
+				break;
+
+			case 'wpeu_cs_remove_language':
+				$code = sanitize_key( $_GET['lang'] ?? '' );
+				check_admin_referer( 'wpeu_cs_remove_language_' . $code );
+				$this->handle_remove_language( $code );
+				break;
 		}
+	}
+
+	/**
+	 * Handle adding a new language.
+	 */
+	private function handle_add_language(): void {
+		$code  = sanitize_key( $_POST['wpeu_cs_new_lang_code'] ?? '' );
+		$label = sanitize_text_field( $_POST['wpeu_cs_new_lang_label'] ?? '' );
+
+		if ( strlen( $code ) < 2 || strlen( $code ) > 5 ) {
+			$tab = sanitize_key( $_POST['active_tab'] ?? 'banner' );
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&message=invalid_code' ) );
+			exit;
+		}
+
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		if ( ! isset( $settings['language_labels'] ) ) {
+			$settings['language_labels'] = array();
+		}
+
+		$settings['language_labels'][ $code ] = $label ?: strtoupper( $code );
+
+		// Prefill banner texts and policy texts from English defaults if not exists
+		if ( ! isset( $settings['banner_texts'][ $code ] ) ) {
+			$settings['banner_texts'][ $code ] = BannerTexts::get_defaults( 'en' );
+		}
+		if ( ! isset( $settings['policy_texts'][ $code ] ) ) {
+			$settings['policy_texts'][ $code ] = array(
+				'intro'    => '',
+				'template' => BannerTexts::get_default_policy_template( 'en' ),
+			);
+		}
+
+		update_option( 'wpeu_cs_settings', $settings );
+
+		$tab = sanitize_key( $_POST['active_tab'] ?? 'banner' );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&lang=' . $code . '&message=lang_added' ) );
+		exit;
+	}
+
+	/**
+	 * Handle removing a language.
+	 *
+	 * @param string $code Language code.
+	 */
+	private function handle_remove_language( string $code ): void {
+		$settings = get_option( 'wpeu_cs_settings', array() );
+
+		unset( $settings['language_labels'][ $code ] );
+		unset( $settings['banner_texts'][ $code ] );
+		unset( $settings['policy_texts'][ $code ] );
+
+		update_option( 'wpeu_cs_settings', $settings );
+
+		$tab = sanitize_key( $_GET['tab'] ?? 'banner' );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&message=lang_removed' ) );
+		exit;
 	}
 
 	/**
@@ -229,7 +297,7 @@ final class Admin {
 					if ( ! is_array( $texts ) ) {
 						continue;
 					}
-					$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+					$sanitized['banner_texts'][ sanitize_key( $locale ) ] = array_map( 'sanitize_text_field', $texts );
 				}
 			}
 
@@ -277,7 +345,7 @@ final class Admin {
 					if ( ! is_array( $texts ) ) {
 						continue;
 					}
-					$sanitized['policy_texts'][ $locale ] = array(
+					$sanitized['policy_texts'][ sanitize_key( $locale ) ] = array(
 						'intro'    => sanitize_textarea_field( $texts['intro'] ?? '' ),
 						'template' => wp_kses_post( $texts['template'] ?? '' ),
 					);
@@ -376,6 +444,65 @@ final class Admin {
 	}
 
 	/**
+	 * Render language selector.
+	 *
+	 * @param string $active_tab   Active tab.
+	 * @param array  $locales      All locales.
+	 * @param string $current_lang Current language.
+	 */
+	private function render_language_selector( string $active_tab, array $locales, string $current_lang ): void {
+		?>
+		<div class="wpeu-cs-lang-selector">
+			<ul class="subsubsub">
+				<?php
+				$i = 0;
+				foreach ( $locales as $code => $label ) :
+					$url     = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $active_tab . '&lang=' . $code );
+					$current = $current_lang === $code ? 'current' : '';
+					$remove_url = wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $active_tab . '&action=wpeu_cs_remove_language&lang=' . $code ), 'wpeu_cs_remove_language_' . $code );
+
+					echo '<li>';
+					echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>';
+
+					// Allow removal if not a core language and not currently detected site locale
+					$is_core = in_array( $code, array( 'en', 'de' ), true );
+					if ( ! $is_core ) {
+						echo ' <a href="' . esc_url( $remove_url ) . '" class="wpeu-cs-remove-lang" onclick="return confirm(\'' . esc_js( __( 'Are you sure you want to remove this language? Settings for this language will be deleted.', 'wp-eu-cookie-suite' ) ) . '\');" title="' . esc_attr__( 'Remove language', 'wp-eu-cookie-suite' ) . '"><span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span></a>';
+					}
+
+					echo ( $i < count( $locales ) - 1 ? ' | ' : '' );
+					echo '</li>';
+					$i++;
+				endforeach;
+				?>
+			</ul>
+			<br class="clear">
+		</div>
+
+		<div class="wpeu-cs-add-lang-form card" style="margin-top: 10px; max-width: 500px;">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
+				<?php wp_nonce_field( 'wpeu_cs_add_language', 'wpeu_cs_add_lang_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_add_language">
+				<input type="hidden" name="active_tab" value="<?php echo esc_attr( $active_tab ); ?>">
+
+				<h4 style="margin-top: 0;"><?php esc_html_e( 'Add Language', 'wp-eu-cookie-suite' ); ?></h4>
+				<div style="display: flex; gap: 10px; align-items: flex-end;">
+					<div>
+						<label for="new_lang_code" style="display: block; font-size: 11px;"><?php esc_html_e( 'Code (e.g. fr)', 'wp-eu-cookie-suite' ); ?></label>
+						<input type="text" name="wpeu_cs_new_lang_code" id="new_lang_code" value="" class="small-text" required maxlength="5">
+					</div>
+					<div>
+						<label for="new_lang_label" style="display: block; font-size: 11px;"><?php esc_html_e( 'Display Name', 'wp-eu-cookie-suite' ); ?></label>
+						<input type="text" name="wpeu_cs_new_lang_label" id="new_lang_label" value="" class="regular-text" required placeholder="Français">
+					</div>
+					<?php submit_button( __( 'Add', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
+				</div>
+			</form>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render banner tab.
 	 */
 	private function render_banner_tab(): void {
@@ -398,21 +525,17 @@ final class Admin {
 		$current_lang   = isset( $_GET['lang'] ) && array_key_exists( $_GET['lang'], $locales ) ? $_GET['lang'] : 'en';
 		$texts          = BannerTexts::get_strings( $current_lang );
 
+		$message = isset( $_GET['message'] ) ? sanitize_key( $_GET['message'] ) : '';
+		if ( 'lang_added' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language added successfully.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'lang_removed' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'invalid_code' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use 2-5 characters.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		}
+
+		$this->render_language_selector( 'banner', $locales, $current_lang );
 		?>
-		<div class="wpeu-cs-lang-selector">
-			<ul class="subsubsub">
-				<?php
-				$i = 0;
-				foreach ( $locales as $code => $label ) :
-					$url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner&lang=' . $code );
-					$current = $current_lang === $code ? 'current' : '';
-					echo '<li><a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>' . ( $i < count( $locales ) - 1 ? ' | ' : '' ) . '</li>';
-					$i++;
-				endforeach;
-				?>
-			</ul>
-			<br class="clear">
-		</div>
 
 		<form method="post" action="options.php">
 			<?php
@@ -963,7 +1086,17 @@ final class Admin {
 		<h2><?php esc_html_e( 'Tools', 'wp-eu-cookie-suite' ); ?></h2>
 
 		<?php
-		$message = isset( $_GET['message'] ) ? sanitize_key( wp_unslash( $_GET['message'] ) ) : '';
+		$message = isset( $_GET['message'] ) ? sanitize_key( $_GET['message'] ) : '';
+		if ( 'lang_added' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language added successfully.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'lang_removed' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'invalid_code' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use 2-5 characters.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		}
+		?>
+
+		<?php
 		if ( 'imported' === $message ) :
 			?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings imported successfully.', 'wp-eu-cookie-suite' ); ?></p></div>
@@ -983,20 +1116,9 @@ final class Admin {
 			<p><strong><?php esc_html_e( 'Disclaimer:', 'wp-eu-cookie-suite' ); ?></strong> <?php esc_html_e( 'This plugin provides tools for cookie compliance but does not constitute legal advice.', 'wp-eu-cookie-suite' ); ?></p>
 		</div>
 
-		<div class="wpeu-cs-lang-selector">
-			<ul class="subsubsub">
-				<?php
-				$i = 0;
-				foreach ( $locales as $code => $label ) :
-					$url     = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&lang=' . $code );
-					$current = $current_lang === $code ? 'current' : '';
-					echo '<li><a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>' . ( $i < count( $locales ) - 1 ? ' | ' : '' ) . '</li>';
-					$i++;
-				endforeach;
-				?>
-			</ul>
-			<br class="clear">
-		</div>
+		<?php
+		$this->render_language_selector( 'tools', $locales, $current_lang );
+		?>
 
 		<form method="post" action="options.php">
 			<?php settings_fields( 'wpeu_cs_settings' ); ?>
