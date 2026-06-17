@@ -122,10 +122,9 @@ final class ScriptBlocker {
 			if ( null !== $enabled_services && empty( $enabled_services[ $id ] ) ) {
 				continue;
 			}
-				foreach ( $service['patterns'] as $pattern ) {
-					if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
-						return $service['category'];
-					}
+			foreach ( $service['patterns'] as $pattern ) {
+				if ( str_contains( $src, $pattern ) || str_contains( $content, $pattern ) ) {
+					return $service['category'];
 				}
 			}
 		}

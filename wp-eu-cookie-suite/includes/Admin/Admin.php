@@ -76,7 +76,73 @@ final class Admin {
 				check_admin_referer( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' );
 				$this->handle_csv_export();
 				break;
+
+			case 'wpeu_cs_export_json':
+				check_admin_referer( 'wpeu_cs_export_json', 'wpeu_cs_export_nonce' );
+				$this->handle_json_export();
+				break;
+
+			case 'wpeu_cs_import_json':
+				check_admin_referer( 'wpeu_cs_import_json', 'wpeu_cs_import_nonce' );
+				$this->handle_json_import();
+				break;
 		}
+	}
+
+	/**
+	 * Handle JSON export.
+	 */
+	private function handle_json_export(): void {
+		$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+		$cookies    = $repository->all();
+		$settings   = get_option( 'wpeu_cs_settings', array() );
+
+		$export_data = array(
+			'version'  => WPEU_CS_VERSION,
+			'settings' => $settings,
+			'cookies'  => $cookies,
+		);
+
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=wpeu-settings-' . date( 'Y-m-d' ) . '.json' );
+
+		echo wp_json_encode( $export_data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		exit;
+	}
+
+	/**
+	 * Handle JSON import.
+	 */
+	private function handle_json_import(): void {
+		if ( empty( $_FILES['import_file']['tmp_name'] ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=import_failed' ) );
+			exit;
+		}
+
+		$json = file_get_contents( $_FILES['import_file']['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$data = json_decode( $json, true );
+
+		if ( ! is_array( $data ) || ! isset( $data['settings'] ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=import_invalid' ) );
+			exit;
+		}
+
+		// Update settings
+		update_option( 'wpeu_cs_settings', $this->sanitize_settings( $data['settings'] ) );
+
+		// Import cookies if present
+		if ( isset( $data['cookies'] ) && is_array( $data['cookies'] ) ) {
+			$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+			foreach ( $data['cookies'] as $cookie ) {
+				if ( ! empty( $cookie['name'] ) ) {
+					unset( $cookie['id'] ); // Don't overwrite by ID, let upsert handle it
+					$repository->upsert( array_map( 'sanitize_text_field', $cookie ) );
+				}
+			}
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=imported' ) );
+		exit;
 	}
 
 	/**
@@ -575,7 +641,7 @@ final class Admin {
 			<div class="wpeu-cs-card">
 				<h3><?php esc_html_e( 'Blocker Status', 'wp-eu-cookie-suite' ); ?></h3>
 				<p>
-					<span class="status <?php echo $blocker ? 'status-active' : 'status-inactive'; ?>">
+					<span class="status <?php echo $blocker ? 'status-active' : 'status-inactive'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>">
 						<?php echo $blocker ? esc_html__( 'Active', 'wp-eu-cookie-suite' ) : esc_html__( 'Inactive', 'wp-eu-cookie-suite' ); ?>
 					</span>
 				</p>
@@ -598,7 +664,7 @@ final class Admin {
 
 			<div class="wpeu-cs-card">
 				<h3><?php esc_html_e( 'Active Block Rules', 'wp-eu-cookie-suite' ); ?></h3>
-				<p><?php echo (int) $total_rules; ?></p>
+				<p><?php echo (int) $total_rules; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
 			</div>
 		</div>
 		<?php
@@ -841,7 +907,7 @@ final class Admin {
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies' ) ); ?>">
 			<?php wp_nonce_field( 'wpeu_cs_save_cookie', 'wpeu_cs_cookie_nonce' ); ?>
 			<input type="hidden" name="action" value="wpeu_cs_save_cookie">
-			<input type="hidden" name="cookie[id]" value="<?php echo (int) $id; ?>">
+			<input type="hidden" name="cookie[id]" value="<?php echo (int) $id; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>">
 
 			<table class="form-table" role="presentation">
 				<tr>
@@ -953,12 +1019,32 @@ final class Admin {
 		</form>
 
 		<div class="card">
+			<h3><?php esc_html_e( 'Export / Import Settings', 'wp-eu-cookie-suite' ); ?></h3>
+			<p><?php esc_html_e( 'Export your current settings and cookie inventory to a JSON file, or import them from a previously exported file.', 'wp-eu-cookie-suite' ); ?></p>
+
+			<div style="display: flex; gap: 20px;">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+					<?php wp_nonce_field( 'wpeu_cs_export_json', 'wpeu_cs_export_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_export_json">
+					<?php submit_button( __( 'Export to JSON', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
+				</form>
+
+				<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+					<?php wp_nonce_field( 'wpeu_cs_import_json', 'wpeu_cs_import_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_import_json">
+					<input type="file" name="import_file" accept=".json" required>
+					<?php submit_button( __( 'Import from JSON', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
+				</form>
+			</div>
+		</div>
+
+		<div class="card">
 			<h3><?php esc_html_e( 'Export Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h3>
 			<p><?php esc_html_e( 'Download your cookie inventory as a CSV file.', 'wp-eu-cookie-suite' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
 				<?php wp_nonce_field( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' ); ?>
 				<input type="hidden" name="action" value="wpeu_cs_export_csv">
-				<?php submit_button( __( 'Download CSV', 'wp-eu-cookie-suite' ), 'primary', 'submit', false ); ?>
+				<?php submit_button( __( 'Download CSV', 'wp-eu-cookie-suite' ), 'secondary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php

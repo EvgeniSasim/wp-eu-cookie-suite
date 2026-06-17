@@ -10,5 +10,8 @@
     "psr-4": {
       "WPEU\\CookieSuite\\": "includes/"
     }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
   }
 }

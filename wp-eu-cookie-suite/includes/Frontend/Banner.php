@@ -120,7 +120,7 @@ final class Banner {
 					};
 				}
 
-				cc.run(<?php echo wp_json_encode( $config ); ?>);
+				cc.run(<?php echo wp_json_encode( $config ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>);
 
 				const syncWpeuCookies = function () {
 					const categories = Object.keys(cc.getConfig().categories);
