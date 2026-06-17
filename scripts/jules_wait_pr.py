@@ -15,11 +15,17 @@ REPO = "EvgeniSasim/wp-eu-cookie-suite"
 
 
 def session_state(session_id: str) -> str:
-    key = os.environ["JULES_API_KEY"]
+    key = os.environ.get("JULES_API_KEY")
+    if not key:
+        raise SystemExit("JULES_API_KEY not set")
     url = f"{API}/{session_id}"
     req = urllib.request.Request(url, headers={"x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return json.loads(resp.read().decode()).get("state", "?")
+    try:
+        with urllib.request.urlopen(req, timeout=45) as resp:
+            return json.loads(resp.read().decode()).get("state", "?")
+    except Exception as exc:  # noqa: BLE001
+        print(f"poll error: {exc}", flush=True)
+        return "UNKNOWN"
 
 
 def open_prs() -> list[dict]:
