@@ -113,6 +113,7 @@ final class Plugin {
 
 		if ( is_admin() ) {
 			new Admin\Admin();
+			new Scanner\Scanner();
 		} else {
 			new Frontend\Banner();
 			new Frontend\ScriptBlocker();
