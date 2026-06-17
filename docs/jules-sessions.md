@@ -20,8 +20,8 @@ Branch: `main`
 | 11 | jules-task-cc-11-multilingual.md | [15758632919316872286](https://jules.google.com/session/15758632919316872286) | [#10](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/10) | merged |
 | 12 | jules-task-cc-12-banner-customizer.md | [9423596550467606091](https://jules.google.com/session/9423596550467606091) | [#11](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/11) | merged |
 | 13 | jules-task-cc-13-legal-shortcodes.md | [10804725820254881360](https://jules.google.com/session/10804725820254881360) | [#12](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/12) | merged |
-| 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | | in progress |
-| 15 | jules-task-cc-15-tests.md | | | pending |
+| 14 | jules-task-cc-14-integrations.md | [14941124310403673538](https://jules.google.com/session/14941124310403673538) | [#13](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/13) | merged |
+| 15 | jules-task-cc-15-tests.md | [11065622560920599686](https://jules.google.com/session/11065622560920599686) | | in progress |
 
 ## Команды
 
