@@ -31,6 +31,16 @@ North Star: [docs/north-star-spec.md](docs/north-star-spec.md)
 ln -s "$(pwd)/wp-eu-cookie-suite" /path/to/wp-content/plugins/wp-eu-cookie-suite
 ```
 
+## Google Consent Mode v2
+
+Plugin automatically injects `gtag('consent', 'default', ...)` with all categories set to `denied` before any GTM/GA scripts. When a user provides consent, it triggers `gtag('consent', 'update', ...)`.
+
+**GTM Integration:**
+To use this with Google Tag Manager, ensure your tags are configured to respect "Require additional consent for tag to fire" or use GTM's built-in Consent Settings. The plugin handles the underlying `gtag` communication.
+
+**Google Site Kit:**
+The plugin integrates with Site Kit by Google to automatically block its snippets if the "Statistics" category is not accepted, or uses Site Kit's native GCM support if enabled.
+
 ### Build
 
 ```bash

@@ -71,6 +71,7 @@ final class Admin {
 
 		$sanitized['blocker_enabled']        = isset( $input['blocker_enabled'] );
 		$sanitized['eu_mode']                = isset( $input['eu_mode'] );
+		$sanitized['google_consent_mode']    = isset( $input['google_consent_mode'] );
 		$sanitized['keep_data_on_uninstall'] = isset( $input['keep_data_on_uninstall'] );
 		$sanitized['show_reject_all']        = isset( $input['show_reject_all'] );
 
@@ -324,16 +325,35 @@ final class Admin {
 	 * Render integrations tab.
 	 */
 	private function render_integrations_tab(): void {
-		$settings         = get_option( 'wpeu_cs_settings', array() );
-		$services         = ScriptRegistry::get_services();
-		$enabled_services = $settings['enabled_services'] ?? array();
-		$custom_rules     = $settings['custom_block_rules'] ?? '';
+		$settings            = get_option( 'wpeu_cs_settings', array() );
+		$services            = ScriptRegistry::get_services();
+		$enabled_services    = $settings['enabled_services'] ?? array();
+		$custom_rules        = $settings['custom_block_rules'] ?? '';
+		$google_consent_mode = $settings['google_consent_mode'] ?? true;
 
 		?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
+
+			<h2><?php esc_html_e( 'Google Consent Mode', 'wp-eu-cookie-suite' ); ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Enable Consent Mode v2', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[google_consent_mode]" value="1" <?php checked( $google_consent_mode ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description">
+							<?php esc_html_e( 'Automatically inject Google Consent Mode v2 default and update calls.', 'wp-eu-cookie-suite' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<hr>
 
 			<h2><?php esc_html_e( 'Service Integrations', 'wp-eu-cookie-suite' ); ?></h2>
 			<p><?php esc_html_e( 'Enable automatic script blocking for these popular services.', 'wp-eu-cookie-suite' ); ?></p>

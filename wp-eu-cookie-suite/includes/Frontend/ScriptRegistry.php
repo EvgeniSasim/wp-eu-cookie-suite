@@ -32,6 +32,7 @@ final class ScriptRegistry {
 					'ga.js',
 					'gtag(',
 					'ga(',
+					'googlesitekit-analytics',
 				),
 			),
 			'gtm'              => array(

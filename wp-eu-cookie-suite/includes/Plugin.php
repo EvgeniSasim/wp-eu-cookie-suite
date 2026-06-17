@@ -82,12 +82,13 @@ final class Plugin {
 			update_option(
 				'wpeu_cs_settings',
 				array(
-					'blocker_enabled'    => true,
-					'eu_mode'            => true,
-					'enabled_services'   => $enabled,
-					'enabled_categories' => array( 'preferences', 'statistics', 'marketing' ),
-					'show_reject_all'    => true,
-					'version'            => WPEU_CS_VERSION,
+					'blocker_enabled'     => true,
+					'eu_mode'             => true,
+					'google_consent_mode' => true,
+					'enabled_services'    => $enabled,
+					'enabled_categories'  => array( 'preferences', 'statistics', 'marketing' ),
+					'show_reject_all'     => true,
+					'version'             => WPEU_CS_VERSION,
 				)
 			);
 		}
@@ -113,6 +114,8 @@ final class Plugin {
 		} else {
 			new Frontend\Banner();
 			new Frontend\ScriptBlocker();
+			new Consent\GoogleConsentMode();
+			new Integrations\GoogleSiteKit();
 		}
 	}
 }
