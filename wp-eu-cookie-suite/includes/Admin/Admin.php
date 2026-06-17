@@ -300,8 +300,14 @@ final class Admin {
 			<div class="wpeu-cs-card">
 				<h3><?php esc_html_e( 'Consent API Status', 'wp-eu-cookie-suite' ); ?></h3>
 				<p>
-					<span class="status <?php echo $consent_api ? 'status-active' : 'status-inactive'; ?>">
-						<?php echo $consent_api ? esc_html__( 'Detected', 'wp-eu-cookie-suite' ) : esc_html__( 'Not Detected', 'wp-eu-cookie-suite' ); ?>
+					<span class="status status-active">
+						<?php
+						if ( defined( 'WP_CONSENT_API_VERSION' ) ) {
+							esc_html_e( 'Active (native)', 'wp-eu-cookie-suite' );
+						} else {
+							esc_html_e( 'Active (polyfill)', 'wp-eu-cookie-suite' );
+						}
+						?>
 					</span>
 				</p>
 			</div>

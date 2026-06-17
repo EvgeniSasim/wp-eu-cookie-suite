@@ -76,16 +76,41 @@ final class Banner {
 					return;
 				}
 
+				// WP Consent API Polyfill
+				if (typeof window.wp_set_consent !== 'function') {
+					window.wp_set_consent = function (category, status) {
+						// Polyfill for wp_set_consent if not provided by wp-consent-api
+						console.debug('WP Consent API (polyfill):', category, status);
+						document.dispatchEvent(new CustomEvent('wp_api_set_consent', {
+							detail: {
+								category: category,
+								status: status
+							}
+						}));
+					};
+				}
+
 				cc.run(<?php echo wp_json_encode( $config ); ?>);
 
 				const syncWpeuCookies = function () {
 					const categories = Object.keys(cc.getConfig().categories);
 					const consentData = {};
+					const mapping = {
+						'necessary': 'functional',
+						'statistics': 'statistics',
+						'marketing': 'marketing',
+						'preferences': 'preferences'
+					};
 
 					categories.forEach(function (cat) {
 						const accepted = cc.acceptedCategory(cat);
 						consentData[cat] = accepted;
 						document.cookie = 'wpeu_' + cat + '=' + (accepted ? '1' : '0') + '; path=/; max-age=31536000; SameSite=Lax';
+
+						// WP Consent API integration
+						if (mapping[cat]) {
+							window.wp_set_consent(mapping[cat], accepted ? 'allow' : 'deny');
+						}
 					});
 
 					document.cookie = 'wpeu_consent=' + encodeURIComponent(JSON.stringify(consentData)) + '; path=/; max-age=31536000; SameSite=Lax';
