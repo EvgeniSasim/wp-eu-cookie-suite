@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace WPEU\CookieSuite\Admin;
 
 use WPEU\CookieSuite\Consent\Categories;
+use WPEU\CookieSuite\Consent\BannerTexts;
 use WPEU\CookieSuite\Frontend\ScriptRegistry;
 
 /**
@@ -180,6 +181,16 @@ final class Admin {
 			$sanitized['version'] = $old_settings['version'];
 		}
 
+		$sanitized['banner_texts'] = $old_settings['banner_texts'] ?? array();
+		if ( isset( $input['banner_texts'] ) && is_array( $input['banner_texts'] ) ) {
+			foreach ( $input['banner_texts'] as $locale => $texts ) {
+				if ( ! is_array( $texts ) ) {
+					continue;
+				}
+				$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+			}
+		}
+
 		return $sanitized;
 	}
 
@@ -280,12 +291,32 @@ final class Admin {
 		$show_reject_all    = $settings['show_reject_all'] ?? true;
 		$eu_mode            = $settings['eu_mode'] ?? true;
 
+		$locales        = BannerTexts::get_locales();
+		$current_lang   = isset( $_GET['lang'] ) && array_key_exists( $_GET['lang'], $locales ) ? $_GET['lang'] : 'en';
+		$texts          = BannerTexts::get_strings( $current_lang );
+
 		?>
+		<div class="wpeu-cs-lang-selector">
+			<ul class="subsubsub">
+				<?php
+				$i = 0;
+				foreach ( $locales as $code => $label ) :
+					$url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner&lang=' . $code );
+					$current = $current_lang === $code ? 'current' : '';
+					echo '<li><a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>' . ( $i < count( $locales ) - 1 ? ' | ' : '' ) . '</li>';
+					$i++;
+				endforeach;
+				?>
+			</ul>
+			<br class="clear">
+		</div>
+
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
 
+			<h3><?php printf( esc_html__( 'Banner Settings (%s)', 'wp-eu-cookie-suite' ), esc_html( $locales[ $current_lang ] ) ); ?></h3>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'wp-eu-cookie-suite' ); ?></th>
@@ -330,6 +361,78 @@ final class Admin {
 						</label>
 					</td>
 				</tr>
+			</table>
+
+			<hr>
+			<h3><?php esc_html_e( 'Localized Texts', 'wp-eu-cookie-suite' ); ?></h3>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Consent Modal Title', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][consent_modal_title]" value="<?php echo esc_attr( $texts['consent_modal_title'] ?? '' ); ?>" class="large-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Consent Modal Description', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<textarea name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][consent_modal_description]" rows="3" class="large-text"><?php echo esc_textarea( $texts['consent_modal_description'] ?? '' ); ?></textarea>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Preferences Modal Title', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][preferences_modal_title]" value="<?php echo esc_attr( $texts['preferences_modal_title'] ?? '' ); ?>" class="large-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Accept All Button', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][accept_all_btn]" value="<?php echo esc_attr( $texts['accept_all_btn'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Reject All Button', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][accept_necessary_btn]" value="<?php echo esc_attr( $texts['accept_necessary_btn'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Manage Preferences Button', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][show_preferences_btn]" value="<?php echo esc_attr( $texts['show_preferences_btn'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Save Preferences Button', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][save_preferences_btn]" value="<?php echo esc_attr( $texts['save_preferences_btn'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Close Icon Label', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][close_icon_label]" value="<?php echo esc_attr( $texts['close_icon_label'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<?php foreach ( $all_categories as $id => $category ) : ?>
+					<?php
+					if ( 'necessary' !== $id && ! in_array( $id, $enabled_categories, true ) ) {
+						continue;
+					}
+					?>
+					<tr>
+						<th scope="row"><?php echo esc_html( $category['label'] ); ?> (<?php esc_html_e( 'Label', 'wp-eu-cookie-suite' ); ?>)</th>
+						<td>
+							<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][<?php echo esc_attr( $id ); ?>_label]" value="<?php echo esc_attr( $texts[ $id . '_label' ] ?? '' ); ?>" class="large-text">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html( $category['label'] ); ?> (<?php esc_html_e( 'Description', 'wp-eu-cookie-suite' ); ?>)</th>
+						<td>
+							<textarea name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][<?php echo esc_attr( $id ); ?>_description]" rows="2" class="large-text"><?php echo esc_textarea( $texts[ $id . '_description' ] ?? '' ); ?></textarea>
+						</td>
+					</tr>
+				<?php endforeach; ?>
 			</table>
 
 			<?php submit_button(); ?>
