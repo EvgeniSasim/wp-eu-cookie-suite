@@ -20,6 +20,7 @@ final class Scanner {
 	public function __construct() {
 		add_action( 'wp_ajax_wpeu_cs_get_scan_urls', array( $this, 'ajax_get_scan_urls' ) );
 		add_action( 'wp_ajax_wpeu_cs_scan_url', array( $this, 'ajax_scan_url' ) );
+		add_action( 'wp_ajax_wpeu_cs_import_scan', array( $this, 'ajax_import_scan' ) );
 	}
 
 	/**
@@ -218,6 +219,32 @@ final class Scanner {
 		}
 
 		return \WPEU\CookieSuite\Consent\Categories::NECESSARY;
+	}
+
+	/**
+	 * AJAX handler to import scan results to inventory.
+	 */
+	public function ajax_import_scan(): void {
+		check_ajax_referer( 'wpeu-cs-scanner', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wp-eu-cookie-suite' ) ) );
+		}
+
+		$results = get_option( 'wpeu_cs_scan_results', array() );
+		if ( empty( $results ) ) {
+			wp_send_json_error( array( 'message' => __( 'No scan results to import.', 'wp-eu-cookie-suite' ) ) );
+		}
+
+		$repository = new CookieRepository();
+		$count      = $repository->import_from_scan( $results );
+
+		wp_send_json_success(
+			array(
+				/* translators: %d: number of cookies */
+				'message' => sprintf( __( 'Imported %d items to inventory.', 'wp-eu-cookie-suite' ), $count ),
+			)
+		);
 	}
 
 	/**
