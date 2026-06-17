@@ -47,7 +47,7 @@ class Test_Iframe_Processor extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Google Maps iframe (BSB pattern) is replaced.
+	 * Google Maps iframe is replaced when maps consent is missing.
 	 */
 	public function test_replaces_google_maps_iframe_without_consent(): void {
 		$iframe = '<iframe src="https://maps.google.com/maps?q=Berlin&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>';
