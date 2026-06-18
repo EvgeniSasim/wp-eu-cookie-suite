@@ -76,7 +76,7 @@ final class SettingsTransfer {
 		$current  = get_option( 'wpeu_cs_settings', array() );
 		$sanitized = is_array( $current ) ? $current : array();
 
-		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall' );
+		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke' );
 		foreach ( $bool_keys as $key ) {
 			if ( array_key_exists( $key, $settings ) ) {
 				$sanitized[ $key ] = (bool) $settings[ $key ];
@@ -116,6 +116,10 @@ final class SettingsTransfer {
 
 		if ( array_key_exists( 'consent_revision', $settings ) ) {
 			$sanitized['consent_revision'] = max( 0, (int) $settings['consent_revision'] );
+		}
+
+		if ( array_key_exists( 'consent_log_retention', $settings ) ) {
+			$sanitized['consent_log_retention'] = max( 1, (int) $settings['consent_log_retention'] );
 		}
 
 		if ( isset( $settings['language_labels'] ) && is_array( $settings['language_labels'] ) ) {

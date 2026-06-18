@@ -84,14 +84,17 @@ final class Plugin {
 			update_option(
 				'wpeu_cs_settings',
 				array(
-					'blocker_enabled'    => true,
-					'eu_mode'            => true,
-					'enabled_services'   => $enabled,
-					'enabled_categories' => array( 'preferences', 'statistics', 'marketing' ),
-					'show_reject_all'      => true,
-					'google_consent_mode'  => true,
-					'consent_revision'     => 0,
-					'version'              => WPEU_CS_VERSION,
+					'blocker_enabled'           => true,
+					'eu_mode'                   => true,
+					'enabled_services'          => $enabled,
+					'enabled_categories'        => array( 'preferences', 'statistics', 'marketing' ),
+					'show_reject_all'           => true,
+					'google_consent_mode'       => true,
+					'consent_logging_enabled'   => true,
+					'consent_log_retention'     => 365,
+					'consent_log_store_ip'      => false,
+					'consent_revision'          => 0,
+					'version'                   => WPEU_CS_VERSION,
 				)
 			);
 		}
@@ -103,10 +106,11 @@ final class Plugin {
 	private function create_tables(): void {
 		global $wpdb;
 
-		$table_name      = $wpdb->prefix . 'wpeu_cookies';
 		$charset_collate = $wpdb->get_charset_collate();
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		$sql = "CREATE TABLE $table_name (
+		$cookies_table = $wpdb->prefix . 'wpeu_cookies';
+		$sql_cookies   = "CREATE TABLE $cookies_table (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			name varchar(255) NOT NULL,
 			domain varchar(255) NOT NULL,
@@ -121,8 +125,31 @@ final class Plugin {
 			KEY category (category)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( $sql );
+		dbDelta( $sql_cookies );
+
+		$log_table = $wpdb->prefix . 'wpeu_consent_log';
+		$sql_log   = "CREATE TABLE $log_table (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			consent_uuid varchar(36) NOT NULL,
+			event_type varchar(32) NOT NULL,
+			categories text NOT NULL,
+			consent_mode varchar(16) NOT NULL,
+			page_url varchar(512) NOT NULL,
+			locale varchar(10) NOT NULL,
+			banner_revision int(10) unsigned DEFAULT 0 NOT NULL,
+			plugin_version varchar(20) NOT NULL,
+			ip_hash varchar(64) DEFAULT NULL,
+			user_agent varchar(255) DEFAULT NULL,
+			created_at datetime NOT NULL,
+			wp_user_id bigint(20) DEFAULT NULL,
+			config_snapshot text DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY consent_uuid (consent_uuid),
+			KEY event_type (event_type),
+			KEY created_at (created_at)
+		) $charset_collate;";
+
+		dbDelta( $sql_log );
 	}
 
 	/**
