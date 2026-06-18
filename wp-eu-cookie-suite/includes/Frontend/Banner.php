@@ -84,6 +84,7 @@ final class Banner {
 		$is_preview    = defined( 'WPEU_CS_PREVIEW' );
 		$cookie_secure = is_ssl() && ! $is_preview;
 		$wp_consent_map = Categories::get_wp_consent_map();
+		$locale         = BannerTexts::get_active_locale();
 
 		if ( 'dark' === $theme ) {
 			?>

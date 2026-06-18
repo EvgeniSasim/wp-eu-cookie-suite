@@ -34,7 +34,7 @@ final class ConsentLogger {
 		global $wpdb;
 
 		$settings = get_option( 'wpeu_cs_settings', array() );
-		if ( empty( $settings['consent_logging_enabled'] ) ) {
+		if ( array_key_exists( 'consent_logging_enabled', $settings ) && empty( $settings['consent_logging_enabled'] ) ) {
 			return false;
 		}
 

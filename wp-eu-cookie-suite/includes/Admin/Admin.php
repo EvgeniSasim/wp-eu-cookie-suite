@@ -1671,7 +1671,7 @@ final class Admin {
 		check_ajax_referer( 'wpeu-cs-log', 'nonce' );
 
 		$settings = get_option( 'wpeu_cs_settings', array() );
-		if ( empty( $settings['consent_logging_enabled'] ) ) {
+		if ( array_key_exists( 'consent_logging_enabled', $settings ) && empty( $settings['consent_logging_enabled'] ) ) {
 			wp_send_json_error( 'logging_disabled' );
 		}
 
