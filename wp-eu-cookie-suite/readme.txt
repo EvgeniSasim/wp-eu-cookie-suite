@@ -16,7 +16,7 @@ WP EU Cookie Suite is a comprehensive solution for managing cookie consent on yo
 
 Key features include:
 * **Customizable Cookie Banner:** Fully responsive UI with light/dark modes and multiple layouts.
-* **Consent Categories:** Necessary, Preferences, Statistics, and Marketing.
+* **Consent Categories:** Necessary, Preferences, Statistics, Marketing, plus optional custom categories.
 * **Automatic Script Blocking:** Blocks third-party scripts (GA, Pixel, etc.) and iframes (YouTube, Vimeo, Google Maps) until consent is granted.
 * **Google Consent Mode v2:** Native support for GCM v2, including integration with Google Site Kit.
 * **WP Consent API Support:** Fully compatible with the WordPress Consent API.

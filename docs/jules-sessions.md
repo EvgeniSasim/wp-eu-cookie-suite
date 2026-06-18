@@ -35,7 +35,7 @@ Branch: `main`
 | 23 | jules-task-cc-23-custom-categories.md | [2413275180526383754](https://jules.google.com/session/2413275180526383754) (superseded) | — | merged (Cursor) |
 | 20 | jules-task-cc-20-ci.md | [1120338809836275782](https://jules.google.com/session/1120338809836275782) | [#21](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/21) | merged |
 | 21 | jules-task-cc-21-consent-records.md | [13639516324280863306](https://jules.google.com/session/13639516324280863306) | [#22](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/22) | merged |
-| 22 | jules-task-cc-22-wordpress-org-release.md | [7576984083680245419](https://jules.google.com/session/7576984083680245419) | | in progress (Jules) |
+| 22 | jules-task-cc-22-wordpress-org-release.md | [7576984083680245419](https://jules.google.com/session/7576984083680245419) | [#23](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/23) | merged |
 
 ## Команды
 

@@ -21,6 +21,7 @@ if ( is_array( $settings ) && ! empty( $settings['keep_data_on_uninstall'] ) ) {
 delete_option( 'wpeu_cs_settings' );
 delete_option( 'wpeu_cs_scan_results' );
 delete_option( 'wpeu_cs_last_scan_time' );
+delete_option( 'wpeu_cs_last_log_cleanup' );
 
 global $wpdb;
 
