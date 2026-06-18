@@ -691,7 +691,7 @@ final class Admin {
 			<br class="clear">
 		</div>
 
-		<div class="wpeu-cs-add-lang-form card" style="margin-top: 10px; max-width: 500px;">
+		<div class="wpeu-cs-add-lang-form card">
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
 				<?php wp_nonce_field( 'wpeu_cs_add_language', 'wpeu_cs_add_lang_nonce' ); ?>
 				<input type="hidden" name="action" value="wpeu_cs_add_language">
@@ -1394,7 +1394,7 @@ final class Admin {
 		?>
 		<div class="wpeu-cs-cookies-header">
 			<h2><?php esc_html_e( 'Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h2>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies&action=add' ) ); ?>" class="page-title-action">
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=cookies&action=add' ) ); ?>" class="button button-primary">
 				<?php esc_html_e( 'Add New', 'wp-eu-cookie-suite' ); ?>
 			</a>
 		</div>
@@ -1751,6 +1751,20 @@ final class Admin {
 
 		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
 			define( 'WPEU_CS_PREVIEW', true );
+		}
+
+		$preview_locale = '';
+		if ( isset( $_POST['settings']['preview_locale'] ) ) {
+			$preview_locale = sanitize_key( wp_unslash( (string) $_POST['settings']['preview_locale'] ) );
+		}
+
+		if ( $preview_locale ) {
+			add_filter(
+				'wpeu_cs_banner_locale',
+				static function () use ( $preview_locale ) {
+					return $preview_locale;
+				}
+			);
 		}
 
 		// Mock settings for preview

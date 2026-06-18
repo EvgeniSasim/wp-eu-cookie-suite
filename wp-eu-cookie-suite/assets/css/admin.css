@@ -160,16 +160,32 @@ input:checked + .slider:before {
     padding: 20px 0;
 }
 
+/* Settings tabs content */
+.wpeu-cs-content {
+    clear: both;
+    margin-top: 16px;
+}
+
+.wpeu-cs-content .card {
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* Cookies Inventory */
 .wpeu-cs-cookies-header {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 16px;
 }
 
 .wpeu-cs-cookies-header h2 {
     margin: 0;
+    padding: 0;
+    line-height: 1.4;
 }
 
 .wpeu-cs-scan-actions-secondary {
@@ -201,10 +217,66 @@ input:checked + .slider:before {
     margin: 15px 0;
     overflow: hidden;
     position: relative;
+    border: 1px solid #ccd0d4;
+    background: #f6f7f7;
+}
+
+#wpeu-cs-banner-preview {
+    display: block;
+    min-height: 420px;
+    background: #f6f7f7;
 }
 
 .wpeu-cs-preview-container h3 {
     margin-top: 0;
+}
+
+.wpeu-cs-lang-selector {
+    margin: 0 0 16px;
+}
+
+.wpeu-cs-lang-selector .subsubsub {
+    float: none;
+    margin-bottom: 8px;
+}
+
+.wpeu-cs-lang-selector .wpeu-cs-remove-lang {
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.wpeu-cs-lang-selector .wpeu-cs-remove-lang .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    color: #b32d2e;
+}
+
+.wpeu-cs-content .wpeu-cs-add-lang-form {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin: 12px 0 20px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+}
+
+.wpeu-cs-add-lang-form h4 {
+    margin: 0 0 12px;
+}
+
+.wpeu-cs-add-lang-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.wpeu-cs-add-lang-fields label {
+    display: block;
+    font-size: 11px;
+    margin-bottom: 4px;
 }
 
 /* Color picker adjustment */

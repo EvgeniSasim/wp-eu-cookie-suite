@@ -28,7 +28,7 @@ Branch: `main`
 | # | Task file | Session ID | PR | Status |
 |---|-----------|------------|-----|--------|
 | 16 | jules-task-cc-16-dynamic-languages.md | [7316212288513132930](https://jules.google.com/session/7316212288513132930) | [#16](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/16) | merged |
-| 16.1 | jules-task-cc-16-1-admin-preview-ui.md | | | pending (Cursor hotfix in stash) |
+| 16.1 | jules-task-cc-16-1-admin-preview-ui.md | — | — | merged (Cursor) |
 | 17 | jules-task-cc-17-iframe-buffer.md | [14920897654020325449](https://jules.google.com/session/14920897654020325449) | [#17](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/17) | merged |
 | 18 | jules-task-cc-18-ga-guard.md | — | [#18](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/18) | merged (Cursor) |
 | 19 | jules-task-cc-19-consent-ux.md | [13352903253669476636](https://jules.google.com/session/13352903253669476636) (duplicate) | [#19](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/19) | merged (Cursor) |

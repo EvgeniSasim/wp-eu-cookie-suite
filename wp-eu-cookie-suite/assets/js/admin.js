@@ -90,14 +90,18 @@
 			}
 		}
 
-		// Color Picker + Banner Preview
+		// Color Picker + Banner Preview (independent of scanner UI)
 		const $previewFrame = $('#wpeu-cs-banner-preview');
 		const $refreshBtn = $('#wpeu-cs-refresh-preview');
 		const previewNonce = $('#wpeu_cs_preview_nonce').val();
 		let previewTimer = null;
 
+		function getPreviewLang() {
+			return new URLSearchParams(window.location.search).get('lang') || 'en';
+		}
+
 		function getPrimaryColor() {
-			const $input = $('#wpeu-cs-banner-primary-color, .wpeu-cs-color-picker').first();
+			const $input = $('#wpeu-cs-banner-primary-color');
 			if (!$input.length) {
 				return '#30363c';
 			}
@@ -105,9 +109,30 @@
 			return value && /^#([A-Fa-f0-9]{3}){1,2}$/.test(value) ? value : '#30363c';
 		}
 
+		function writePreviewHtml(html) {
+			const iframe = $previewFrame[0];
+			if (!iframe) {
+				return;
+			}
+			if ('srcdoc' in iframe) {
+				iframe.src = 'about:blank';
+				iframe.srcdoc = html;
+				return;
+			}
+			const doc = iframe.contentWindow.document;
+			doc.open();
+			doc.write(html);
+			doc.close();
+		}
+
+		function showPreviewError(message) {
+			writePreviewHtml('<p style="padding:1em;color:#b32d2e;font-family:sans-serif;">' + message + '</p>');
+		}
+
 		function updatePreview() {
-			const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
+			const lang = getPreviewLang();
 			const settings = {
+				preview_locale: lang,
 				banner_ui: {
 					layout: $('#wpeu-cs-banner-layout').val(),
 					position: $('#wpeu-cs-banner-position').val(),
@@ -152,17 +177,14 @@
 					settings: settings
 				},
 				success: function(response) {
-					const iframe = $previewFrame[0];
-					const doc = iframe.contentWindow.document;
-					doc.open();
-					doc.write(response);
-					doc.close();
+					if (!response || response.indexOf('CookieConsent') === -1) {
+						showPreviewError('Preview response invalid.');
+						return;
+					}
+					writePreviewHtml(response);
 				},
 				error: function() {
-					const doc = $previewFrame[0].contentWindow.document;
-					doc.open();
-					doc.write('<p style="padding:1em;color:#b32d2e;">Preview failed to load.</p>');
-					doc.close();
+					showPreviewError('Preview failed to load.');
 				},
 				complete: function() {
 					if ($refreshBtn.length) {
