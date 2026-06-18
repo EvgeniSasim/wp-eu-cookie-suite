@@ -36,6 +36,21 @@ final class Admin {
 	}
 
 	/**
+	 * Handle bumping consent revision.
+	 */
+	private function handle_bump_consent_revision(): void {
+		$settings = get_option( 'wpeu_cs_settings', array() );
+
+		$current_revision = (int) ( $settings['consent_revision'] ?? 0 );
+		$settings['consent_revision'] = $current_revision + 1;
+
+		update_option( 'wpeu_cs_settings', $settings );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools&message=revision_bumped' ) );
+		exit;
+	}
+
+	/**
 	 * Handle admin actions (CRUD, export, etc).
 	 */
 	public function handle_actions(): void {
@@ -645,6 +660,13 @@ final class Admin {
 					<th scope="row"><?php esc_html_e( 'Close Icon Label', 'wp-eu-cookie-suite' ); ?></th>
 					<td>
 						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][close_icon_label]" value="<?php echo esc_attr( $texts['close_icon_label'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Manage Consent Label', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][manage_consent_label]" value="<?php echo esc_attr( $texts['manage_consent_label'] ?? '' ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Text for the [wpeu_manage_consent] shortcode link/button.', 'wp-eu-cookie-suite' ); ?></p>
 					</td>
 				</tr>
 				<?php foreach ( $all_categories as $id => $category ) : ?>

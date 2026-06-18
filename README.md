@@ -65,6 +65,14 @@ vendor/bin/phpunit
 
 Атрибут `style` — `link` (по умолчанию) или `button`. Текст по умолчанию берётся из строк баннера (`manage_consent_label`) или атрибута `label`.
 
+Вы также можете добавить его программно в файл `functions.php` вашей темы:
+
+```php
+add_action('wp_footer', function() {
+    echo do_shortcode('[wpeu_manage_consent style="link"]');
+});
+```
+
 ## Миграция с Complianz (ручной чеклист)
 
 Автоматической миграции нет — перенос настроек выполняется вручную:
