@@ -127,6 +127,62 @@ final class Banner {
 					cc.reset(true);
 				}
 
+				const getWpeuUuid = function () {
+					const name = 'wpeu_consent_uuid=';
+					const decodedCookie = decodeURIComponent(document.cookie);
+					const ca = decodedCookie.split(';');
+					for (let i = 0; i < ca.length; i++) {
+						let c = ca[i];
+						while (c.charAt(0) === ' ') {
+							c = c.substring(1);
+						}
+						if (c.indexOf(name) === 0) {
+							return c.substring(name.length, c.length);
+						}
+					}
+					return '';
+				};
+
+				const generateWpeuUuid = function () {
+					return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+						const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+						return v.toString(16);
+					});
+				};
+
+				let wpeuUuid = getWpeuUuid();
+				if (!wpeuUuid && !isPreview) {
+					wpeuUuid = generateWpeuUuid();
+					const secureAttr = <?php echo $cookie_secure ? "'; Secure'" : "''"; ?>;
+					document.cookie = 'wpeu_consent_uuid=' + wpeuUuid + '; path=/; max-age=34128000; SameSite=Lax' + secureAttr;
+				}
+
+				const logConsentEvent = function (eventType, categories) {
+					if (isPreview || !wpeuUuid) {
+						return;
+					}
+					const data = new FormData();
+					data.append('action', 'wpeu_cs_log_consent');
+					data.append('nonce', '<?php echo esc_js( wp_create_nonce( 'wpeu-cs-log' ) ); ?>');
+					data.append('event_type', eventType);
+					data.append('consent_uuid', wpeuUuid);
+					data.append('page_url', window.location.href);
+					data.append('locale', '<?php echo esc_js( $locale ); ?>');
+
+					if (categories) {
+						Object.keys(categories).forEach(function (cat) {
+							data.append('categories[' + cat + ']', categories[cat] ? 1 : 0);
+						});
+					}
+
+					fetch('<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+						method: 'POST',
+						body: data
+					}).catch(function (err) {
+						console.error('WPEU Log Error:', err);
+					});
+				};
+
 				cc.run(<?php echo wp_json_encode( $config ); ?>);
 
 				if (isPreview && typeof cc.show === 'function') {
@@ -134,7 +190,7 @@ final class Banner {
 					return;
 				}
 
-				const syncWpeuCookies = function () {
+				const syncWpeuCookies = function (event) {
 					const categories = Object.keys(cc.getConfig().categories);
 					const consentData = {};
 					const mapping = <?php echo wp_json_encode( $wp_consent_map ); ?>;
@@ -164,10 +220,61 @@ final class Banner {
 
 					document.cookie = 'wpeu_consent=' + encodeURIComponent(JSON.stringify(consentData)) + '; path=/; max-age=31536000; SameSite=Lax' + secureAttr;
 					document.dispatchEvent(new CustomEvent('wpeu-consent-updated', { detail: consentData }));
+
+					if (event && event.changedCategories && event.changedCategories.length > 0) {
+						let eventType = 'save_preferences';
+						const allEnabled = categories.filter(c => !cc.getConfig().categories[c].readOnly);
+						const acceptedEnabled = allEnabled.filter(c => consentData[c]);
+
+						if (acceptedEnabled.length === allEnabled.length) {
+							eventType = 'accept_all';
+						} else if (acceptedEnabled.length === 0) {
+							eventType = 'reject_all';
+						}
+
+						logConsentEvent(eventType, consentData);
+					} else if (event && event.cookie) {
+						// Initial consent on load if already exists? CC v3 doesn't fire onConsent if cookie exists usually,
+						// but if it does, we might want to log it if it's the first time.
+						// Actually cc.onConsent fires when consent is FIRST given.
+						// cc.onChange fires when consent is CHANGED.
+
+						let eventType = 'save_preferences';
+						const allEnabled = categories.filter(c => !cc.getConfig().categories[c].readOnly);
+						const acceptedEnabled = allEnabled.filter(c => consentData[c]);
+						if (acceptedEnabled.length === allEnabled.length) {
+							eventType = 'accept_all';
+						} else if (acceptedEnabled.length === 0) {
+							eventType = 'reject_all';
+						}
+						logConsentEvent(eventType, consentData);
+					}
 				};
 
 				cc.onConsent(syncWpeuCookies);
 				cc.onChange(syncWpeuCookies);
+
+				window.addEventListener('wpeu-cs-revoke', function () {
+					const secureAttr = <?php echo $cookie_secure ? "'; Secure'" : "''"; ?>;
+					const categories = Object.keys(cc.getConfig().categories);
+
+					logConsentEvent('revoke', {});
+
+					categories.forEach(function (cat) {
+						document.cookie = 'wpeu_' + cat + '=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureAttr;
+					});
+					document.cookie = 'wpeu_consent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureAttr;
+					document.cookie = 'wpeu_consent_uuid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureAttr;
+
+					cc.reset(true);
+					document.dispatchEvent(new CustomEvent('wpeu-consent-revoked'));
+
+					<?php if ( ! empty( $settings['reload_on_revoke'] ) ) : ?>
+					window.location.reload();
+					<?php else : ?>
+					cc.show(true);
+					<?php endif; ?>
+				});
 			});
 		</script>
 		<?php

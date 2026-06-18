@@ -31,8 +31,11 @@ final class Admin {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
+		add_action( 'admin_init', array( $this, 'maybe_cleanup_logs' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_wpeu_cs_preview', array( $this, 'ajax_preview' ) );
+		add_action( 'wp_ajax_wpeu_cs_log_consent', array( $this, 'ajax_log_consent' ) );
+		add_action( 'wp_ajax_nopriv_wpeu_cs_log_consent', array( $this, 'ajax_log_consent' ) );
 	}
 
 	/**
@@ -113,6 +116,17 @@ final class Admin {
 				$slug = sanitize_key( $_GET['category'] ?? '' );
 				check_admin_referer( 'wpeu_cs_remove_category_' . $slug );
 				$this->handle_remove_category( $slug );
+				break;
+
+			case 'wpeu_cs_export_logs_csv':
+				check_admin_referer( 'wpeu_cs_export_logs_csv' );
+				$this->handle_logs_csv_export();
+				break;
+
+			case 'wpeu_cs_download_snapshot':
+				$id = isset( $_GET['id'] ) ? (int) $_GET['id'] : 0;
+				check_admin_referer( 'wpeu_cs_download_snapshot_' . $id );
+				$this->handle_download_snapshot( $id );
 				break;
 		}
 	}
@@ -325,6 +339,71 @@ final class Admin {
 	}
 
 	/**
+	 * Handle CSV export of consent logs.
+	 */
+	private function handle_logs_csv_export(): void {
+		$logger = new \WPEU\CookieSuite\Consent\ConsentLogger();
+		$args   = array(
+			'event_type' => $_GET['event_type'] ?? '',
+			'search'     => $_GET['s'] ?? '',
+			'start_date' => $_GET['start_date'] ?? '',
+			'end_date'   => $_GET['end_date'] ?? '',
+			'per_page'   => 5000, // Large limit for export
+		);
+		$logs   = $logger->get_logs( $args );
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=wpeu-consent-logs-' . date( 'Y-m-d' ) . '.csv' );
+
+		$output = fopen( 'php://output', 'w' );
+		fputcsv( $output, array( 'Date', 'Visitor UUID', 'Event', 'Categories', 'Mode', 'Locale', 'Revision', 'Page URL', 'IP Hash', 'User Agent' ) );
+
+		foreach ( $logs as $log ) {
+			fputcsv(
+				$output,
+				array(
+					$log['created_at'],
+					$log['consent_uuid'],
+					$log['event_type'],
+					$log['categories'],
+					$log['consent_mode'],
+					$log['locale'],
+					$log['banner_revision'],
+					$log['page_url'],
+					$log['ip_hash'],
+					$log['user_agent'],
+				)
+			);
+		}
+
+		fclose( $output );
+		exit;
+	}
+
+	/**
+	 * Handle individual log snapshot download.
+	 *
+	 * @param int $id Log ID.
+	 */
+	private function handle_download_snapshot( int $id ): void {
+		global $wpdb;
+		$table = \WPEU\CookieSuite\Consent\ConsentLogger::get_table_name();
+		$log   = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ), ARRAY_A );
+
+		if ( ! $log || empty( $log['config_snapshot'] ) ) {
+			wp_die( esc_html__( 'Snapshot not found.', 'wp-eu-cookie-suite' ) );
+		}
+
+		$filename = 'wpeu-consent-snapshot-' . $log['consent_uuid'] . '-' . date( 'Ymd-His', strtotime( $log['created_at'] ) ) . '.json';
+		$data     = json_decode( $log['config_snapshot'], true );
+
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+		echo wp_json_encode( $data, JSON_PRETTY_PRINT );
+		exit;
+	}
+
+	/**
 	 * Handle JSON settings import.
 	 */
 	private function handle_json_import(): void {
@@ -459,7 +538,13 @@ final class Admin {
 			$sanitized['theme_analytics_field'] = isset( $input['theme_analytics_field'] ) ? sanitize_text_field( $input['theme_analytics_field'] ) : 'analytics';
 
 			$sanitized['custom_block_rules'] = isset( $input['custom_block_rules'] ) ? sanitize_textarea_field( $input['custom_block_rules'] ) : '';
+
+			$sanitized['reload_on_revoke'] = isset( $input['reload_on_revoke'] );
 		} elseif ( 'tools' === $active_tab ) {
+			$sanitized['consent_logging_enabled'] = isset( $input['consent_logging_enabled'] );
+			$sanitized['consent_log_retention']   = isset( $input['consent_log_retention'] ) ? max( 1, (int) $input['consent_log_retention'] ) : 365;
+			$sanitized['consent_log_store_ip']    = isset( $input['consent_log_store_ip'] );
+
 			if ( isset( $input['policy_texts'] ) && is_array( $input['policy_texts'] ) ) {
 				if ( ! isset( $sanitized['policy_texts'] ) ) {
 					$sanitized['policy_texts'] = array();
@@ -520,6 +605,7 @@ final class Admin {
 			'banner'       => __( 'Banner', 'wp-eu-cookie-suite' ),
 			'cookies'      => __( 'Cookies', 'wp-eu-cookie-suite' ),
 			'scanner'      => __( 'Scanner', 'wp-eu-cookie-suite' ),
+			'consent_log'  => __( 'Consent Log', 'wp-eu-cookie-suite' ),
 			'integrations' => __( 'Integrations', 'wp-eu-cookie-suite' ),
 			'tools'        => __( 'Tools', 'wp-eu-cookie-suite' ),
 		);
@@ -555,6 +641,9 @@ final class Admin {
 						break;
 					case 'integrations':
 						$this->render_integrations_tab();
+						break;
+					case 'consent_log':
+						$this->render_consent_log_tab();
 						break;
 					case 'tools':
 						$this->render_tools_tab();
@@ -677,6 +766,17 @@ final class Admin {
 						</td>
 					</tr>
 				<?php endforeach; ?>
+
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Reload on revoke', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[reload_on_revoke]" value="1" <?php checked( ! empty( $settings['reload_on_revoke'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Reload the page immediately after consent is revoked.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 
@@ -869,6 +969,12 @@ final class Admin {
 					</td>
 				</tr>
 				<tr>
+					<th scope="row"><?php esc_html_e( 'Revoke Consent Label', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][revoke_consent_label]" value="<?php echo esc_attr( $texts['revoke_consent_label'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><?php esc_html_e( 'Close Icon Label', 'wp-eu-cookie-suite' ); ?></th>
 					<td>
 						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][close_icon_label]" value="<?php echo esc_attr( $texts['close_icon_label'] ?? '' ); ?>" class="regular-text">
@@ -959,6 +1065,28 @@ final class Admin {
 	}
 
 	/**
+	 * Render consent log tab.
+	 */
+	private function render_consent_log_tab(): void {
+		$table = new ConsentLogTable();
+		$table->prepare_items();
+
+		?>
+		<div class="wpeu-cs-consent-log-header">
+			<h2><?php esc_html_e( 'Consent Log', 'wp-eu-cookie-suite' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Audit trail of visitor consent interactions. This is a technical aid for Art. 7(1) GDPR accountability.', 'wp-eu-cookie-suite' ); ?></p>
+		</div>
+
+		<form method="get">
+			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+			<input type="hidden" name="tab" value="consent_log">
+			<?php $table->search_box( __( 'Search Logs', 'wp-eu-cookie-suite' ), 'search-id' ); ?>
+			<?php $table->display(); ?>
+		</form>
+		<?php
+	}
+
+	/**
 	 * Render dashboard tab.
 	 */
 	private function render_dashboard_tab(): void {
@@ -966,6 +1094,9 @@ final class Admin {
 		$version      = $settings['version'] ?? WPEU_CS_VERSION;
 		$blocker      = $settings['blocker_enabled'] ?? false;
 		$consent_api  = defined( 'WP_CONSENT_API_VERSION' );
+
+		$logger = new \WPEU\CookieSuite\Consent\ConsentLogger();
+		$logs_30_days = $logger->get_total_logs( array( 'start_date' => date( 'Y-m-d', strtotime( '-30 days' ) ) ) );
 
 		$services_count = 0;
 		if ( ! empty( $settings['enabled_services'] ) ) {
@@ -1014,6 +1145,11 @@ final class Admin {
 			<div class="wpeu-cs-card">
 				<h3><?php esc_html_e( 'Active Block Rules', 'wp-eu-cookie-suite' ); ?></h3>
 				<p><?php echo (int) $total_rules; ?></p>
+			</div>
+
+			<div class="wpeu-cs-card">
+				<h3><?php esc_html_e( 'Logs (Last 30 days)', 'wp-eu-cookie-suite' ); ?></h3>
+				<p><?php echo (int) $logs_30_days; ?></p>
 			</div>
 		</div>
 		<?php
@@ -1422,6 +1558,44 @@ final class Admin {
 
 
 		<div class="card">
+			<h3><?php esc_html_e( 'Consent Logging', 'wp-eu-cookie-suite' ); ?></h3>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'wpeu_cs_settings' ); ?>
+				<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Enable Logging', 'wp-eu-cookie-suite' ); ?></th>
+						<td>
+							<label class="switch">
+								<input type="checkbox" name="wpeu_cs_settings[consent_logging_enabled]" value="1" <?php checked( ! empty( $settings['consent_logging_enabled'] ) ); ?>>
+								<span class="slider round"></span>
+							</label>
+							<p class="description"><?php esc_html_e( 'Store an audit trail of consent events in the local database.', 'wp-eu-cookie-suite' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Retention (days)', 'wp-eu-cookie-suite' ); ?></th>
+						<td>
+							<input type="number" name="wpeu_cs_settings[consent_log_retention]" value="<?php echo (int) ( $settings['consent_log_retention'] ?? 365 ); ?>" min="1" step="1" class="small-text">
+							<p class="description"><?php esc_html_e( 'Automatically delete logs older than this many days.', 'wp-eu-cookie-suite' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Store IP Hash', 'wp-eu-cookie-suite' ); ?></th>
+						<td>
+							<label class="switch">
+								<input type="checkbox" name="wpeu_cs_settings[consent_log_store_ip]" value="1" <?php checked( ! empty( $settings['consent_log_store_ip'] ) ); ?>>
+								<span class="slider round"></span>
+							</label>
+							<p class="description"><?php esc_html_e( 'Store a salted SHA-256 hash of the visitor IP address for better accountability (Art. 7 GDPR).', 'wp-eu-cookie-suite' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</form>
+		</div>
+
+		<div class="card">
 			<h3><?php esc_html_e( 'Consent revision', 'wp-eu-cookie-suite' ); ?></h3>
 			<p><?php esc_html_e( 'Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated).', 'wp-eu-cookie-suite' ); ?></p>
 			<p><strong><?php esc_html_e( 'Current revision:', 'wp-eu-cookie-suite' ); ?></strong> <?php echo (int) ( $settings['consent_revision'] ?? 0 ); ?></p>
@@ -1465,6 +1639,105 @@ final class Admin {
 		<?php
 	}
 
+
+	/**
+	 * Run log cleanup if retention period is reached.
+	 */
+	public function maybe_cleanup_logs(): void {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$page = $_GET['page'] ?? '';
+		if ( self::PAGE_SLUG !== $page ) {
+			return;
+		}
+
+		$last_cleanup = get_option( 'wpeu_cs_last_log_cleanup', 0 );
+		if ( time() - $last_cleanup < DAY_IN_SECONDS ) {
+			return;
+		}
+
+		$logger = new \WPEU\CookieSuite\Consent\ConsentLogger();
+		$logger->cleanup_expired_logs();
+
+		update_option( 'wpeu_cs_last_log_cleanup', time() );
+	}
+
+	/**
+	 * Ajax log consent action.
+	 */
+	public function ajax_log_consent(): void {
+		check_ajax_referer( 'wpeu-cs-log', 'nonce' );
+
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		if ( empty( $settings['consent_logging_enabled'] ) ) {
+			wp_send_json_error( 'logging_disabled' );
+		}
+
+		// Skip bots (empty user agent)
+		$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+		if ( empty( $ua ) ) {
+			wp_send_json_error( 'bot_skipped' );
+		}
+
+		// Rate limit: max 10 requests/minute per IP
+		$ip         = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+		$transient  = 'wpeu_cs_log_rl_' . md5( $ip );
+		$count      = (int) get_transient( $transient );
+
+		if ( $count >= 10 ) {
+			wp_send_json_error( 'rate_limited', 429 );
+		}
+		set_transient( $transient, $count + 1, 60 );
+
+		$raw_data = wp_unslash( $_POST );
+		$event_type = sanitize_key( $raw_data['event_type'] ?? '' );
+		$allowed_events = array( 'accept_all', 'reject_all', 'save_preferences', 'revoke', 'policy_revision' );
+
+		if ( ! in_array( $event_type, $allowed_events, true ) ) {
+			wp_send_json_error( 'invalid_event' );
+		}
+
+		$consent_uuid = sanitize_text_field( $raw_data['consent_uuid'] ?? '' );
+		if ( ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $consent_uuid ) ) {
+			wp_send_json_error( 'invalid_uuid' );
+		}
+
+		$categories = array();
+		if ( isset( $raw_data['categories'] ) && is_array( $raw_data['categories'] ) ) {
+			foreach ( $raw_data['categories'] as $cat => $status ) {
+				$categories[ sanitize_key( $cat ) ] = (bool) $status;
+			}
+		}
+
+		$ip_hash = null;
+		if ( ! empty( $settings['consent_log_store_ip'] ) ) {
+			$salt    = defined( 'AUTH_SALT' ) ? AUTH_SALT : 'wpeu_default_salt';
+			$ip_hash = hash( 'sha256', $ip . $salt );
+		}
+
+		$logger = new \WPEU\CookieSuite\Consent\ConsentLogger();
+		$success = $logger->log(
+			array(
+				'consent_uuid'    => $consent_uuid,
+				'event_type'      => $event_type,
+				'categories'      => $categories,
+				'consent_mode'    => ! empty( $settings['eu_mode'] ) ? 'optin' : 'optout',
+				'page_url'        => esc_url_raw( $raw_data['page_url'] ?? '' ),
+				'locale'          => sanitize_text_field( $raw_data['locale'] ?? 'en' ),
+				'banner_revision' => (int) ( $settings['consent_revision'] ?? 0 ),
+				'ip_hash'         => $ip_hash,
+				'user_agent'      => substr( sanitize_text_field( $ua ), 0, 255 ),
+			)
+		);
+
+		if ( $success ) {
+			wp_send_json_success( array( 'log_id' => $success ) );
+		}
+
+		wp_send_json_error( 'log_failed' );
+	}
 
 	/**
 	 * Ajax preview action.

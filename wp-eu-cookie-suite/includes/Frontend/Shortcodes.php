@@ -25,6 +25,7 @@ final class Shortcodes {
 		add_shortcode( 'wpeu_cookie_table', array( $this, 'render_cookie_table' ) );
 		add_shortcode( 'wpeu_cookie_policy', array( $this, 'render_cookie_policy' ) );
 		add_shortcode( 'wpeu_manage_consent', array( $this, 'render_manage_consent' ) );
+		add_shortcode( 'wpeu_revoke_consent', array( $this, 'render_revoke_consent' ) );
 	}
 
 	/**
@@ -137,6 +138,48 @@ final class Shortcodes {
 		);
 
 		return '<div class="wpeu-cookie-policy-wrapper">' . $output . '</div>';
+	}
+
+	/**
+	 * Render [wpeu_revoke_consent] shortcode.
+	 *
+	 * @param array|string $atts Shortcode attributes.
+	 * @return string
+	 */
+	public function render_revoke_consent( $atts ): string {
+		$atts = shortcode_atts(
+			array(
+				'label' => '',
+				'style' => 'link',
+			),
+			$atts,
+			'wpeu_revoke_consent'
+		);
+
+		$style = 'button' === $atts['style'] ? 'button' : 'link';
+		$label = $atts['label'];
+
+		if ( '' === $label ) {
+			$locale = BannerTexts::get_active_locale();
+			$texts  = BannerTexts::get_strings( $locale );
+			$label  = $texts['revoke_consent_label'] ?? __( 'Revoke cookie consent', 'wp-eu-cookie-suite' );
+		}
+
+		$onclick = "window.dispatchEvent(new CustomEvent('wpeu-cs-revoke')); return false;";
+
+		if ( 'button' === $style ) {
+			return sprintf(
+				'<button type="button" class="wpeu-revoke-consent wpeu-revoke-consent--button" onclick="%1$s">%2$s</button>',
+				esc_attr( $onclick ),
+				esc_html( $label )
+			);
+		}
+
+		return sprintf(
+			'<a href="#" class="wpeu-revoke-consent wpeu-revoke-consent--link" role="button" onclick="%1$s">%2$s</a>',
+			esc_attr( $onclick ),
+			esc_html( $label )
+		);
 	}
 
 	/**
