@@ -109,6 +109,10 @@ final class SettingsTransfer {
 			$sanitized['custom_block_rules'] = sanitize_textarea_field( (string) $settings['custom_block_rules'] );
 		}
 
+		if ( array_key_exists( 'consent_revision', $settings ) ) {
+			$sanitized['consent_revision'] = max( 0, (int) $settings['consent_revision'] );
+		}
+
 		if ( isset( $settings['language_labels'] ) && is_array( $settings['language_labels'] ) ) {
 			$sanitized['language_labels'] = array_map( 'sanitize_text_field', $settings['language_labels'] );
 		}

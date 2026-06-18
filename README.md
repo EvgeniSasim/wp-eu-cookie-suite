@@ -54,6 +54,17 @@ vendor/bin/phpunit
 3. Проверить блокировку GA/GTM/Pixel до согласия
 4. Вести актуальный cookie inventory (сканер + ручные правки)
 
+## Cookie settings link (footer)
+
+Добавьте шорткод **`[wpeu_manage_consent]`** в футер (виджет HTML, блок или шаблон темы), чтобы посетители могли снова открыть настройки cookies:
+
+```
+[wpeu_manage_consent]
+[wpeu_manage_consent style="button" label="Cookie settings"]
+```
+
+Атрибут `style` — `link` (по умолчанию) или `button`. Текст по умолчанию берётся из строк баннера (`manage_consent_label`) или атрибута `label`.
+
 ## Миграция с Complianz (ручной чеклист)
 
 Автоматической миграции нет — перенос настроек выполняется вручную:

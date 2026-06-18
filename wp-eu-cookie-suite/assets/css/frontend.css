@@ -41,3 +41,23 @@
 .wpeu-cs-iframe-placeholder button.wpeu-cs-accept-category:hover {
 	opacity: 0.9;
 }
+
+.wpeu-manage-consent--link {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.wpeu-manage-consent--button {
+	cursor: pointer;
+	background: var(--cc-btn-primary-bg, #30363c);
+	border: 1px solid var(--cc-btn-primary-border-color, #30363c);
+	color: #fff;
+	padding: 8px 16px;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.wpeu-manage-consent--button:hover {
+	opacity: 0.9;
+}
