@@ -31,7 +31,7 @@ Branch: `main`
 | 16.1 | jules-task-cc-16-1-admin-preview-ui.md | | | pending (Cursor hotfix in stash) |
 | 17 | jules-task-cc-17-iframe-buffer.md | [14920897654020325449](https://jules.google.com/session/14920897654020325449) | [#17](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/17) | merged |
 | 18 | jules-task-cc-18-ga-guard.md | — | [#18](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/18) | merged (Cursor) |
-| 19 | jules-task-cc-19-consent-ux.md | | | pending — blocked by Jules CC-15 session IN_PROGRESS |
+| 19 | jules-task-cc-19-consent-ux.md | — | [#19](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/19) | merged (Cursor) |
 | 23 | jules-task-cc-23-custom-categories.md | | | pending (after CC-19) |
 | 20 | jules-task-cc-20-ci.md | | | pending |
 | 21 | jules-task-cc-21-consent-records.md | | | pending (after CC-23) |
