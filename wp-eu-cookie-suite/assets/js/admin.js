@@ -188,7 +188,8 @@
 				$refreshBtn.on('click', updatePreview);
 			}
 			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', schedulePreviewUpdate);
-			$('textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').on('input', schedulePreviewUpdate);
+			$('input[name="wpeu_cs_settings[eu_mode]"], input[name="wpeu_cs_settings[show_reject_all]"], input[name="wpeu_cs_settings[enabled_categories][]"]').on('change', schedulePreviewUpdate);
+			$('input[name^="wpeu_cs_settings[banner_texts]"], textarea[name^="wpeu_cs_settings[banner_texts]"], textarea[name="wpeu_cs_settings[banner_ui][custom_css]"]').on('input', schedulePreviewUpdate);
 		}
 
 		// Scanner-only: import scan results

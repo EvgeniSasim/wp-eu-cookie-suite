@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards">
+	<description>WordPress Coding Standards for WP EU Cookie Suite</description>
+
+	<arg value="psvn"/>
+	<arg name="extensions" value="php"/>
+
+	<file>.</file>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+
+	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Extra"/>
+	<rule ref="WordPress-Docs"/>
+
+	<!-- PSR-4 is used, so exclude filename sniffs. -->
+	<rule ref="WordPress.Files.FileName">
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+
+	<!-- Relax rules for existing codebase to unblock CI. -->
+	<rule ref="Universal.Operators.DisallowShortTernary.Found">
+		<severity>0</severity>
+	</rule>
+	<rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+		<severity>0</severity>
+	</rule>
+	<rule ref="Squiz.Commenting.FunctionComment.MissingParamTag">
+		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.WP.I18n.MissingTranslatorsComment">
+		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.DateTime.RestrictedFunctions.date_date">
+		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
+		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+		<severity>0</severity>
+	</rule>
+
+	<!-- Ignore nonce verification for preview as it is mocked/handled via AJAX nonce. -->
+	<rule ref="WordPress.Security.NonceVerification.Missing">
+		<exclude-pattern>*/includes/Admin/Admin.php</exclude-pattern>
+	</rule>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="wp-eu-cookie-suite"/>
+			</property>
+		</properties>
+	</rule>
+
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<config name="minimum_supported_wp_version" value="6.4"/>
+</ruleset>

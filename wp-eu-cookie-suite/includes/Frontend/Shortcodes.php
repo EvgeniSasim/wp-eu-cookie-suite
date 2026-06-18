@@ -180,5 +180,4 @@ final class Shortcodes {
 			esc_html( $label )
 		);
 	}
-
 }

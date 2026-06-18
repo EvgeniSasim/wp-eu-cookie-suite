@@ -27,7 +27,7 @@ final class WpConsentBridge {
 	 */
 	private function register_polyfills(): void {
 		if ( ! function_exists( 'wp_has_consent' ) ) {
-			require_once dirname( __FILE__ ) . '/polyfills.php';
+			require_once __DIR__ . '/polyfills.php';
 		}
 	}
 }

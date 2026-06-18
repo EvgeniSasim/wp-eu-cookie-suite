@@ -778,7 +778,11 @@ final class Admin {
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'wp-eu-cookie-suite' ); ?></th>
 					<td>
 						<?php foreach ( $all_categories as $id => $category ) : ?>
-							<?php if ( 'necessary' === $id ) continue; ?>
+							<?php
+							if ( 'necessary' === $id ) {
+								continue;
+							}
+							?>
 							<label>
 								<input type="checkbox" name="wpeu_cs_settings[enabled_categories][]" value="<?php echo esc_attr( $id ); ?>" <?php checked( in_array( $id, $enabled_categories, true ) ); ?>>
 								<?php echo esc_html( $category['label'] ); ?>
@@ -1499,14 +1503,14 @@ final class Admin {
 				if ( isset( $post['banner_texts'] ) && is_array( $post['banner_texts'] ) ) {
 					$settings['banner_texts'] = $post['banner_texts'];
 				}
-				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) && ! empty( $post['enabled_categories'] ) ) {
+				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
 					$settings['enabled_categories'] = array_map( 'sanitize_text_field', $post['enabled_categories'] );
 				}
 				if ( array_key_exists( 'show_reject_all', $post ) ) {
-					$settings['show_reject_all'] = (bool) $post['show_reject_all'];
+					$settings['show_reject_all'] = filter_var( $post['show_reject_all'], FILTER_VALIDATE_BOOLEAN );
 				}
 				if ( array_key_exists( 'eu_mode', $post ) ) {
-					$settings['eu_mode'] = (bool) $post['eu_mode'];
+					$settings['eu_mode'] = filter_var( $post['eu_mode'], FILTER_VALIDATE_BOOLEAN );
 				}
 
 				return $settings;
