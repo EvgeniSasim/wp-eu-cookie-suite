@@ -47,7 +47,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y subversion
-        bash bin/install-wp-tests.sh test_db root root 127.0.0.1 latest
+        bash bin/install-wp-tests.sh test_db root root 127.0.0.1 latest true
       env:
         WP_TESTS_DIR: /tmp/wordpress-tests-lib
         WP_CORE_DIR: /tmp/wordpress
