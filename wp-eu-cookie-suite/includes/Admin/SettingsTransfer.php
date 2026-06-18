@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Admin;
 
+use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Frontend\ScriptRegistry;
 
 /**
@@ -91,6 +92,10 @@ final class SettingsTransfer {
 
 		if ( isset( $settings['enabled_categories'] ) && is_array( $settings['enabled_categories'] ) ) {
 			$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $settings['enabled_categories'] );
+		}
+
+		if ( isset( $settings['custom_categories'] ) ) {
+			$sanitized['custom_categories'] = Categories::sanitize_custom_categories( $settings['custom_categories'] );
 		}
 
 		if ( isset( $settings['enabled_services'] ) && is_array( $settings['enabled_services'] ) ) {

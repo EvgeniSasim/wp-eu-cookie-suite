@@ -83,6 +83,7 @@ final class Banner {
 		$custom_css   = $banner_ui['custom_css'] ?? '';
 		$is_preview    = defined( 'WPEU_CS_PREVIEW' );
 		$cookie_secure = is_ssl() && ! $is_preview;
+		$wp_consent_map = Categories::get_wp_consent_map();
 
 		if ( 'dark' === $theme ) {
 			?>
@@ -136,23 +137,29 @@ final class Banner {
 				const syncWpeuCookies = function () {
 					const categories = Object.keys(cc.getConfig().categories);
 					const consentData = {};
-					const mapping = {
-						'necessary': 'functional',
-						'statistics': 'statistics',
-						'marketing': 'marketing',
-						'preferences': 'preferences'
-					};
+					const mapping = <?php echo wp_json_encode( $wp_consent_map ); ?>;
 					const secureAttr = <?php echo $cookie_secure ? "'; Secure'" : "''"; ?>;
+					const wpConsentState = {};
+					Object.keys(mapping).forEach(function (slug) {
+						const wpCat = mapping[slug];
+						if (wpCat && typeof wpConsentState[wpCat] === 'undefined') {
+							wpConsentState[wpCat] = false;
+						}
+					});
 
 					categories.forEach(function (cat) {
 						const accepted = cc.acceptedCategory(cat);
 						consentData[cat] = accepted;
 						document.cookie = 'wpeu_' + cat + '=' + (accepted ? '1' : '0') + '; path=/; max-age=31536000; SameSite=Lax' + secureAttr;
 
-						// WP Consent API integration
-						if (mapping[cat]) {
-							window.wp_set_consent(mapping[cat], accepted ? 'allow' : 'deny');
+						const wpCat = mapping[cat];
+						if (wpCat && accepted) {
+							wpConsentState[wpCat] = true;
 						}
+					});
+
+					Object.keys(wpConsentState).forEach(function (wpCat) {
+						window.wp_set_consent(wpCat, wpConsentState[wpCat] ? 'allow' : 'deny');
 					});
 
 					document.cookie = 'wpeu_consent=' + encodeURIComponent(JSON.stringify(consentData)) + '; path=/; max-age=31536000; SameSite=Lax' + secureAttr;
@@ -173,7 +180,7 @@ final class Banner {
 	 */
 	private function get_config(): array {
 		$settings           = get_option( 'wpeu_cs_settings', array() );
-		$all_categories     = Categories::get_all();
+		$all_categories     = Categories::get_enabled_for_banner();
 		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
 		$show_reject_all    = $settings['show_reject_all'] ?? true;
 		$privacy_url        = $settings['privacy_policy_url'] ?? '';
@@ -196,10 +203,6 @@ final class Banner {
 		);
 
 		foreach ( $all_categories as $id => $category ) {
-			if ( 'necessary' !== $id && ! in_array( $id, $enabled_categories, true ) ) {
-				continue;
-			}
-
 			$categories_config[ $id ] = array(
 				'readOnly' => $category['read_only'] ?? false,
 				'enabled'  => $category['enabled'] ?? false,

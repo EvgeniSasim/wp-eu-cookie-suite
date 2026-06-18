@@ -13,6 +13,27 @@ use WPEU\CookieSuite\Consent\Categories;
 class Test_Categories extends WP_UnitTestCase {
 
 	/**
+	 * @var array<string, mixed>
+	 */
+	private $original_settings = array();
+
+	/**
+	 * Backup settings before each test.
+	 */
+	public function set_up(): void {
+		parent::set_up();
+		$this->original_settings = get_option( 'wpeu_cs_settings', array() );
+	}
+
+	/**
+	 * Restore settings after each test.
+	 */
+	public function tear_down(): void {
+		update_option( 'wpeu_cs_settings', $this->original_settings );
+		parent::tear_down();
+	}
+
+	/**
 	 * All categories are returned with required keys.
 	 */
 	public function test_get_all_returns_four_categories(): void {
@@ -23,6 +44,85 @@ class Test_Categories extends WP_UnitTestCase {
 		$this->assertArrayHasKey( Categories::PREFERENCES, $categories );
 		$this->assertArrayHasKey( Categories::STATISTICS, $categories );
 		$this->assertArrayHasKey( Categories::MARKETING, $categories );
+	}
+
+	/**
+	 * Custom categories merge into get_all().
+	 */
+	public function test_get_all_includes_custom_categories(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'custom_categories' => array(
+					'social' => array(
+						'label'           => 'Social Media',
+						'description'     => 'Social widgets',
+						'integration_map' => Categories::MARKETING,
+					),
+				),
+			)
+		);
+
+		$categories = Categories::get_all();
+		$this->assertArrayHasKey( 'social', $categories );
+		$this->assertSame( Categories::MARKETING, $categories['social']['integration_map'] );
+		$this->assertTrue( $categories['social']['custom'] );
+	}
+
+	/**
+	 * Invalid custom slug is rejected.
+	 */
+	public function test_is_valid_slug_rejects_builtin_and_invalid(): void {
+		$this->assertFalse( Categories::is_valid_slug( Categories::MARKETING ) );
+		$this->assertFalse( Categories::is_valid_slug( 'a' ) );
+		$this->assertFalse( Categories::is_valid_slug( 'Bad Slug' ) );
+		$this->assertTrue( Categories::is_valid_slug( 'social' ) );
+	}
+
+	/**
+	 * Integration map resolves for custom categories.
+	 */
+	public function test_get_integration_map_for_custom_category(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'custom_categories' => array(
+					'embeds' => array(
+						'label'           => 'Embeds',
+						'description'     => 'Embedded content',
+						'integration_map' => Categories::MARKETING,
+					),
+				),
+			)
+		);
+
+		$this->assertSame( Categories::MARKETING, Categories::get_integration_map( 'embeds' ) );
+		$this->assertSame( 'functional', Categories::get_wp_consent_category( Categories::NECESSARY ) );
+	}
+
+	/**
+	 * Enabled banner categories include necessary and selected slugs.
+	 */
+	public function test_get_enabled_for_banner(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'enabled_categories' => array( 'social', Categories::STATISTICS ),
+				'custom_categories'  => array(
+					'social' => array(
+						'label'           => 'Social',
+						'description'     => '',
+						'integration_map' => Categories::MARKETING,
+					),
+				),
+			)
+		);
+
+		$banner = Categories::get_enabled_for_banner();
+		$this->assertArrayHasKey( Categories::NECESSARY, $banner );
+		$this->assertArrayHasKey( 'social', $banner );
+		$this->assertArrayHasKey( Categories::STATISTICS, $banner );
+		$this->assertArrayNotHasKey( Categories::MARKETING, $banner );
 	}
 
 	/**
@@ -63,5 +163,27 @@ class Test_Categories extends WP_UnitTestCase {
 
 		unset( $_COOKIE['wpeu_consent'] );
 		$this->assertFalse( wpeu_cs_user_has_consent( 'marketing' ) );
+	}
+
+	/**
+	 * wp_has_consent respects custom category integration map.
+	 */
+	public function test_wp_has_consent_custom_category_mapping(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'custom_categories' => array(
+					'social' => array(
+						'label'           => 'Social',
+						'description'     => '',
+						'integration_map' => Categories::MARKETING,
+					),
+				),
+			)
+		);
+
+		$_COOKIE['wpeu_social'] = '1';
+		$this->assertTrue( wp_has_consent( 'marketing' ) );
+		unset( $_COOKIE['wpeu_social'] );
 	}
 }

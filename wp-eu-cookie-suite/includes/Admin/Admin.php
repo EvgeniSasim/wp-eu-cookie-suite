@@ -103,6 +103,17 @@ final class Admin {
 				check_admin_referer( 'wpeu_cs_bump_consent_revision', 'wpeu_cs_bump_revision_nonce' );
 				$this->handle_bump_consent_revision();
 				break;
+
+			case 'wpeu_cs_add_category':
+				check_admin_referer( 'wpeu_cs_add_category', 'wpeu_cs_add_category_nonce' );
+				$this->handle_add_category();
+				break;
+
+			case 'wpeu_cs_remove_category':
+				$slug = sanitize_key( $_GET['category'] ?? '' );
+				check_admin_referer( 'wpeu_cs_remove_category_' . $slug );
+				$this->handle_remove_category( $slug );
+				break;
 		}
 	}
 
@@ -160,6 +171,106 @@ final class Admin {
 
 		$tab = sanitize_key( (string) ( $_GET['tab'] ?? 'banner' ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab . '&message=lang_removed' ) );
+		exit;
+	}
+
+	/**
+	 * Handle adding a custom consent category.
+	 */
+	private function handle_add_category(): void {
+		$slug            = sanitize_key( $_POST['wpeu_cs_new_category_slug'] ?? '' );
+		$label           = sanitize_text_field( $_POST['wpeu_cs_new_category_label'] ?? '' );
+		$description     = sanitize_textarea_field( $_POST['wpeu_cs_new_category_description'] ?? '' );
+		$integration_map = sanitize_key( $_POST['wpeu_cs_new_category_integration_map'] ?? Categories::MARKETING );
+
+		$redirect_base = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner' );
+
+		if ( ! Categories::is_valid_slug( $slug ) ) {
+			wp_safe_redirect( $redirect_base . '&message=invalid_category_slug' );
+			exit;
+		}
+
+		if ( ! Categories::is_valid_integration_map( $integration_map ) ) {
+			wp_safe_redirect( $redirect_base . '&message=invalid_integration_map' );
+			exit;
+		}
+
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		if ( ! isset( $settings['custom_categories'] ) || ! is_array( $settings['custom_categories'] ) ) {
+			$settings['custom_categories'] = array();
+		}
+
+		if ( count( $settings['custom_categories'] ) >= Categories::MAX_CUSTOM ) {
+			wp_safe_redirect( $redirect_base . '&message=category_limit' );
+			exit;
+		}
+
+		if ( isset( $settings['custom_categories'][ $slug ] ) ) {
+			wp_safe_redirect( $redirect_base . '&message=category_exists' );
+			exit;
+		}
+
+		$settings['custom_categories'][ $slug ] = array(
+			'label'           => $label ?: $slug,
+			'description'     => $description,
+			'integration_map' => $integration_map,
+		);
+
+		$locales = BannerTexts::get_locales();
+		if ( ! isset( $settings['banner_texts'] ) || ! is_array( $settings['banner_texts'] ) ) {
+			$settings['banner_texts'] = array();
+		}
+		foreach ( array_keys( $locales ) as $locale ) {
+			if ( ! isset( $settings['banner_texts'][ $locale ] ) || ! is_array( $settings['banner_texts'][ $locale ] ) ) {
+				$settings['banner_texts'][ $locale ] = array();
+			}
+			$settings['banner_texts'][ $locale ][ $slug . '_label' ]       = $label ?: $slug;
+			$settings['banner_texts'][ $locale ][ $slug . '_description' ] = $description;
+		}
+
+		update_option( 'wpeu_cs_settings', $settings );
+
+		wp_safe_redirect( $redirect_base . '&message=category_added' );
+		exit;
+	}
+
+	/**
+	 * Handle removing a custom consent category.
+	 *
+	 * @param string $slug Category slug.
+	 */
+	private function handle_remove_category( string $slug ): void {
+		if ( ! Categories::is_valid_slug( $slug ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner&message=invalid_category_slug' ) );
+			exit;
+		}
+
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		unset( $settings['custom_categories'][ $slug ] );
+
+		if ( isset( $settings['enabled_categories'] ) && is_array( $settings['enabled_categories'] ) ) {
+			$settings['enabled_categories'] = array_values(
+				array_filter(
+					$settings['enabled_categories'],
+					static function ( $item ) use ( $slug ) {
+						return $slug !== $item;
+					}
+				)
+			);
+		}
+
+		if ( isset( $settings['banner_texts'] ) && is_array( $settings['banner_texts'] ) ) {
+			foreach ( $settings['banner_texts'] as $locale => $texts ) {
+				if ( ! is_array( $texts ) ) {
+					continue;
+				}
+				unset( $settings['banner_texts'][ $locale ][ $slug . '_label' ], $settings['banner_texts'][ $locale ][ $slug . '_description' ] );
+			}
+		}
+
+		update_option( 'wpeu_cs_settings', $settings );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner&message=category_removed' ) );
 		exit;
 	}
 
@@ -286,7 +397,13 @@ final class Admin {
 		if ( 'banner' === $active_tab ) {
 			$sanitized['enabled_categories'] = array();
 			if ( isset( $input['enabled_categories'] ) && is_array( $input['enabled_categories'] ) ) {
-				$sanitized['enabled_categories'] = array_map( 'sanitize_text_field', $input['enabled_categories'] );
+				$valid_slugs = array_keys( Categories::get_all() );
+				$sanitized['enabled_categories'] = array_values(
+					array_intersect(
+						array_map( 'sanitize_text_field', $input['enabled_categories'] ),
+						$valid_slugs
+					)
+				);
 			}
 
 			$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
@@ -509,6 +626,99 @@ final class Admin {
 	}
 
 	/**
+	 * Render custom category management (Banner tab).
+	 */
+	private function render_categories_management(): void {
+		$builtin         = Categories::get_builtin();
+		$custom          = Categories::get_custom();
+		$integration_opts = array(
+			Categories::PREFERENCES => __( 'Preferences', 'wp-eu-cookie-suite' ),
+			Categories::STATISTICS  => __( 'Statistics', 'wp-eu-cookie-suite' ),
+			Categories::MARKETING   => __( 'Marketing', 'wp-eu-cookie-suite' ),
+		);
+		?>
+		<h3><?php esc_html_e( 'Categories', 'wp-eu-cookie-suite' ); ?></h3>
+		<p class="description"><?php esc_html_e( 'Built-in categories are always available. Add up to 5 custom categories for site-specific consent groups.', 'wp-eu-cookie-suite' ); ?></p>
+
+		<table class="widefat striped" style="max-width: 900px;">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Slug', 'wp-eu-cookie-suite' ); ?></th>
+					<th><?php esc_html_e( 'Label', 'wp-eu-cookie-suite' ); ?></th>
+					<th><?php esc_html_e( 'Counts as', 'wp-eu-cookie-suite' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'wp-eu-cookie-suite' ); ?></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $builtin as $slug => $category ) : ?>
+					<tr>
+						<td><code><?php echo esc_html( $slug ); ?></code></td>
+						<td><?php echo esc_html( (string) $category['label'] ); ?></td>
+						<td><?php echo esc_html( (string) ( $category['integration_map'] ?? $slug ) ); ?></td>
+						<td><?php esc_html_e( 'Built-in', 'wp-eu-cookie-suite' ); ?></td>
+						<td></td>
+					</tr>
+				<?php endforeach; ?>
+				<?php foreach ( $custom as $slug => $category ) : ?>
+					<?php
+					$remove_url = wp_nonce_url(
+						admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner&action=wpeu_cs_remove_category&category=' . $slug ),
+						'wpeu_cs_remove_category_' . $slug
+					);
+					?>
+					<tr>
+						<td><code><?php echo esc_html( $slug ); ?></code></td>
+						<td><?php echo esc_html( $category['label'] ); ?></td>
+						<td><?php echo esc_html( $category['integration_map'] ); ?></td>
+						<td><?php esc_html_e( 'Custom', 'wp-eu-cookie-suite' ); ?></td>
+						<td>
+							<a href="<?php echo esc_url( $remove_url ); ?>" class="submitdelete" onclick="return confirm('<?php echo esc_js( __( 'Remove this custom category?', 'wp-eu-cookie-suite' ) ); ?>');"><?php esc_html_e( 'Remove', 'wp-eu-cookie-suite' ); ?></a>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+
+		<?php if ( count( $custom ) < Categories::MAX_CUSTOM ) : ?>
+		<div class="wpeu-cs-add-category-form card" style="margin-top: 12px; max-width: 900px;">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
+				<?php wp_nonce_field( 'wpeu_cs_add_category', 'wpeu_cs_add_category_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_add_category">
+				<h4 style="margin-top: 0;"><?php esc_html_e( 'Add Custom Category', 'wp-eu-cookie-suite' ); ?></h4>
+				<table class="form-table" role="presentation" style="margin-top: 0;">
+					<tr>
+						<th scope="row"><label for="wpeu_cs_new_category_slug"><?php esc_html_e( 'Slug', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td><input type="text" name="wpeu_cs_new_category_slug" id="wpeu_cs_new_category_slug" class="regular-text" required pattern="[a-z0-9_-]{2,32}" maxlength="32" placeholder="social"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="wpeu_cs_new_category_label"><?php esc_html_e( 'Label', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td><input type="text" name="wpeu_cs_new_category_label" id="wpeu_cs_new_category_label" class="regular-text" required placeholder="<?php esc_attr_e( 'Social Media', 'wp-eu-cookie-suite' ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="wpeu_cs_new_category_description"><?php esc_html_e( 'Description', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td><textarea name="wpeu_cs_new_category_description" id="wpeu_cs_new_category_description" rows="2" class="large-text"></textarea></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="wpeu_cs_new_category_integration_map"><?php esc_html_e( 'Counts as (for blocking integrations)', 'wp-eu-cookie-suite' ); ?></label></th>
+						<td>
+							<select name="wpeu_cs_new_category_integration_map" id="wpeu_cs_new_category_integration_map">
+								<?php foreach ( $integration_opts as $value => $label ) : ?>
+									<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Add Category', 'wp-eu-cookie-suite' ), 'secondary' ); ?>
+			</form>
+		</div>
+		<?php endif; ?>
+		<hr>
+		<?php
+	}
+
+	/**
 	 * Render banner tab.
 	 */
 	private function render_banner_tab(): void {
@@ -538,9 +748,22 @@ final class Admin {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'wp-eu-cookie-suite' ) . '</p></div>';
 		} elseif ( 'invalid_code' === $message ) {
 			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use 2-5 characters.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'category_added' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Custom category added.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'category_removed' === $message ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Custom category removed.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'invalid_category_slug' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid category slug. Use 2-32 lowercase letters, numbers, hyphens or underscores. Built-in slugs are reserved.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'category_limit' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Maximum number of custom categories reached.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'category_exists' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'A category with this slug already exists.', 'wp-eu-cookie-suite' ) . '</p></div>';
+		} elseif ( 'invalid_integration_map' === $message ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid integration map value.', 'wp-eu-cookie-suite' ) . '</p></div>';
 		}
 
 		$this->render_language_selector( 'banner', $locales, $current_lang );
+		$this->render_categories_management();
 		?>
 
 		<form method="post" action="options.php">

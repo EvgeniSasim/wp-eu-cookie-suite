@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Frontend;
 
+use WPEU\CookieSuite\Consent\Categories;
+
 /**
  * Handles blocking and unblocking of third-party scripts.
  */
@@ -187,9 +189,11 @@ final class ScriptBlocker {
 		if ( ! $blocker && ! $iframes ) {
 			return;
 		}
+		$category_slugs = array_keys( Categories::get_all() );
 		?>
 		<script type="text/javascript">
 			(function() {
+				const allCategorySlugs = <?php echo wp_json_encode( array_values( $category_slugs ) ); ?>;
 				const activateScripts = function(consentData) {
 					const scripts = document.querySelectorAll('script[type="text/plain"][data-category]');
 					scripts.forEach(function(script) {
@@ -241,9 +245,8 @@ final class ScriptBlocker {
 				// Check on initial load if consent is already there.
 				window.addEventListener('load', function() {
 					if (window.CookieConsent && typeof window.CookieConsent.acceptedCategory === 'function') {
-						const categories = ['necessary', 'preferences', 'statistics', 'marketing'];
 						const consentData = {};
-						categories.forEach(cat => {
+						allCategorySlugs.forEach(function (cat) {
 							consentData[cat] = window.CookieConsent.acceptedCategory(cat);
 						});
 						activateScripts(consentData);

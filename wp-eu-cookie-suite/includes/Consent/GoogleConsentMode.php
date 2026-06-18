@@ -64,20 +64,68 @@ final class GoogleConsentMode {
 		if ( ! $this->is_enabled() ) {
 			return;
 		}
+
+		$integration_map = Categories::get_integration_map_by_slug();
+		$banner_slugs    = array_keys( Categories::get_enabled_for_banner() );
 		?>
 		<script type="text/javascript">
 			(function () {
+				const integrationMap = <?php echo wp_json_encode( $integration_map ); ?>;
+				const bannerSlugs = <?php echo wp_json_encode( array_values( $banner_slugs ) ); ?>;
+
+				function resolveGcmFlags(detail) {
+					const flags = {
+						statistics: false,
+						marketing: false,
+						preferences: false
+					};
+
+					if (!detail || typeof detail !== 'object') {
+						return flags;
+					}
+
+					Object.keys(detail).forEach(function (slug) {
+						if (!detail[slug]) {
+							return;
+						}
+						const mapped = integrationMap[slug] || slug;
+						if (mapped === 'statistics') {
+							flags.statistics = true;
+						}
+						if (mapped === 'marketing') {
+							flags.marketing = true;
+						}
+						if (mapped === 'preferences' || mapped === 'necessary') {
+							flags.preferences = true;
+						}
+					});
+
+					return flags;
+				}
+
 				function updateGoogleConsent(detail) {
-					if (typeof gtag !== 'function' || !detail) {
+					if (typeof gtag !== 'function') {
 						return;
 					}
+					const flags = resolveGcmFlags(detail);
 					gtag('consent', 'update', {
-						analytics_storage: detail.statistics ? 'granted' : 'denied',
-						ad_storage: detail.marketing ? 'granted' : 'denied',
-						ad_user_data: detail.marketing ? 'granted' : 'denied',
-						ad_personalization: detail.marketing ? 'granted' : 'denied',
-						functionality_storage: detail.preferences ? 'granted' : 'denied'
+						analytics_storage: flags.statistics ? 'granted' : 'denied',
+						ad_storage: flags.marketing ? 'granted' : 'denied',
+						ad_user_data: flags.marketing ? 'granted' : 'denied',
+						ad_personalization: flags.marketing ? 'granted' : 'denied',
+						functionality_storage: flags.preferences ? 'granted' : 'denied'
 					});
+				}
+
+				function buildDetailFromCookieConsent() {
+					const detail = {};
+					if (typeof window.CookieConsent === 'undefined' || typeof window.CookieConsent.acceptedCategory !== 'function') {
+						return detail;
+					}
+					bannerSlugs.forEach(function (slug) {
+						detail[slug] = window.CookieConsent.acceptedCategory(slug);
+					});
+					return detail;
 				}
 
 				document.addEventListener('wpeu-consent-updated', function (event) {
@@ -85,13 +133,7 @@ final class GoogleConsentMode {
 				});
 
 				window.addEventListener('load', function () {
-					if (typeof window.CookieConsent !== 'undefined' && typeof window.CookieConsent.acceptedCategory === 'function') {
-						updateGoogleConsent({
-							statistics: window.CookieConsent.acceptedCategory('statistics'),
-							marketing: window.CookieConsent.acceptedCategory('marketing'),
-							preferences: window.CookieConsent.acceptedCategory('preferences')
-						});
-					}
+					updateGoogleConsent(buildDetailFromCookieConsent());
 				});
 			})();
 		</script>

@@ -5,6 +5,8 @@
  * @package WPEU\CookieSuite
  */
 
+use WPEU\CookieSuite\Consent\Categories;
+
 if ( ! function_exists( 'wp_has_consent' ) ) {
 	/**
 	 * Check if consent has been given for a category.
@@ -13,15 +15,27 @@ if ( ! function_exists( 'wp_has_consent' ) ) {
 	 * @return bool
 	 */
 	function wp_has_consent( string $category ): bool {
-		$mapping = array(
-			'functional'  => 'necessary',
-			'statistics'  => 'statistics',
-			'marketing'   => 'marketing',
-			'preferences' => 'preferences',
-		);
+		$wp_categories = array( 'functional', 'statistics', 'marketing', 'preferences' );
+		if ( ! in_array( $category, $wp_categories, true ) ) {
+			return wpeu_cs_user_has_consent( $category );
+		}
 
-		$wpeu_category = $mapping[ $category ] ?? $category;
-		return wpeu_cs_user_has_consent( $wpeu_category );
+		if ( 'functional' === $category ) {
+			return wpeu_cs_user_has_consent( Categories::NECESSARY );
+		}
+
+		if ( wpeu_cs_user_has_consent( $category ) ) {
+			return true;
+		}
+
+		foreach ( Categories::get_custom() as $slug => $data ) {
+			$map = $data['integration_map'] ?? Categories::MARKETING;
+			if ( $map === $category && wpeu_cs_user_has_consent( $slug ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
 

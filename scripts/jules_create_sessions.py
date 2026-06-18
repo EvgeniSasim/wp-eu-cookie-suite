@@ -58,10 +58,14 @@ CC_BRANCHES = {
 
 def extract_prompt(md_path: Path) -> str:
     text = md_path.read_text(encoding="utf-8")
-    m = re.search(r"```markdown\s*\n(.*?)```", text, re.DOTALL)
-    if not m:
+    start = re.search(r"```markdown\s*\n", text)
+    if not start:
         raise ValueError(f"No ```markdown block in {md_path}")
-    return m.group(1).strip()
+    body = text[start.end() :]
+    end = body.rfind("\n```")
+    if end == -1:
+        raise ValueError(f"No closing ``` for markdown block in {md_path}")
+    return body[:end].strip()
 
 
 def create_session(*, title: str, prompt: str, branch_hint: str) -> dict:
