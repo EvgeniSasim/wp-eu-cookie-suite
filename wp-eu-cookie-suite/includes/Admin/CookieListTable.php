@@ -103,7 +103,7 @@ class CookieListTable extends \WP_List_Table {
 				return '0000-00-00 00:00:00' === $item['detected_at'] ? __( 'Manual', 'wp-eu-cookie-suite' ) : mysql2date( get_option( 'date_format' ), $item['detected_at'] );
 
 			default:
-				return esc_html( (string) ($item[ $column_name ] ?? '') );
+				return esc_html( (string) ( $item[ $column_name ] ?? '' ) );
 		}
 	}
 

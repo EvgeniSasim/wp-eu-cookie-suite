@@ -778,7 +778,10 @@ final class Admin {
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'wp-eu-cookie-suite' ); ?></th>
 					<td>
 						<?php foreach ( $all_categories as $id => $category ) : ?>
-							<?php if ( 'necessary' === $id ) continue; ?>
+							<?php
+							if ( 'necessary' === $id ) {
+								continue;}
+							?>
 							<label>
 								<input type="checkbox" name="wpeu_cs_settings[enabled_categories][]" value="<?php echo esc_attr( $id ); ?>" <?php checked( in_array( $id, $enabled_categories, true ) ); ?>>
 								<?php echo esc_html( $category['label'] ); ?>
