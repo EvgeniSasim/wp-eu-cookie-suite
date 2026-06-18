@@ -29,16 +29,16 @@ jobs:
     - name: Run PHPCS
       run: vendor/bin/phpcs
 
+    - name: Start MySQL service
+      run: sudo systemctl start mysql
+
     - name: Setup WordPress test environment
       run: |
         sudo apt-get install subversion
-        bash bin/install-wp-tests.sh test_db root root localhost latest
+        bash bin/install-wp-tests.sh test_db root "" localhost latest
       env:
         WP_TESTS_DIR: /tmp/wordpress-tests-lib
         WP_CORE_DIR: /tmp/wordpress
-
-    - name: Start MySQL service
-      run: sudo systemctl start mysql
 
     - name: Run PHPUnit
       run: vendor/bin/phpunit
