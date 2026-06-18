@@ -24,6 +24,7 @@ final class Shortcodes {
 	public function __construct() {
 		add_shortcode( 'wpeu_cookie_table', array( $this, 'render_cookie_table' ) );
 		add_shortcode( 'wpeu_cookie_policy', array( $this, 'render_cookie_policy' ) );
+		add_shortcode( 'wpeu_manage_consent', array( $this, 'render_manage_consent' ) );
 	}
 
 	/**
@@ -136,6 +137,48 @@ final class Shortcodes {
 		);
 
 		return '<div class="wpeu-cookie-policy-wrapper">' . $output . '</div>';
+	}
+
+	/**
+	 * Render [wpeu_manage_consent] shortcode.
+	 *
+	 * @param array|string $atts Shortcode attributes.
+	 * @return string
+	 */
+	public function render_manage_consent( $atts ): string {
+		$atts = shortcode_atts(
+			array(
+				'label' => '',
+				'style' => 'link',
+			),
+			$atts,
+			'wpeu_manage_consent'
+		);
+
+		$style = 'button' === $atts['style'] ? 'button' : 'link';
+		$label = $atts['label'];
+
+		if ( '' === $label ) {
+			$locale = BannerTexts::get_active_locale();
+			$texts  = BannerTexts::get_strings( $locale );
+			$label  = $texts['manage_consent_label'] ?? __( 'Cookie settings', 'wp-eu-cookie-suite' );
+		}
+
+		$onclick = "if(window.CookieConsent&&typeof window.CookieConsent.showPreferences==='function'){window.CookieConsent.showPreferences();}else if(window.CookieConsent&&typeof window.CookieConsent.show==='function'){window.CookieConsent.show(true);}return false;";
+
+		if ( 'button' === $style ) {
+			return sprintf(
+				'<button type="button" class="wpeu-manage-consent wpeu-manage-consent--button" onclick="%1$s">%2$s</button>',
+				esc_attr( $onclick ),
+				esc_html( $label )
+			);
+		}
+
+		return sprintf(
+			'<a href="#" class="wpeu-manage-consent wpeu-manage-consent--link" role="button" onclick="%1$s">%2$s</a>',
+			esc_attr( $onclick ),
+			esc_html( $label )
+		);
 	}
 
 }

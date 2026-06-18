@@ -90,6 +90,7 @@ final class Plugin {
 					'enabled_categories' => array( 'preferences', 'statistics', 'marketing' ),
 					'show_reject_all'      => true,
 					'google_consent_mode'  => true,
+					'consent_revision'     => 0,
 					'version'              => WPEU_CS_VERSION,
 				)
 			);

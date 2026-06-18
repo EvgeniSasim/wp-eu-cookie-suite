@@ -50,6 +50,7 @@ final class GoogleConsentMode {
 				analytics_storage: 'denied',
 				ad_user_data: 'denied',
 				ad_personalization: 'denied',
+				functionality_storage: 'denied',
 				wait_for_update: 500
 			});
 		</script>
@@ -74,7 +75,8 @@ final class GoogleConsentMode {
 						analytics_storage: detail.statistics ? 'granted' : 'denied',
 						ad_storage: detail.marketing ? 'granted' : 'denied',
 						ad_user_data: detail.marketing ? 'granted' : 'denied',
-						ad_personalization: detail.marketing ? 'granted' : 'denied'
+						ad_personalization: detail.marketing ? 'granted' : 'denied',
+						functionality_storage: detail.preferences ? 'granted' : 'denied'
 					});
 				}
 
@@ -86,7 +88,8 @@ final class GoogleConsentMode {
 					if (typeof window.CookieConsent !== 'undefined' && typeof window.CookieConsent.acceptedCategory === 'function') {
 						updateGoogleConsent({
 							statistics: window.CookieConsent.acceptedCategory('statistics'),
-							marketing: window.CookieConsent.acceptedCategory('marketing')
+							marketing: window.CookieConsent.acceptedCategory('marketing'),
+							preferences: window.CookieConsent.acceptedCategory('preferences')
 						});
 					}
 				});

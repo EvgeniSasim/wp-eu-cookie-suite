@@ -81,7 +81,8 @@ final class Banner {
 		$theme        = $banner_ui['theme'] ?? 'light';
 		$primary      = sanitize_hex_color( $banner_ui['primary_color'] ?? '' ) ?: '#30363c';
 		$custom_css   = $banner_ui['custom_css'] ?? '';
-		$is_preview   = defined( 'WPEU_CS_PREVIEW' );
+		$is_preview    = defined( 'WPEU_CS_PREVIEW' );
+		$cookie_secure = is_ssl() && ! $is_preview;
 
 		if ( 'dark' === $theme ) {
 			?>
@@ -141,11 +142,12 @@ final class Banner {
 						'marketing': 'marketing',
 						'preferences': 'preferences'
 					};
+					const secureAttr = <?php echo $cookie_secure ? "'; Secure'" : "''"; ?>;
 
 					categories.forEach(function (cat) {
 						const accepted = cc.acceptedCategory(cat);
 						consentData[cat] = accepted;
-						document.cookie = 'wpeu_' + cat + '=' + (accepted ? '1' : '0') + '; path=/; max-age=31536000; SameSite=Lax';
+						document.cookie = 'wpeu_' + cat + '=' + (accepted ? '1' : '0') + '; path=/; max-age=31536000; SameSite=Lax' + secureAttr;
 
 						// WP Consent API integration
 						if (mapping[cat]) {
@@ -153,7 +155,7 @@ final class Banner {
 						}
 					});
 
-					document.cookie = 'wpeu_consent=' + encodeURIComponent(JSON.stringify(consentData)) + '; path=/; max-age=31536000; SameSite=Lax';
+					document.cookie = 'wpeu_consent=' + encodeURIComponent(JSON.stringify(consentData)) + '; path=/; max-age=31536000; SameSite=Lax' + secureAttr;
 					document.dispatchEvent(new CustomEvent('wpeu-consent-updated', { detail: consentData }));
 				};
 
@@ -221,6 +223,7 @@ final class Banner {
 		$footer_html = implode( ' | ', $footer_links );
 
 		$config = array(
+			'revision'   => max( 0, (int) ( $settings['consent_revision'] ?? 0 ) ),
 			'mode'       => $eu_mode ? 'opt-in' : 'opt-out',
 			'guiOptions' => array(
 				'consentModal' => array(

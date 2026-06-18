@@ -98,6 +98,11 @@ final class Admin {
 				check_admin_referer( 'wpeu_cs_remove_language_' . $code );
 				$this->handle_remove_language( $code );
 				break;
+
+			case 'wpeu_cs_bump_consent_revision':
+				check_admin_referer( 'wpeu_cs_bump_consent_revision', 'wpeu_cs_bump_revision_nonce' );
+				$this->handle_bump_consent_revision();
+				break;
 		}
 	}
 
@@ -311,6 +316,7 @@ final class Admin {
 				);
 			}
 		} elseif ( 'integrations' === $active_tab ) {
+			$sanitized['blocker_enabled']     = isset( $input['blocker_enabled'] );
 			$sanitized['google_consent_mode'] = isset( $input['google_consent_mode'] );
 
 			$sanitized['enabled_services'] = array();
@@ -796,6 +802,7 @@ final class Admin {
 		$enabled_integrations = $settings['enabled_integrations'] ?? array();
 		$custom_rules         = $settings['custom_block_rules'] ?? '';
 		$google_gcm           = $settings['google_consent_mode'] ?? true;
+		$blocker_enabled      = ! empty( $settings['blocker_enabled'] );
 		$analytics_field      = $settings['theme_analytics_field'] ?? 'analytics';
 
 		?>
@@ -885,6 +892,16 @@ final class Admin {
 			<p><?php esc_html_e( 'Enable automatic script blocking for these popular services.', 'wp-eu-cookie-suite' ); ?></p>
 
 			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Script blocker enabled', 'wp-eu-cookie-suite' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[blocker_enabled]" value="1" <?php checked( $blocker_enabled ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'Output-buffer blocking for third-party scripts matched by the registry and custom rules.', 'wp-eu-cookie-suite' ); ?></p>
+					</td>
+				</tr>
 				<?php foreach ( $services as $id => $service ) : ?>
 					<tr>
 						<th scope="row"><?php echo esc_html( $service['label'] ); ?></th>
@@ -1131,6 +1148,10 @@ final class Admin {
 			?>
 			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Import failed: could not read the uploaded file.', 'wp-eu-cookie-suite' ); ?></p></div>
 			<?php
+		elseif ( 'revision_bumped' === $message ) :
+			?>
+			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Consent revision updated. Visitors will be prompted again.', 'wp-eu-cookie-suite' ); ?></p></div>
+			<?php
 		endif;
 		?>
 
@@ -1171,6 +1192,18 @@ final class Admin {
 				<?php submit_button(); ?>
 			</div>
 		</form>
+
+
+		<div class="card">
+			<h3><?php esc_html_e( 'Consent revision', 'wp-eu-cookie-suite' ); ?></h3>
+			<p><?php esc_html_e( 'Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated).', 'wp-eu-cookie-suite' ); ?></p>
+			<p><strong><?php esc_html_e( 'Current revision:', 'wp-eu-cookie-suite' ); ?></strong> <?php echo (int) ( $settings['consent_revision'] ?? 0 ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Reset all visitor consents and show the banner again?', 'wp-eu-cookie-suite' ) ); ?>');">
+				<?php wp_nonce_field( 'wpeu_cs_bump_consent_revision', 'wpeu_cs_bump_revision_nonce' ); ?>
+				<input type="hidden" name="action" value="wpeu_cs_bump_consent_revision">
+				<?php submit_button( __( 'Reset all consents (bump revision)', 'wp-eu-cookie-suite' ), 'delete', 'submit', false ); ?>
+			</form>
+		</div>
 
 		<div class="card">
 			<h3><?php esc_html_e( 'Export Cookie Inventory', 'wp-eu-cookie-suite' ); ?></h3>
