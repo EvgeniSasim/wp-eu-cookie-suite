@@ -780,7 +780,8 @@ final class Admin {
 						<?php foreach ( $all_categories as $id => $category ) : ?>
 							<?php
 							if ( 'necessary' === $id ) {
-								continue;}
+								continue;
+							}
 							?>
 							<label>
 								<input type="checkbox" name="wpeu_cs_settings[enabled_categories][]" value="<?php echo esc_attr( $id ); ?>" <?php checked( in_array( $id, $enabled_categories, true ) ); ?>>

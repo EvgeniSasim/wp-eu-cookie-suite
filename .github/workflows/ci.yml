@@ -11,7 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['8.1', '8.2']
+        php-version: [ '8.1', '8.2' ]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - uses: actions/checkout@v4
@@ -29,16 +43,11 @@ jobs:
     - name: Run PHPCS
       run: vendor/bin/phpcs
 
-    - name: Start MySQL service
-      run: |
-        sudo systemctl start mysql
-        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
-        sudo mysql -e "FLUSH PRIVILEGES;"
-
     - name: Setup WordPress test environment
       run: |
-        sudo apt-get install subversion
-        bash bin/install-wp-tests.sh test_db root root localhost latest
+        sudo apt-get update
+        sudo apt-get install -y subversion
+        bash bin/install-wp-tests.sh test_db root root 127.0.0.1 latest
       env:
         WP_TESTS_DIR: /tmp/wordpress-tests-lib
         WP_CORE_DIR: /tmp/wordpress

@@ -1,6 +1,8 @@
 <?php
 /**
- * PHPUnit bootstrap for SQLite.
+ * PHPUnit bootstrap.
+ *
+ * @package WPEU\CookieSuite
  */
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
@@ -11,6 +13,7 @@ if ( ! $_tests_dir ) {
 
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
 	echo "Could not find {$_tests_dir}/includes/functions.php\n";
+	echo "Run: bin/install-wp-tests.sh <db-name> <db-user> <db-pass>\n";
 	exit( 1 );
 }
 
