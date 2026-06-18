@@ -84,6 +84,12 @@ vendor/bin/phpunit
 
 При включении в **Integrations** плагин выставляет default `denied` для Google tags и обновляет после выбора в баннере. Совместим с Google Site Kit через `googlesitekit_analytics-4_tag_block_on_consent`.
 
+## Author
+
+**Evgenii Sasim**
+- [Instagram](https://www.instagram.com/evgenii.sasim/)
+- [GitHub](https://github.com/EvgeniSasim)
+
 ## Разработка
 
 | Роль | Кто |

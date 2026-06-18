@@ -3,10 +3,11 @@
  * Plugin Name:       WP EU Cookie Suite
  * Plugin URI:        https://github.com/EvgeniSasim/wp-eu-cookie-suite
  * Description:       EU/GDPR cookie consent with CookieConsent UI, script blocking, scanner, and WP Consent API.
- * Version:           0.1.0
+ * Version:           1.0.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Evgenii Sasim
+ * Author URI:        https://www.instagram.com/evgenii.sasim/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       wp-eu-cookie-suite

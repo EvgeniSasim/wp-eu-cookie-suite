@@ -55,7 +55,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '0.1.0' );
+			define( 'WPEU_CS_VERSION', '1.0.0' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/wp-eu-cookie-suite.php' );

@@ -3,6 +3,12 @@
   "description": "WP EU Cookie Suite WordPress plugin",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Evgenii Sasim",
+      "homepage": "https://www.instagram.com/evgenii.sasim/"
+    }
+  ],
   "require": {
     "php": ">=8.1"
   },

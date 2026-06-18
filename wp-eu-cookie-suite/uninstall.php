@@ -17,4 +17,13 @@ if ( is_array( $settings ) && ! empty( $settings['keep_data_on_uninstall'] ) ) {
 	return;
 }
 
+// Remove settings and scan results.
 delete_option( 'wpeu_cs_settings' );
+delete_option( 'wpeu_cs_scan_results' );
+delete_option( 'wpeu_cs_last_scan_time' );
+
+global $wpdb;
+
+// Drop custom tables.
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wpeu_cookies" );
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wpeu_consent_log" );
