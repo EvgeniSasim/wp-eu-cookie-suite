@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards">
+	<description>WordPress Coding Standards for WP EU Cookie Suite</description>
+
+	<!-- Pass some flags to PHPCS:
+		 p: show progress of the run
+		 s: show sniff codes in all reports
+		 v: verbose output
+		 n: do not print warnings
+	-->
+	<arg value="psvn"/>
+
+	<!-- Only check PHP files. JS/CSS are handled by other tools if any. -->
+	<arg name="extensions" value="php"/>
+
+	<!-- Check all files in this directory and below. -->
+	<file>.</file>
+
+	<!-- Exclude build and vendor directories. -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+
+	<!-- Use WordPress-Core, WordPress-Extra and WordPress-Docs. -->
+	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Extra"/>
+	<rule ref="WordPress-Docs"/>
+
+	<!-- PSR-4 is used, so exclude filename sniffs. -->
+	<rule ref="WordPress.Files.FileName">
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+
+	<!-- Verify that the text_domain is set to a string and that it matches the correct value. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="wp-eu-cookie-suite"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Check for cross-version compatibility. -->
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- Set minimum supported WP version. -->
+	<config name="minimum_supported_wp_version" value="6.4"/>
+</ruleset>
