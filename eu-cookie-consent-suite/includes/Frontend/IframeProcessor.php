@@ -6,12 +6,13 @@
  */
 
 declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Frontend;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
-namespace WPEU\CookieSuite\Frontend;
 
 /**
  * Handles detection and replacement of iframes with placeholders.

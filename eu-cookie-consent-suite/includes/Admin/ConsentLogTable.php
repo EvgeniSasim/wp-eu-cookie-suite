@@ -6,12 +6,13 @@
  */
 
 declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Admin;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
-namespace WPEU\CookieSuite\Admin;
 
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';

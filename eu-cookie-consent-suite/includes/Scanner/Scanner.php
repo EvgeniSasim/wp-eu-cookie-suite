@@ -6,12 +6,13 @@
  */
 
 declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Scanner;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
-namespace WPEU\CookieSuite\Scanner;
 
 /**
  * Handles website scanning for cookies and scripts.

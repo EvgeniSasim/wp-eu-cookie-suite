@@ -6,12 +6,13 @@
  */
 
 declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Integrations;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
-namespace WPEU\CookieSuite\Integrations;
 
 use WPEU\CookieSuite\Consent\Categories;
 

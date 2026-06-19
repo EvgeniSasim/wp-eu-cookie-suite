@@ -1,0 +1,40 @@
+---
+description: EU Cookie Consent Suite — release and PHP conventions
+globs: eu-cookie-consent-suite/**
+alwaysApply: false
+---
+
+# EU Cookie Consent Suite
+
+## Bump version on every release
+
+When shipping fixes or features, increment the plugin version in **all** of these:
+
+1. `eu-cookie-consent-suite/eu-cookie-consent-suite.php` — `Version:` header
+2. `eu-cookie-consent-suite/includes/Plugin.php` — `WPEU_CS_VERSION` constant
+3. `eu-cookie-consent-suite/readme.txt` — `Stable tag:` and a new `= x.y.z =` changelog entry
+
+Use semver (e.g. `1.0.0` → `1.0.1` for bugfixes). Rebuild zip after bump:
+
+```bash
+bash scripts/build-release.sh
+```
+
+Deploy only `build/eu-cookie-consent-suite.zip` (not legacy `wp-eu-cookie-suite.zip`).
+
+## PHP file order (namespaced classes)
+
+`namespace` must immediately follow `declare(strict_types=1);`. ABSPATH guard goes **after** namespace:
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Example;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+```
+
+Putting `ABSPATH` before `namespace` causes a fatal error on activation.
