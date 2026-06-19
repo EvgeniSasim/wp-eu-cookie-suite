@@ -880,10 +880,12 @@ final class Admin {
 			?>
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
 
-			<h3><?php
+			<h3>
+			<?php
 			/* translators: %s: language label */
 			printf( esc_html__( 'Banner Settings (%s)', 'eu-cookie-consent-suite' ), esc_html( $locales[ $current_lang ] ) );
-			?></h3>
+			?>
+			</h3>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'eu-cookie-consent-suite' ); ?></th>
@@ -1543,10 +1545,12 @@ final class Admin {
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
 
 			<div class="card">
-				<h3><?php
+				<h3>
+				<?php
 				/* translators: %s: language label */
 				printf( esc_html__( 'Cookie Policy Settings (%s)', 'eu-cookie-consent-suite' ), esc_html( $locales[ $current_lang ] ) );
-				?></h3>
+				?>
+				</h3>
 
 				<table class="form-table" role="presentation">
 					<tr>

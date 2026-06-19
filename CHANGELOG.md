@@ -9,13 +9,9 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
-### Added
-
-### Changed
-
 ### Fixed
 
-### Removed
+- CI: PHPCS file doc in `polyfills.php` and embedded PHP formatting in `Admin.php`.
 
 ## [1.0.2] - 2026-06-19
 

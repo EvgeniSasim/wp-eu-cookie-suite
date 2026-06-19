@@ -1,12 +1,13 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 /**
  * Global polyfills for WP Consent API.
  *
  * @package WPEU\CookieSuite
  */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 use WPEU\CookieSuite\Consent\Categories;
 
