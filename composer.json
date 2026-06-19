@@ -21,7 +21,7 @@
   },
   "autoload": {
     "psr-4": {
-      "WPEU\\CookieSuite\\": "wp-eu-cookie-suite/includes/"
+      "WPEU\\CookieSuite\\": "eu-cookie-consent-suite/includes/"
     }
   },
   "scripts": {

@@ -3,8 +3,8 @@
 
 set -e
 
-PLUGIN_SLUG="wp-eu-cookie-suite"
-PLUGIN_DIR="wp-eu-cookie-suite"
+PLUGIN_SLUG="eu-cookie-consent-suite"
+PLUGIN_DIR="eu-cookie-consent-suite"
 BUILD_DIR="build"
 
 echo "Verifying versions..."

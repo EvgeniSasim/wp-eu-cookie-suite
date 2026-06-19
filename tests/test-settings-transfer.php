@@ -25,7 +25,7 @@ class Test_Settings_Transfer extends WP_UnitTestCase {
 
 		$payload = SettingsTransfer::export();
 
-		$this->assertSame( 'wp-eu-cookie-suite', $payload['plugin'] );
+		$this->assertSame( 'eu-cookie-consent-suite', $payload['plugin'] );
 		$this->assertArrayHasKey( 'settings', $payload );
 		$this->assertArrayHasKey( 'registry', $payload );
 		$this->assertTrue( $payload['settings']['eu_mode'] );

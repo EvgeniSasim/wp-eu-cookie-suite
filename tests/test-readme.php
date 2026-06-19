@@ -10,8 +10,8 @@ class ReadmeTest extends TestCase {
 	private $main_file_path;
 
 	protected function setUp(): void {
-		$this->readme_path    = dirname( __DIR__ ) . '/wp-eu-cookie-suite/readme.txt';
-		$this->main_file_path = dirname( __DIR__ ) . '/wp-eu-cookie-suite/wp-eu-cookie-suite.php';
+		$this->readme_path    = dirname( __DIR__ ) . '/eu-cookie-consent-suite/readme.txt';
+		$this->main_file_path = dirname( __DIR__ ) . '/eu-cookie-consent-suite/eu-cookie-consent-suite.php';
 	}
 
 	public function test_readme_exists() {
@@ -21,8 +21,8 @@ class ReadmeTest extends TestCase {
 	public function test_readme_headers() {
 		$content = file_get_contents( $this->readme_path );
 
-		$this->assertStringContainsString( '=== WP EU Cookie Suite ===', $content );
-		$this->assertStringContainsString( 'Contributors: evgeniisasim', $content );
+		$this->assertStringContainsString( '=== EU Cookie Consent Suite ===', $content );
+		$this->assertStringContainsString( 'Contributors: evgenij347', $content );
 		$this->assertStringContainsString( 'Requires at least:', $content );
 		$this->assertStringContainsString( 'Tested up to:', $content );
 		$this->assertStringContainsString( 'Stable tag:', $content );
