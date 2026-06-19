@@ -1,26 +1,30 @@
 ---
-description: EU Cookie Consent Suite — release and PHP conventions
+description: EU Cookie Consent Suite — releases, changelog, and PHP conventions
 globs: eu-cookie-consent-suite/**
 alwaysApply: false
 ---
 
 # EU Cookie Consent Suite
 
-## Bump version on every release
+## Release checklist (every shipped version)
 
-When shipping fixes or features, increment the plugin version in **all** of these:
+1. Implement fix/feature on a branch or `main`.
+2. **Bump version** in all of:
+   - `eu-cookie-consent-suite/eu-cookie-consent-suite.php` — `Version:` header
+   - `eu-cookie-consent-suite/includes/Plugin.php` — `WPEU_CS_VERSION`
+   - `eu-cookie-consent-suite/readme.txt` — `Stable tag:`
+3. **Update [CHANGELOG.md](../../CHANGELOG.md)** (Keep a Changelog):
+   - Move items from `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section.
+   - Sections: `Added`, `Changed`, `Fixed`, `Removed`.
+   - Add compare link at the bottom.
+4. **Update [BREAKING_CHANGES.md](../../BREAKING_CHANGES.md)** if the release breaks upgrades, renames paths, changes hooks/cookies/DB, or removes public API.
+   - Use the template at the bottom of that file.
+   - Cross-link from `CHANGELOG.md` under `Changed` or `Removed`.
+5. **Sync `readme.txt`** `== Changelog ==` with a **short** user-facing summary (WP.org; no need to duplicate full dev notes).
+6. Rebuild zip: `bash scripts/build-release.sh`
+7. Deploy **`build/eu-cookie-consent-suite.zip`** only.
 
-1. `eu-cookie-consent-suite/eu-cookie-consent-suite.php` — `Version:` header
-2. `eu-cookie-consent-suite/includes/Plugin.php` — `WPEU_CS_VERSION` constant
-3. `eu-cookie-consent-suite/readme.txt` — `Stable tag:` and a new `= x.y.z =` changelog entry
-
-Use semver (e.g. `1.0.0` → `1.0.1` for bugfixes). Rebuild zip after bump:
-
-```bash
-bash scripts/build-release.sh
-```
-
-Deploy only `build/eu-cookie-consent-suite.zip` (not legacy `wp-eu-cookie-suite.zip`).
+Semver: `MAJOR` = breaking, `MINOR` = features, `PATCH` = fixes.
 
 ## PHP file order (namespaced classes)
 

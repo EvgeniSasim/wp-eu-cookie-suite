@@ -1,6 +1,8 @@
-# WP EU Cookie Suite
+# EU Cookie Consent Suite
 
 WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): баннер на [vanilla-cookieconsent](https://cookieconsent.orestbida.com/), блокировка скриптов, сканер cookies, мультиязычность, WP Consent API.
+
+**Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Breaking changes:** [BREAKING_CHANGES.md](BREAKING_CHANGES.md)
 
 ## Возможности
 
@@ -15,10 +17,10 @@ WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): ба
 
 ## Установка
 
-Скопируйте `wp-eu-cookie-suite/` в `wp-content/plugins/` или симлинк:
+Скопируйте `eu-cookie-consent-suite/` в `wp-content/plugins/` или симлинк:
 
 ```bash
-ln -s "$(pwd)/wp-eu-cookie-suite" /path/to/wp-content/plugins/wp-eu-cookie-suite
+ln -s "$(pwd)/eu-cookie-consent-suite" /path/to/wp-content/plugins/eu-cookie-consent-suite
 ```
 
 Активируйте плагин в админке WordPress. При первой активации создаётся таблица `wp_wpeu_cookies` и настройки по умолчанию.

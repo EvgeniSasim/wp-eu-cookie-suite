@@ -69,6 +69,7 @@ Absolutely. The 'Banner' tab in settings includes a 'Custom CSS' field where you
 * Fix CookieConsent v3 callbacks (onConsent/onChange via cc.run config).
 * Defer consent UUID and sync cookies until valid user choice.
 * Harden Google resource blocking before consent.
+* BREAKING: plugin folder/file/text domain renamed to eu-cookie-consent-suite — see BREAKING_CHANGES.md in the GitHub repo.
 
 = 1.0.0 =
 * Initial release on WordPress.org.
