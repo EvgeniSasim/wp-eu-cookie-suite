@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,6 +60,9 @@ Absolutely. The 'Banner' tab in settings includes a 'Custom CSS' field where you
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.0.2 =
+* Fix ConsentLogger.php namespace order missed in 1.0.1.
 
 = 1.0.1 =
 * Fix fatal error on activation (ABSPATH guard must come after namespace).

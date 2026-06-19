@@ -7,11 +7,11 @@
 
 declare(strict_types=1);
 
+namespace WPEU\CookieSuite\Consent;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
-namespace WPEU\CookieSuite\Consent;
 
 /**
  * Handles database operations for consent logs.
