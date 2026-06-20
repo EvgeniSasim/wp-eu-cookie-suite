@@ -1,5 +1,5 @@
 /**
- * Admin JavaScript for WP EU Cookie Suite
+ * Admin JavaScript for Privaro Cookie Consent Banner
  */
 (function($) {
 	'use strict';

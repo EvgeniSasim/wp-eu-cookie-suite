@@ -9,6 +9,20 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-06-11
+
+### Fixed
+
+- PHPCS: short description on deprecated `Banner::render_config()` docblock (CI).
+- Admin menu title now matches plugin name «Privaro Cookie Consent Banner».
+- PHPUnit admin preview test aligned with v1.1.0 (no `custom_css`, minified CSS variables).
+- Remove dead `category_limit` admin notice after custom-category cap removal.
+- Delete `wpeu_cs_ip_hash_secret` on uninstall when plugin data is not retained.
+
+### Added
+
+- PHPUnit coverage for `wpeu_cs_hash_ip()` helper.
+
 ## [1.1.0] - 2026-06-20
 
 ### Changed
@@ -62,7 +76,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.0...v1.0.1

@@ -34,7 +34,7 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 			define( 'WPEU_CS_VERSION', '0.1.0' );
 		}
 		if ( ! defined( 'WPEU_CS_URL' ) ) {
-			define( 'WPEU_CS_URL', 'http://example.org/wp-content/plugins/wp-eu-cookie-suite/' );
+			define( 'WPEU_CS_URL', 'http://example.org/wp-content/plugins/privaro-cookie-consent-banner/' );
 		}
 		if ( ! defined( 'WPEU_CS_PATH' ) ) {
 			define( 'WPEU_CS_PATH', '/tmp/' );
@@ -54,7 +54,6 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 				'position'      => 'bottom-center',
 				'theme'         => 'dark',
 				'primary_color' => '#ff0000',
-				'custom_css'    => '.custom-test { color: red; }',
 			),
 			'banner_texts' => array(
 				'en' => array(
@@ -79,8 +78,7 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 		$this->assertStringContainsString( '"layout":"bar"', $response );
 		$this->assertStringContainsString( '"position":"bottom center"', $response );
 		$this->assertStringContainsString( 'cc--darkmode', $response );
-		$this->assertStringContainsString( '--cc-btn-primary-bg: #ff0000;', $response );
-		$this->assertStringContainsString( '.custom-test { color: red; }', $response );
+		$this->assertStringContainsString( '--cc-btn-primary-bg:#ff0000;', $response );
 		$this->assertStringContainsString( '"mode":"opt-in"', $response ); // eu_mode: true
 		$this->assertStringContainsString( '"acceptNecessaryBtn":""', $response ); // show_reject_all: false
 		$this->assertStringContainsString( 'window.CookieConsent', $response );

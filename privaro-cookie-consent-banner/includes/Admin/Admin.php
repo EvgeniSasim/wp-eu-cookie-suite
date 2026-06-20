@@ -438,8 +438,8 @@ final class Admin {
 	 */
 	public function add_menu_page(): void {
 		add_menu_page(
-			__( 'EU Cookie Consent', 'privaro-cookie-consent-banner' ),
-			__( 'EU Cookie Consent', 'privaro-cookie-consent-banner' ),
+			__( 'Privaro Cookie Consent Banner', 'privaro-cookie-consent-banner' ),
+			__( 'Privaro Cookie Consent Banner', 'privaro-cookie-consent-banner' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_settings_page' ),
@@ -853,8 +853,6 @@ final class Admin {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Custom category removed.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'invalid_category_slug' === $message ) {
 			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid category slug. Use 2-32 lowercase letters, numbers, hyphens or underscores. Built-in slugs are reserved.', 'privaro-cookie-consent-banner' ) . '</p></div>';
-		} elseif ( 'category_limit' === $message ) {
-			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Maximum number of custom categories reached.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'category_exists' === $message ) {
 			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'A category with this slug already exists.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'invalid_integration_map' === $message ) {

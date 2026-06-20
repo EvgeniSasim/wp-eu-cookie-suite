@@ -1,6 +1,6 @@
 {
   "name": "wpeu/cookie-suite",
-  "description": "WP EU Cookie Suite WordPress plugin",
+  "description": "Privaro Cookie Consent Banner WordPress plugin",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "require": {

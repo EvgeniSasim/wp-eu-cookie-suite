@@ -36,6 +36,7 @@
 | 18 | jules-task-cc-18-ga-guard.md | `jules/cc-18-ga-guard` | P0 — _ga cookies, gtag fallback |
 | 19 | jules-task-cc-19-consent-ux.md | `jules/cc-19-consent-ux` | P1 — cookie settings link, toggles |
 | 20 | jules-task-cc-20-ci.md | `jules/cc-20-ci` | P1 — CI + preview regression |
+| 23 | jules-task-cc-23-phpunit-coverage.md | `jules/cc-23-phpunit` | P1 — scanner/log/sanitize/uninstall tests |
 
 ## Запуск
 

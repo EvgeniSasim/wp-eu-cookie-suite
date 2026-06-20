@@ -176,6 +176,8 @@ final class Banner {
 	}
 
 	/**
+	 * Legacy hook for inline banner config (deprecated).
+	 *
 	 * @deprecated Use attach_inline_assets().
 	 */
 	public function render_config(): void {

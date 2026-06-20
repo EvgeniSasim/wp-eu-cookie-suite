@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,13 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.1.1 =
+* Fix CI PHPCS docblock on deprecated Banner method.
+* Align admin menu title with plugin name.
+* Update admin preview PHPUnit after custom CSS removal.
+* Remove obsolete custom-category limit notice.
+* Clear IP hash secret on uninstall when data is removed.
 
 = 1.1.0 =
 * Rename to Privaro Cookie Consent Banner (distinctive slug for WordPress.org).

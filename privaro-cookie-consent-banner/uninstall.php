@@ -26,6 +26,7 @@ delete_option( 'wpeu_cs_settings' );
 delete_option( 'wpeu_cs_scan_results' );
 delete_option( 'wpeu_cs_last_scan_time' );
 delete_option( 'wpeu_cs_last_log_cleanup' );
+delete_option( 'wpeu_cs_ip_hash_secret' );
 
 global $wpdb;
 

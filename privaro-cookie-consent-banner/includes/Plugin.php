@@ -59,7 +59,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '1.1.0' );
+			define( 'WPEU_CS_VERSION', '1.1.1' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/privaro-cookie-consent-banner.php' );
