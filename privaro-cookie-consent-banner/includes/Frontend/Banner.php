@@ -168,8 +168,8 @@ final class Banner {
 			. 'categories.forEach(function(cat){document.cookie="wpeu_"+cat+"=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;});'
 			. 'document.cookie="wpeu_consent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;'
 			. 'document.cookie="wpeu_consent_uuid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;'
-			. 'cc.reset(true);document.dispatchEvent(new CustomEvent("wpeu-consent-revoked"));'
-			. 'if(' . $reload_js . '){window.location.reload();}else if(typeof cc.show==="function"){cc.show(true);}});'
+			. 'cc.reset(true);wpeuUuid="";document.dispatchEvent(new CustomEvent("wpeu-consent-revoked"));'
+			. 'if(' . $reload_js . '){window.location.reload();}else{cc.run(ccConfig);if(typeof cc.show==="function"){cc.show(true);}}});'
 			. '});})();';
 
 		wp_add_inline_script( 'wpeu-cs-cookieconsent', $script, 'after' );
