@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.1.3 =
+* Prevent fatal error when legacy cookie plugins are still active during migration.
+* Guard helper functions with function_exists for safe coexistence during upgrades.
 
 = 1.1.2 =
 * Fix banner not reappearing after revoke when reload on revoke is disabled.

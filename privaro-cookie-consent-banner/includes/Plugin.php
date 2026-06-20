@@ -59,7 +59,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '1.1.2' );
+			define( 'WPEU_CS_VERSION', '1.1.3' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/privaro-cookie-consent-banner.php' );
@@ -76,6 +76,7 @@ final class Plugin {
 	 * Activation hook.
 	 */
 	public function activate(): void {
+		$this->deactivate_legacy_plugins();
 		$this->create_tables();
 
 		if ( false === get_option( 'wpeu_cs_ip_hash_secret' ) ) {
@@ -105,6 +106,26 @@ final class Plugin {
 					'version'                   => WPEU_CS_VERSION,
 				)
 			);
+		}
+	}
+
+	/**
+	 * Deactivate legacy plugin slugs from before the rename.
+	 */
+	private function deactivate_legacy_plugins(): void {
+		if ( ! function_exists( 'deactivate_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$legacy = array(
+			'wp-eu-cookie-suite/wp-eu-cookie-suite.php',
+			'eu-cookie-consent-suite/eu-cookie-consent-suite.php',
+		);
+
+		foreach ( $legacy as $plugin ) {
+			if ( is_plugin_active( $plugin ) ) {
+				deactivate_plugins( $plugin, true );
+			}
 		}
 	}
 

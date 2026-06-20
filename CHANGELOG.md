@@ -9,6 +9,13 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-06-11
+
+### Fixed
+
+- Fatal error on activation when `wp-eu-cookie-suite` / `eu-cookie-consent-suite` still active (duplicate `Plugin` class and helper functions).
+- Admin notice when a legacy EU cookie plugin is already loaded; auto-deactivate legacy slugs on successful activation.
+
 ## [1.1.2] - 2026-06-11
 
 ### Fixed
@@ -86,7 +93,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.2...v1.1.0
