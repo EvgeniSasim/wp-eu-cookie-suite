@@ -1,0 +1,13 @@
+{
+  "name": "wpeu-cookie-suite-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for Privaro Cookie Consent Banner",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "test": "playwright test"
+  }
+}
