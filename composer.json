@@ -21,7 +21,7 @@
   },
   "autoload": {
     "psr-4": {
-      "WPEU\\CookieSuite\\": "eu-cookie-consent-suite/includes/"
+      "WPEU\\CookieSuite\\": "privaro-cookie-consent-banner/includes/"
     }
   },
   "scripts": {

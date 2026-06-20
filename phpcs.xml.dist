@@ -52,7 +52,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="eu-cookie-consent-suite"/>
+				<element value="privaro-cookie-consent-banner"/>
 			</property>
 		</properties>
 	</rule>

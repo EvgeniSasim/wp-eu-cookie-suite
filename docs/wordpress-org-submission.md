@@ -7,7 +7,7 @@
 - [ ] Username должен совпадать с `evgeniisasim` (указан в `Contributors` в `readme.txt`).
 
 ## Чеклист перед отправкой
-- [ ] Проверьте, что версия в `eu-cookie-consent-suite.php` совпадает со `Stable tag` в `readme.txt` (сейчас `1.0.0`).
+- [ ] Проверьте, что версия в `privaro-cookie-consent-banner.php` совпадает со `Stable tag` в `readme.txt` (сейчас `1.0.0`).
 - [ ] Убедитесь, что `readme.txt` проходит валидацию в [Readme Validator](https://wordpress.org/plugins/developers/readme-validator/).
 - [ ] Убедитесь, что в коде нет секретов, API ключей или ссылок на тестовые стенды.
 - [ ] Проверьте наличие `THIRD-PARTY.md` с кредитами библиотек.
@@ -19,21 +19,21 @@
    bash scripts/build-release.sh
    ```
 2. Перейдите на страницу [Add your plugin](https://wordpress.org/plugins/add/).
-3. Загрузите файл `build/eu-cookie-consent-suite.zip`.
+3. Загрузите файл `build/privaro-cookie-consent-banner.zip`.
 4. Дождитесь ручного ревью от команды WordPress.org (обычно занимает 1-2 недели).
 
 ## Работа с SVN (после аппрува)
 После одобрения вам будет предоставлен доступ к SVN-репозиторию.
 
 ### Структура SVN:
-- `/trunk`: Основная ветка разработки (копия содержимого папки `eu-cookie-consent-suite`).
+- `/trunk`: Основная ветка разработки (копия содержимого папки `privaro-cookie-consent-banner`).
 - `/tags/1.0.0`: Копия trunk для релиза 1.0.0.
 - `/assets`: Иконки, баннеры и скриншоты (из папки `wordpress-org/assets`).
 
 ### Инструкции по загрузке:
 1. Сделайте checkout репозитория:
    ```bash
-   svn co https://plugins.svn.wordpress.org/eu-cookie-consent-suite/ my-plugin-svn
+   svn co https://plugins.svn.wordpress.org/privaro-cookie-consent-banner/ my-plugin-svn
    ```
 2. Скопируйте файлы плагина в `trunk`.
 3. Скопируйте маркетинговые ассеты в `assets`.
@@ -47,6 +47,6 @@
    ```
 
 ## Важные правила
-- Используйте Text Domain `eu-cookie-consent-suite` для всех строк перевода.
+- Используйте Text Domain `privaro-cookie-consent-banner` для всех строк перевода.
 - Не включайте `node_modules` или `vendor` в итоговый ZIP (скрипт `build-release.sh` делает это автоматически).
 - Лицензия должна быть GPLv2 или выше.

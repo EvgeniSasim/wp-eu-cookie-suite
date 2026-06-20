@@ -1,0 +1,44 @@
+---
+description: Privaro Cookie Consent Banner — releases, changelog, and PHP conventions
+globs: privaro-cookie-consent-banner/**
+alwaysApply: false
+---
+
+# Privaro Cookie Consent Banner
+
+## Release checklist (every shipped version)
+
+1. Implement fix/feature on a branch or `main`.
+2. **Bump version** in all of:
+   - `privaro-cookie-consent-banner/privaro-cookie-consent-banner.php` — `Version:` header
+   - `privaro-cookie-consent-banner/includes/Plugin.php` — `WPEU_CS_VERSION`
+   - `privaro-cookie-consent-banner/readme.txt` — `Stable tag:`
+3. **Update [CHANGELOG.md](../../CHANGELOG.md)** (Keep a Changelog):
+   - Move items from `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section.
+   - Sections: `Added`, `Changed`, `Fixed`, `Removed`.
+   - Add compare link at the bottom.
+4. **Update [BREAKING_CHANGES.md](../../BREAKING_CHANGES.md)** if the release breaks upgrades, renames paths, changes hooks/cookies/DB, or removes public API.
+   - Use the template at the bottom of that file.
+   - Cross-link from `CHANGELOG.md` under `Changed` or `Removed`.
+5. **Sync `readme.txt`** `== Changelog ==` with a **short** user-facing summary (WP.org; no need to duplicate full dev notes).
+6. Rebuild zip: `bash scripts/build-release.sh`
+7. Deploy **`build/privaro-cookie-consent-banner.zip`** only.
+
+Semver: `MAJOR` = breaking, `MINOR` = features, `PATCH` = fixes.
+
+## PHP file order (namespaced classes)
+
+`namespace` must immediately follow `declare(strict_types=1);`. ABSPATH guard goes **after** namespace:
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace WPEU\CookieSuite\Example;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+```
+
+Putting `ABSPATH` before `namespace` causes a fatal error on activation.

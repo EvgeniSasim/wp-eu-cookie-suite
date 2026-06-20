@@ -1,6 +1,6 @@
 # Breaking Changes
 
-This file lists **breaking changes** between releases of EU Cookie Consent Suite.
+This file lists **breaking changes** between releases of Privaro Cookie Consent Banner.
 For the full history see [CHANGELOG.md](CHANGELOG.md).
 
 When upgrading across a listed version, read the matching section and follow the migration steps.
@@ -13,10 +13,10 @@ When upgrading across a listed version, read the matching section and follow the
 
 | Before | After |
 |--------|--------|
-| Folder `wp-eu-cookie-suite/` | Folder `eu-cookie-consent-suite/` |
-| Main file `wp-eu-cookie-suite.php` | Main file `eu-cookie-consent-suite.php` |
-| Text domain `wp-eu-cookie-suite` | Text domain `eu-cookie-consent-suite` |
-| WP.org slug (target) `wp-eu-cookie-suite` | WP.org slug `eu-cookie-consent-suite` |
+| Folder `wp-eu-cookie-suite/` | Folder `privaro-cookie-consent-banner/` |
+| Main file `wp-eu-cookie-suite.php` | Main file `privaro-cookie-consent-banner.php` |
+| Text domain `wp-eu-cookie-suite` | Text domain `privaro-cookie-consent-banner` |
+| WP.org slug (target) `wp-eu-cookie-suite` | WP.org slug `privaro-cookie-consent-banner` |
 
 **Unchanged (no migration needed):**
 
@@ -29,10 +29,10 @@ When upgrading across a listed version, read the matching section and follow the
 
 1. Deactivate the old plugin (do **not** delete data if prompted — options stay in `wp_options`).
 2. Delete the old `wp-eu-cookie-suite` folder.
-3. Install `eu-cookie-consent-suite` (zip or git) and activate.
-4. Re-save settings once if custom translations used the old text domain (`.po`/`.mo` files must use `eu-cookie-consent-suite`).
+3. Install `privaro-cookie-consent-banner` (zip or git) and activate.
+4. Re-save settings once if custom translations used the old text domain (`.po`/`.mo` files must use `privaro-cookie-consent-banner`).
 
-**Do not deploy** legacy `build/wp-eu-cookie-suite.zip`; use `build/eu-cookie-consent-suite.zip` only.
+**Do not deploy** legacy `build/wp-eu-cookie-suite.zip`; use `build/privaro-cookie-consent-banner.zip` only.
 
 ---
 

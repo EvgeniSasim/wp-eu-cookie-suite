@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **EU Cookie Consent Suite** are documented in this file.
+All notable changes to **Privaro Cookie Consent Banner** are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,9 +9,24 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-20
+
+### Changed
+
+- Rename to **Privaro Cookie Consent Banner** (`privaro-cookie-consent-banner`) for WordPress.org distinctiveness and search.
+- Remove custom CSS field; banner styling via primary color and bundled CSS variables only.
+- Remove artificial cap on custom consent categories.
+- Move frontend inline scripts/styles to `wp_enqueue_script` / `wp_add_inline_script` API.
+- Document third-party services in `readme.txt`; fix Plugin URI.
+
 ### Fixed
 
-- CI: PHPCS file doc in `polyfills.php` and embedded PHP formatting in `Admin.php`.
+- Fatal error on activation (namespace before ABSPATH guard).
+- CookieConsent v3 callbacks via `cc.run(config)`.
+- Defer consent UUID and sync cookies until valid user choice.
+- Consent log IP hashing uses site-specific secret instead of `AUTH_SALT`.
+- Theme analytics integration blocks ACF output only (no raw snippet injection).
+- PHPCS: `polyfills.php` file doc and embedded PHP in `Admin.php`.
 
 ## [1.0.2] - 2026-06-19
 
@@ -47,7 +62,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/releases/tag/v1.0.0

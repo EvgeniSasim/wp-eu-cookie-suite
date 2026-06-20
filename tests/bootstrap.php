@@ -23,7 +23,7 @@ require_once $_tests_dir . '/includes/functions.php';
  * Manually load the plugin for tests.
  */
 function _manually_load_plugin() {
-	require dirname( __DIR__ ) . '/eu-cookie-consent-suite/eu-cookie-consent-suite.php';
+	require dirname( __DIR__ ) . '/privaro-cookie-consent-banner/privaro-cookie-consent-banner.php';
 }
 
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );

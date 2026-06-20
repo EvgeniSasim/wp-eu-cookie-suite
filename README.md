@@ -1,4 +1,4 @@
-# EU Cookie Consent Suite
+# Privaro Cookie Consent Banner
 
 WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): баннер на [vanilla-cookieconsent](https://cookieconsent.orestbida.com/), блокировка скриптов, сканер cookies, мультиязычность, WP Consent API.
 
@@ -17,10 +17,10 @@ WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): ба
 
 ## Установка
 
-Скопируйте `eu-cookie-consent-suite/` в `wp-content/plugins/` или симлинк:
+Скопируйте `privaro-cookie-consent-banner/` в `wp-content/plugins/` или симлинк:
 
 ```bash
-ln -s "$(pwd)/eu-cookie-consent-suite" /path/to/wp-content/plugins/eu-cookie-consent-suite
+ln -s "$(pwd)/privaro-cookie-consent-banner" /path/to/wp-content/plugins/privaro-cookie-consent-banner
 ```
 
 Активируйте плагин в админке WordPress. При первой активации создаётся таблица `wp_wpeu_cookies` и настройки по умолчанию.

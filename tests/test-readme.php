@@ -10,8 +10,8 @@ class ReadmeTest extends TestCase {
 	private $main_file_path;
 
 	protected function setUp(): void {
-		$this->readme_path    = dirname( __DIR__ ) . '/eu-cookie-consent-suite/readme.txt';
-		$this->main_file_path = dirname( __DIR__ ) . '/eu-cookie-consent-suite/eu-cookie-consent-suite.php';
+		$this->readme_path    = dirname( __DIR__ ) . '/privaro-cookie-consent-banner/readme.txt';
+		$this->main_file_path = dirname( __DIR__ ) . '/privaro-cookie-consent-banner/privaro-cookie-consent-banner.php';
 	}
 
 	public function test_readme_exists() {
@@ -21,7 +21,7 @@ class ReadmeTest extends TestCase {
 	public function test_readme_headers() {
 		$content = file_get_contents( $this->readme_path );
 
-		$this->assertStringContainsString( '=== EU Cookie Consent Suite ===', $content );
+		$this->assertStringContainsString( '=== Privaro Cookie Consent Banner ===', $content );
 		$this->assertStringContainsString( 'Contributors: evgenij347', $content );
 		$this->assertStringContainsString( 'Requires at least:', $content );
 		$this->assertStringContainsString( 'Tested up to:', $content );

@@ -1,0 +1,247 @@
+/**
+ * Admin JavaScript for WP EU Cookie Suite
+ */
+(function($) {
+	'use strict';
+	$(function() {
+		const $startBtn = $('#wpeu-cs-start-scan');
+		const $progress = $('#wpeu-cs-scan-progress');
+		const $progressBar = $('.wpeu-cs-progress-fill');
+		const $status = $('.wpeu-cs-progress-status');
+		const $resultsWrapper = $('#wpeu-cs-scan-results-wrapper');
+		const nonce = $('#wpeu_cs_scanner_nonce').val();
+
+		if ($startBtn.length) {
+			$startBtn.on('click', function() {
+				$startBtn.prop('disabled', true);
+				$startBtn.siblings('.spinner').addClass('is-active');
+				$progress.show();
+				$progressBar.css('width', '0%');
+				$status.text('Initializing scan...');
+
+				getUrls();
+			});
+		}
+
+		function getUrls() {
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'wpeu_cs_get_scan_urls',
+					nonce: nonce
+				},
+				success: function(response) {
+					if (response.success) {
+						const urls = response.data.urls;
+						if (urls.length === 0) {
+							finishScan('No URLs found to scan.');
+							return;
+						}
+						scanUrls(urls, 0);
+					} else {
+						finishScan(response.data.message || 'Error fetching URLs.');
+					}
+				},
+				error: function() {
+					finishScan('Network error while fetching URLs.');
+				}
+			});
+		}
+
+		function scanUrls(urls, index) {
+			if (index >= urls.length) {
+				finishScan('Scan complete!', true);
+				return;
+			}
+
+			const progress = Math.round(((index + 1) / urls.length) * 100);
+			$progressBar.css('width', progress + '%');
+			$status.text(`Scanning (${index + 1}/${urls.length}): ${urls[index]}`);
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'wpeu_cs_scan_url',
+					url: urls[index],
+					nonce: nonce
+				},
+				success: function(response) {
+					// We continue even if one URL fails
+					scanUrls(urls, index + 1);
+				},
+				error: function() {
+					scanUrls(urls, index + 1);
+				}
+			});
+		}
+
+		function finishScan(message, success = false) {
+			$startBtn.prop('disabled', false);
+			$startBtn.siblings('.spinner').removeClass('is-active');
+			$status.text(message);
+
+			if (success) {
+				// Reload results table
+				setTimeout(() => {
+					window.location.reload();
+				}, 1000);
+			}
+		}
+
+		// Color Picker + Banner Preview (independent of scanner UI)
+		const $previewFrame = $('#wpeu-cs-banner-preview');
+		const $refreshBtn = $('#wpeu-cs-refresh-preview');
+		const previewNonce = $('#wpeu_cs_preview_nonce').val();
+		let previewTimer = null;
+
+		function getPreviewLang() {
+			return new URLSearchParams(window.location.search).get('lang') || 'en';
+		}
+
+		function getPrimaryColor() {
+			const $input = $('#wpeu-cs-banner-primary-color');
+			if (!$input.length) {
+				return '#30363c';
+			}
+			const value = $input.val();
+			return value && /^#([A-Fa-f0-9]{3}){1,2}$/.test(value) ? value : '#30363c';
+		}
+
+		function writePreviewHtml(html) {
+			const iframe = $previewFrame[0];
+			if (!iframe) {
+				return;
+			}
+			if ('srcdoc' in iframe) {
+				iframe.src = 'about:blank';
+				iframe.srcdoc = html;
+				return;
+			}
+			const doc = iframe.contentWindow.document;
+			doc.open();
+			doc.write(html);
+			doc.close();
+		}
+
+		function showPreviewError(message) {
+			writePreviewHtml('<p style="padding:1em;color:#b32d2e;font-family:sans-serif;">' + message + '</p>');
+		}
+
+		function updatePreview() {
+			const lang = getPreviewLang();
+			const settings = {
+				preview_locale: lang,
+				banner_ui: {
+					layout: $('#wpeu-cs-banner-layout').val(),
+					position: $('#wpeu-cs-banner-position').val(),
+					theme: $('#wpeu-cs-banner-theme').val(),
+					primary_color: getPrimaryColor()
+				},
+				banner_texts: {},
+				enabled_categories: [],
+				show_reject_all: $('input[name="wpeu_cs_settings[show_reject_all]"]').is(':checked'),
+				eu_mode: $('input[name="wpeu_cs_settings[eu_mode]"]').is(':checked')
+			};
+
+			$('input[name="wpeu_cs_settings[enabled_categories][]"]:checked').each(function() {
+				settings.enabled_categories.push($(this).val());
+			});
+
+			settings.banner_texts[lang] = {};
+			$('input[name^="wpeu_cs_settings[banner_texts][' + lang + ']"], textarea[name^="wpeu_cs_settings[banner_texts][' + lang + ']"]').each(function() {
+				const name = $(this).attr('name');
+				const match = name.match(/\[([^\]]+)\]$/);
+				if (match) {
+					settings.banner_texts[lang][match[1]] = $(this).val();
+				}
+			});
+
+			if (!$previewFrame.length || !previewNonce) {
+				return;
+			}
+
+			if ($refreshBtn.length) {
+				$refreshBtn.prop('disabled', true).text('Updating...');
+			}
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				dataType: 'html',
+				data: {
+					action: 'wpeu_cs_preview',
+					nonce: previewNonce,
+					settings: settings
+				},
+				success: function(response) {
+					if (!response || response.indexOf('CookieConsent') === -1) {
+						showPreviewError('Preview response invalid.');
+						return;
+					}
+					writePreviewHtml(response);
+				},
+				error: function() {
+					showPreviewError('Preview failed to load.');
+				},
+				complete: function() {
+					if ($refreshBtn.length) {
+						$refreshBtn.prop('disabled', false).text('Refresh Preview');
+					}
+				}
+			});
+		}
+
+		function schedulePreviewUpdate() {
+			clearTimeout(previewTimer);
+			previewTimer = setTimeout(updatePreview, 250);
+		}
+
+		$('.wpeu-cs-color-picker').wpColorPicker({
+			change: schedulePreviewUpdate,
+			clear: schedulePreviewUpdate
+		});
+
+		if ($previewFrame.length && previewNonce) {
+			updatePreview();
+			if ($refreshBtn.length) {
+				$refreshBtn.on('click', updatePreview);
+			}
+			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', schedulePreviewUpdate);
+			$('input[name="wpeu_cs_settings[eu_mode]"], input[name="wpeu_cs_settings[show_reject_all]"], input[name="wpeu_cs_settings[enabled_categories][]"]').on('change', schedulePreviewUpdate);
+			$('input[name^="wpeu_cs_settings[banner_texts]"], textarea[name^="wpeu_cs_settings[banner_texts]"], #wpeu-cs-banner-primary-color').on('input', schedulePreviewUpdate);
+		}
+
+		// Scanner-only: import scan results
+		$(document).on('click', '#wpeu-cs-import-scan', function() {
+			const $btn = $(this);
+			$btn.prop('disabled', true);
+			$btn.siblings('.spinner').addClass('is-active');
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'wpeu_cs_import_scan',
+					nonce: nonce
+				},
+				success: function(response) {
+					if (response.success) {
+						alert(response.data.message);
+						window.location.href = window.location.href.replace('tab=scanner', 'tab=cookies');
+					} else {
+						alert(response.data.message || 'Error importing items.');
+						$btn.prop('disabled', false);
+						$btn.siblings('.spinner').removeClass('is-active');
+					}
+				},
+				error: function() {
+					alert('Network error while importing items.');
+					$btn.prop('disabled', false);
+					$btn.siblings('.spinner').removeClass('is-active');
+				}
+			});
+		});
+	});
+})(jQuery);

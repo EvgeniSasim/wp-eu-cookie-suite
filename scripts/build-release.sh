@@ -3,8 +3,8 @@
 
 set -e
 
-PLUGIN_SLUG="eu-cookie-consent-suite"
-PLUGIN_DIR="eu-cookie-consent-suite"
+PLUGIN_SLUG="privaro-cookie-consent-banner"
+PLUGIN_DIR="privaro-cookie-consent-banner"
 BUILD_DIR="build"
 
 echo "Verifying versions..."

@@ -25,7 +25,7 @@ class Test_Settings_Transfer extends WP_UnitTestCase {
 
 		$payload = SettingsTransfer::export();
 
-		$this->assertSame( 'eu-cookie-consent-suite', $payload['plugin'] );
+		$this->assertSame( 'privaro-cookie-consent-banner', $payload['plugin'] );
 		$this->assertArrayHasKey( 'settings', $payload );
 		$this->assertArrayHasKey( 'registry', $payload );
 		$this->assertTrue( $payload['settings']['eu_mode'] );
