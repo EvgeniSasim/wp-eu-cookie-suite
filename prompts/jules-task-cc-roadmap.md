@@ -37,6 +37,7 @@
 | 19 | jules-task-cc-19-consent-ux.md | `jules/cc-19-consent-ux` | P1 — cookie settings link, toggles |
 | 20 | jules-task-cc-20-ci.md | `jules/cc-20-ci` | P1 — CI + preview regression |
 | 23 | jules-task-cc-23-phpunit-coverage.md | `jules/cc-23-phpunit` | P1 — scanner/log/sanitize/uninstall tests |
+| 24 | jules-task-cc-24-playwright-e2e.md | `jules/cc-24-playwright` | P1 — Playwright E2E admin + frontend |
 
 ## Запуск
 

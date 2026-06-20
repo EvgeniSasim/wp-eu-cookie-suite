@@ -36,7 +36,8 @@ Branch: `main`
 | 20 | jules-task-cc-20-ci.md | [1120338809836275782](https://jules.google.com/session/1120338809836275782) | [#21](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/21) | merged |
 | 21 | jules-task-cc-21-consent-records.md | [13639516324280863306](https://jules.google.com/session/13639516324280863306) | [#22](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/22) | merged |
 | 22 | jules-task-cc-22-wordpress-org-release.md | [7576984083680245419](https://jules.google.com/session/7576984083680245419) | [#23](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/23) | merged |
-| 23 | jules-task-cc-23-phpunit-coverage.md | [10280687574021748419](https://jules.google.com/session/10280687574021748419) | — | in progress |
+| 23 | jules-task-cc-23-phpunit-coverage.md | [10280687574021748419](https://jules.google.com/session/10280687574021748419) | [#24](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/24) | merged |
+| 24 | jules-task-cc-24-playwright-e2e.md | [320287786204962829](https://jules.google.com/session/320287786204962829) | — | in progress |
 
 ## Команды
 

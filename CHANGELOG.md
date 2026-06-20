@@ -9,6 +9,16 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-06-11
+
+### Fixed
+
+- Consent banner reappears after `[wpeu_revoke_consent]` / `wpeu-cs-revoke` without a full page reload when `reload_on_revoke` is off (`cc.run` after `reset`).
+
+### Added
+
+- PHPUnit: scanner AJAX (`test-scanner-ajax.php`), consent log AJAX (`test-ajax-log-consent.php`), admin settings sanitize (`test-admin-sanitize.php`), uninstall cleanup (`test-uninstall.php`).
+
 ## [1.1.1] - 2026-06-11
 
 ### Fixed
@@ -76,7 +86,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.0.1...v1.0.2
