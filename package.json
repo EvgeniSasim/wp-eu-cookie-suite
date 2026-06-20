@@ -1,0 +1,9 @@
+{
+  "name": "wp-eu-cookie-suite-monorepo",
+  "private": true,
+  "scripts": {
+    "test:e2e": "cd tests/e2e && npm test",
+    "test:unit": "composer test",
+    "lint": "composer lint"
+  }
+}
