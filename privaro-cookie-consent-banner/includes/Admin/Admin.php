@@ -223,7 +223,13 @@ final class Admin {
 		$this->write_context_settings( $settings );
 
 		$tab = sanitize_key( (string) ( $_POST['active_tab'] ?? 'banner' ) );
-		$this->redirect_to_plugin_tab( $tab, array( 'lang' => $code, 'message' => 'lang_added' ) );
+		$this->redirect_to_plugin_tab(
+			$tab,
+			array(
+				'lang'    => $code,
+				'message' => 'lang_added',
+			)
+		);
 	}
 
 	/**

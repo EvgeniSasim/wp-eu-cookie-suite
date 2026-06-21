@@ -2,12 +2,12 @@
   "name": "privaro-cookie-consent-banner",
   "private": true,
   "scripts": {
-    "build": "esbuild assets/js/src/cookieconsent.js --bundle --minify --outfile=assets/js/cookieconsent.bundle.js --loader:.css=css --outdir=assets/js && mv assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css",
-    "dev": "esbuild assets/js/src/cookieconsent.js --bundle --outfile=assets/js/cookieconsent.bundle.js --watch",
+    "build": "esbuild assets/js/src/cookieconsent.js --bundle --minify --outdir=assets/js --entry-names=cookieconsent.bundle --loader:.css=css && mv assets/js/cookieconsent.bundle.css assets/css/cookieconsent.bundle.css",
+    "dev": "esbuild assets/js/src/cookieconsent.js --bundle --outdir=assets/js --entry-names=cookieconsent.bundle --loader:.css=css --watch",
     "test:e2e": "cd ../tests/e2e && npm test"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "vanilla-cookieconsent": "^3.0.0"
   }
 }
