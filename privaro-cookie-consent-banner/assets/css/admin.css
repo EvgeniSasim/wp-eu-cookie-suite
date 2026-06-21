@@ -304,3 +304,12 @@ input:checked + .slider:before {
 .wpeu-cs-inherited button {
     pointer-events: none;
 }
+
+.wpeu-cs-consent-log-table-wrap {
+    overflow-x: auto;
+    margin-top: 12px;
+}
+
+.wpeu-cs-consent-log-table-wrap .wp-list-table {
+    min-width: 960px;
+}

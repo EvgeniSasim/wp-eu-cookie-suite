@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -96,6 +96,11 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.2.3 =
+* Fix Consent Log list table not rendering rows reliably (explicit WP_List_Table columns and admin screen binding).
+* Keep Consent Log tab interactive when site inherits multisite network defaults.
+* Horizontal scroll for wide consent log table in admin.
 
 = 1.2.2 =
 * Restore full plugin name in Network Admin menu (Privaro Cookie Consent Banner).

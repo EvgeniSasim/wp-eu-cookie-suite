@@ -759,7 +759,7 @@ final class Admin {
 			: admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 
 		$content_class = 'wpeu-cs-content';
-		if ( $this->is_settings_readonly() ) {
+		if ( $this->is_settings_readonly() && 'consent_log' !== $active_tab ) {
 			$content_class .= ' wpeu-cs-inherited';
 		}
 
@@ -1302,6 +1302,9 @@ final class Admin {
 	 * Render consent log tab.
 	 */
 	private function render_consent_log_tab(): void {
+		$settings = SettingsRepository::instance()->get_effective_settings();
+		$logging  = ! array_key_exists( 'consent_logging_enabled', $settings ) || ! empty( $settings['consent_logging_enabled'] );
+
 		$table = new ConsentLogTable();
 		$table->prepare_items();
 
@@ -1311,12 +1314,20 @@ final class Admin {
 			<p class="description"><?php esc_html_e( 'Audit trail of visitor consent interactions. This is a technical aid for Art. 7(1) GDPR accountability.', 'privaro-cookie-consent-banner' ); ?></p>
 		</div>
 
-		<form method="get">
-			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
-			<input type="hidden" name="tab" value="consent_log">
-			<?php $table->search_box( __( 'Search Logs', 'privaro-cookie-consent-banner' ), 'search-id' ); ?>
-			<?php $table->display(); ?>
-		</form>
+		<?php if ( ! $logging ) : ?>
+			<div class="notice notice-warning inline">
+				<p><?php esc_html_e( 'Consent logging is disabled in Tools → Consent Logging. Existing entries are shown below; new visits will not be recorded until logging is enabled.', 'privaro-cookie-consent-banner' ); ?></p>
+			</div>
+		<?php endif; ?>
+
+		<div class="wpeu-cs-consent-log-table-wrap">
+			<form method="get">
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+				<input type="hidden" name="tab" value="consent_log">
+				<?php $table->search_box( __( 'Search Logs', 'privaro-cookie-consent-banner' ), 'consent-log' ); ?>
+				<?php $table->display(); ?>
+			</form>
+		</div>
 		<?php
 	}
 

@@ -9,6 +9,18 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-06-21
+
+### Fixed
+
+- Consent Log admin list table: bind to the plugin screen, set column headers explicitly, and show a clear empty state.
+- Consent Log tab no longer inherits read-only multisite styling (`pointer-events: none`) that blocked filters and made the table appear broken.
+- Guard empty visitor UUID cells in the log table.
+
+### Changed
+
+- Consent Log table wrapper allows horizontal scroll on narrow admin layouts.
+
 ## [1.2.2] - 2026-06-21
 
 ### Fixed
@@ -122,7 +134,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.3...v1.2.0

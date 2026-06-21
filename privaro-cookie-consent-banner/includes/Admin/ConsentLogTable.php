@@ -14,11 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
+use WPEU\CookieSuite\Consent\ConsentLogger;
+
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
-
-use WPEU\CookieSuite\Consent\ConsentLogger;
 
 /**
  * ConsentLogTable class.
@@ -34,6 +34,7 @@ final class ConsentLogTable extends \WP_List_Table {
 				'singular' => 'consent_log',
 				'plural'   => 'consent_logs',
 				'ajax'     => false,
+				'screen'   => 'toplevel_page_' . Admin::PAGE_SLUG,
 			)
 		);
 	}
@@ -109,7 +110,11 @@ final class ConsentLogTable extends \WP_List_Table {
 				return sprintf( '<a href="%1$s" target="_blank" title="%1$s">%2$s</a>', esc_url( $url ), esc_html( wp_parse_url( $url, PHP_URL_PATH ) ?: '/' ) );
 
 			case 'consent_uuid':
-				return '<code>' . esc_html( substr( $item['consent_uuid'], 0, 8 ) ) . '...</code>';
+				$uuid = (string) ( $item['consent_uuid'] ?? '' );
+				if ( '' === $uuid ) {
+					return '—';
+				}
+				return '<code>' . esc_html( substr( $uuid, 0, 8 ) ) . '...</code>';
 
 			case 'ip_hash':
 				return $item['ip_hash'] ? '<code>' . esc_html( substr( $item['ip_hash'], 0, 8 ) ) . '...</code>' : '—';
@@ -133,10 +138,22 @@ final class ConsentLogTable extends \WP_List_Table {
 	}
 
 	/**
+	 * Message when no log rows match the current filters.
+	 */
+	public function no_items(): void {
+		esc_html_e( 'No consent log entries found.', 'privaro-cookie-consent-banner' );
+	}
+
+	/**
 	 * Prepare items.
 	 */
 	public function prepare_items(): void {
-		$logger = new ConsentLogger();
+		$columns  = $this->get_columns();
+		$hidden   = array();
+		$sortable = $this->get_sortable_columns();
+		$this->_column_headers = array( $columns, $hidden, $sortable, $this->get_primary_column_name() );
+
+		$logger   = new ConsentLogger();
 		$per_page = 20;
 
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( (string) $_GET['orderby'] ) ) : 'created_at';

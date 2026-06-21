@@ -42,6 +42,7 @@ class CookieListTable extends \WP_List_Table {
 				'singular' => 'cookie',
 				'plural'   => 'cookies',
 				'ajax'     => false,
+				'screen'   => 'toplevel_page_' . Admin::PAGE_SLUG,
 			)
 		);
 		$this->repository = new CookieRepository();
@@ -153,6 +154,11 @@ class CookieListTable extends \WP_List_Table {
 	 * Prepare items.
 	 */
 	public function prepare_items(): void {
+		$columns  = $this->get_columns();
+		$hidden   = array();
+		$sortable = $this->get_sortable_columns();
+		$this->_column_headers = array( $columns, $hidden, $sortable, $this->get_primary_column_name() );
+
 		$per_page = 20;
 		$current_page = $this->get_pagenum();
 
