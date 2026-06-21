@@ -7,7 +7,7 @@
 - [ ] Username должен совпадать с `evgeniisasim` (указан в `Contributors` в `readme.txt`).
 
 ## Чеклист перед отправкой
-- [ ] Проверьте, что версия в `privaro-cookie-consent-banner.php` совпадает со `Stable tag` в `readme.txt` (сейчас `1.0.0`).
+- [ ] Проверьте, что версия в `privaro-cookie-consent-banner.php` совпадает со `Stable tag` в `readme.txt`.
 - [ ] Убедитесь, что `readme.txt` проходит валидацию в [Readme Validator](https://wordpress.org/plugins/developers/readme-validator/).
 - [ ] Убедитесь, что в коде нет секретов, API ключей или ссылок на тестовые стенды.
 - [ ] Проверьте наличие `THIRD-PARTY.md` с кредитами библиотек.

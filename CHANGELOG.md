@@ -9,12 +9,32 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-06-21
+
+### Fixed
+
+- Network Admin submenu title restored to «Privaro Cookie Consent Banner» (regression from v1.2.0 multisite work).
+- Legacy-plugin admin notice wording aligned with product name.
+- Uninstall removes `wpeu_cs_network_settings` from the main site when data retention is off.
+
+### Changed
+
+- JSON settings export uses `SettingsRepository::get_effective_settings()` so multisite inherit reflects runtime config.
+- JSON import accepts exports from legacy plugin slugs (`wp-eu-cookie-suite`, `eu-cookie-consent-suite`).
+- Documentation, AGENTS.md, and Jules roadmap updated to Privaro Cookie Consent Banner naming.
+
+## [1.2.1] - 2026-06-21
+
+### Fixed
+
+- Fatal error on activation when a stale `vendor/autoload.php` exists from a previous install; always register `includes/autoload.php`.
+
 ## [1.2.0] - 2026-06-21
 
 ### Added
 
 - WordPress Multisite support: network-wide default settings (`wpeu_cs_network_settings`) and per-site inherit/override via `use_network_defaults`.
-- Network Admin settings page under Settings → Cookie Consent Banner.
+- Network Admin settings page under Settings → Privaro Cookie Consent Banner.
 - Site Admin toggle “Use network defaults” with read-only inherited settings view.
 - `SettingsRepository` for effective settings resolution with PHPUnit coverage.
 
@@ -102,7 +122,10 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.3...v1.2.0
 [1.1.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.1.0...v1.1.1

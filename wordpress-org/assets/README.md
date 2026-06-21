@@ -12,7 +12,7 @@ To update assets in the WordPress.org Plugin Directory:
 
 1. Checkout the assets directory of your SVN repository:
    ```bash
-   svn co https://plugins.svn.wordpress.org/wp-eu-cookie-suite/assets wpeu-assets
+   svn co https://plugins.svn.wordpress.org/privaro-cookie-consent-banner/assets privaro-assets
    ```
 2. Copy files from this directory to the SVN `assets` folder.
 3. Add new files to SVN:

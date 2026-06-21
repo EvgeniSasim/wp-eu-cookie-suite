@@ -34,7 +34,7 @@ CookieConsent `onConsent` / `onChange` → `wp_set_consent()` + `document.dispat
 ## Build
 
 ```bash
-cd wp-eu-cookie-suite
+cd privaro-cookie-consent-banner
 npm install
 npm run build   # cookieconsent + admin bundle
 ```

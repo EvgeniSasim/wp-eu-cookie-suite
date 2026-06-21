@@ -1,4 +1,4 @@
-# Jules roadmap — WP EU Cookie Suite
+# Jules roadmap — Privaro Cookie Consent Banner
 
 | | |
 |--|--|
@@ -38,9 +38,9 @@
 | 20 | jules-task-cc-20-ci.md | `jules/cc-20-ci` | P1 — CI + preview regression |
 | 23 | jules-task-cc-23-phpunit-coverage.md | `jules/cc-23-phpunit` | P1 — scanner/log/sanitize/uninstall tests |
 | 24 | jules-task-cc-24-playwright-e2e.md | `jules/cc-24-playwright` | P1 — Playwright E2E admin + frontend |
-| 26 | jules-task-cc-26-multisite-network-settings.md | `jules/cc-26-multisite-settings` | P0 — sandbox done, PR missing |
-| 26b | jules-task-cc-26b-multisite-pr-and-tests.md | `jules/cc-26-multisite-settings` | P0 — submit PR + fix PHPUnit (follow-up) |
-| 27 | jules-task-cc-27-multisite-e2e.md | `jules/cc-27-multisite-e2e` | P2 — E2E smoke after merge |
+| 26 | jules-task-cc-26-multisite-network-settings.md | `jules/cc-26-multisite-settings` | P0 — merged [#28](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/28) v1.2.0 |
+| 26b | jules-task-cc-26b-multisite-pr-and-tests.md | `jules/cc-26-multisite-settings` | merged (Cursor) |
+| 27 | jules-task-cc-27-multisite-e2e.md | `jules/cc-27-multisite-e2e` | P2 — E2E smoke after v1.2.x |
 
 ### CC-26 breakdown (review / Jules phases)
 
@@ -49,9 +49,9 @@
 | 26.1 | `SettingsRepository` + `Plugin::activate()` defaults | 8519204115108289871 | done (sandbox) |
 | 26.2 | Refactor `get_effective_settings()` runtime paths | 8519204115108289871 | done (sandbox) |
 | 26.3 | Network Admin + Site toggle UX | 8519204115108289871 | done (sandbox) |
-| 26.4 | PHPUnit in CI bootstrap (no custom runner) | 8519204115108289871 | **partial** — `test_runner.php` |
-| 26.5 | PR + v1.2.0 + CHANGELOG | — | **CC-26b** |
-| 27 | Multisite E2E (env-gated) | — | after merge |
+| 26.4 | PHPUnit in CI bootstrap (no custom runner) | 8519204115108289871 | merged |
+| 26.5 | PR + v1.2.0 + CHANGELOG | [#28](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/28) | merged |
+| 27 | Multisite E2E (env-gated) | — | pending |
 
 ## Запуск
 

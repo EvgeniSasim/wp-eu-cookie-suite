@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Frontend\ScriptRegistry;
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * SettingsTransfer class.
@@ -33,7 +34,7 @@ final class SettingsTransfer {
 	 * @return array<string, mixed>
 	 */
 	public static function export(): array {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 
 		return array(
 			'plugin'         => 'privaro-cookie-consent-banner',
@@ -56,8 +57,14 @@ final class SettingsTransfer {
 			return new \WP_Error( 'wpeu_cs_invalid_json', __( 'Invalid JSON structure.', 'privaro-cookie-consent-banner' ) );
 		}
 
-		if ( ( $data['plugin'] ?? '' ) !== 'privaro-cookie-consent-banner' ) {
-			return new \WP_Error( 'wpeu_cs_invalid_plugin', __( 'This file is not an Privaro Cookie Consent Banner export.', 'privaro-cookie-consent-banner' ) );
+		$plugin_id = (string) ( $data['plugin'] ?? '' );
+		$allowed   = array(
+			'privaro-cookie-consent-banner',
+			'wp-eu-cookie-suite',
+			'eu-cookie-consent-suite',
+		);
+		if ( ! in_array( $plugin_id, $allowed, true ) ) {
+			return new \WP_Error( 'wpeu_cs_invalid_plugin', __( 'This file is not a Privaro Cookie Consent Banner export.', 'privaro-cookie-consent-banner' ) );
 		}
 
 		if ( ! isset( $data['settings'] ) || ! is_array( $data['settings'] ) ) {
@@ -81,7 +88,7 @@ final class SettingsTransfer {
 		$current  = get_option( 'wpeu_cs_settings', array() );
 		$sanitized = is_array( $current ) ? $current : array();
 
-		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke' );
+		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke', 'use_network_defaults' );
 		foreach ( $bool_keys as $key ) {
 			if ( array_key_exists( $key, $settings ) ) {
 				$sanitized[ $key ] = (bool) $settings[ $key ];

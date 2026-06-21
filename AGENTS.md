@@ -1,27 +1,29 @@
-# AGENTS.md — WP EU Cookie Suite
+# AGENTS.md — Privaro Cookie Consent Banner
 
 ## Product
 
-Мультисайтовый WordPress-плагин согласия на cookies для Европы (GDPR / ePrivacy / TTDSG).
+WordPress-плагин согласия на cookies для Европы (GDPR / ePrivacy / TTDSG).
 
 Замена связки Complianz + кастомных надстроек одним плагином:
 - UI: **CookieConsent v3** (vanilla-cookieconsent)
 - Compliance: opt-in по умолчанию для EU, блокировка до согласия, WP Consent API, Google Consent Mode v2
 - Admin: настройки баннера, языки, реестр cookies, сканер
 
+Плагин: **`privaro-cookie-consent-banner/`** · GitHub repo: `EvgeniSasim/wp-eu-cookie-suite`
+
 ## Stack
 
 - **PHP 8.1+**, WordPress 6.4+
 - **Frontend**: vanilla-cookieconsent 3.x (npm → bundle в `assets/`)
-- **Admin**: React ( `@wordpress/scripts` ) или WP Settings API на ранних этапах
-- **Tests**: PHPUnit, Playwright (smoke) — с задачи CC-15
+- **Admin**: WP Settings API
+- **Tests**: PHPUnit, Playwright (E2E)
 
 ## Conventions
 
 - Один PR Jules = одна задача из `prompts/jules-task-cc-*.md`
 - Минимальный diff, без scope creep
 - PSR-4: namespace `WPEU\CookieSuite\`
-- Текстовый домен: `wp-eu-cookie-suite`
+- Текстовый домен: `privaro-cookie-consent-banner`
 - Не копировать GPL-код Complianz дословно — только идеи и поведение
 - CookieConsent — MIT, подключать как vendor/bundle
 

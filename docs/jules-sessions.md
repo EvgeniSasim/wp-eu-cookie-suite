@@ -1,6 +1,7 @@
-# Jules sessions — WP EU Cookie Suite
+# Jules sessions — Privaro Cookie Consent Banner
 
-Репозиторий: `EvgeniSasim/wp-eu-cookie-suite`  
+Репозиторий GitHub: `EvgeniSasim/wp-eu-cookie-suite` (историческое имя репо)  
+Плагин: `privaro-cookie-consent-banner`  
 Source: `sources/github/EvgeniSasim/wp-eu-cookie-suite`  
 Branch: `main`
 
@@ -39,9 +40,9 @@ Branch: `main`
 | 23 | jules-task-cc-23-phpunit-coverage.md | [10280687574021748419](https://jules.google.com/session/10280687574021748419) | [#24](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/24) | merged |
 | 24 | jules-task-cc-24-playwright-e2e.md | [320287786204962829](https://jules.google.com/session/320287786204962829) | [#26](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/26) | merged |
 | 25 | jules-task-cc-25-staging-deploy.md | — | — | **pending** — staging zip deploy + cookie audit |
-| 26 | jules-task-cc-26-multisite-network-settings.md | [8519204115108289871](https://jules.google.com/session/8519204115108289871) | — | **done sandbox, no PR** — код не запушен |
-| 26b | jules-task-cc-26b-multisite-pr-and-tests.md | [16874498731229164822](https://jules.google.com/session/16874498731229164822) | — | **done sandbox, no PR** — Cursor implemented v1.2.0 locally |
-| 27 | jules-task-cc-27-multisite-e2e.md | — | — | pending (after 26b merge) |
+| 26 | jules-task-cc-26-multisite-network-settings.md | [8519204115108289871](https://jules.google.com/session/8519204115108289871) | [#28](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/28) | merged (Cursor) — Jules #29 closed |
+| 26b | jules-task-cc-26b-multisite-pr-and-tests.md | [16874498731229164822](https://jules.google.com/session/16874498731229164822) | [#28](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/28) | merged (Cursor v1.2.0) |
+| 27 | jules-task-cc-27-multisite-e2e.md | — | — | pending (after v1.2.x stable) |
 
 ## Команды
 
@@ -55,7 +56,7 @@ JULES_TASK=jules-task-cc-01-scaffold.md python3 scripts/jules_create_sessions.py
 ## Ревью-чеклист (Cursor) — roadmap complete
 
 - [x] Один PR = одна задача, без лишнего scope
-- [x] PSR-4, `wp-eu-cookie-suite` text domain
+- [x] PSR-4, text domain `privaro-cookie-consent-banner`
 - [x] Нет секретов в коде
 - [x] PHPCS-friendly (escaping, nonces)
 - [x] Соответствие product-spec для этой фазы

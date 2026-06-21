@@ -488,7 +488,7 @@ final class Admin {
 		add_submenu_page(
 			'settings.php',
 			__( 'Privaro Cookie Consent Banner', 'privaro-cookie-consent-banner' ),
-			__( 'Cookie Consent Banner', 'privaro-cookie-consent-banner' ),
+			__( 'Privaro Cookie Consent Banner', 'privaro-cookie-consent-banner' ),
 			'manage_network_options',
 			self::NETWORK_PAGE_SLUG,
 			array( $this, 'render_network_settings_page' )

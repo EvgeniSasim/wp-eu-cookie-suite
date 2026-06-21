@@ -28,6 +28,10 @@ delete_option( 'wpeu_cs_last_scan_time' );
 delete_option( 'wpeu_cs_last_log_cleanup' );
 delete_option( 'wpeu_cs_ip_hash_secret' );
 
+if ( is_multisite() && is_main_site() ) {
+	delete_site_option( 'wpeu_cs_network_settings' );
+}
+
 global $wpdb;
 
 // Drop custom tables.

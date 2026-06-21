@@ -28,7 +28,7 @@ ln -s "$(pwd)/privaro-cookie-consent-banner" /path/to/wp-content/plugins/privaro
 ### Build (опционально)
 
 ```bash
-cd wp-eu-cookie-suite
+cd privaro-cookie-consent-banner
 npm install
 npm run build
 ```
@@ -71,7 +71,7 @@ vendor/bin/phpunit
 
 Автоматической миграции нет — перенос настроек выполняется вручную:
 
-1. Установите WP EU Cookie Suite на staging, **не удаляйте** Complianz до проверки
+1. Установите **Privaro Cookie Consent Banner** на staging, **не удаляйте** Complianz до проверки
 2. Сопоставьте категории: Functional → Necessary, Statistics → Statistics, Marketing → Marketing
 3. Скопируйте custom script rules из Complianz в **Integrations → Custom block rules**
 4. Настройте URL privacy/cookie policy в табе Banner
@@ -80,7 +80,7 @@ vendor/bin/phpunit
 7. Проверьте баннер, GCM, Site Kit, формы (reCAPTCHA → marketing)
 8. После успешной проверки деактивируйте Complianz
 
-Экспорт/импорт JSON в табе **Tools** переносит настройки между инстансами WP EU Cookie Suite (не из Complianz).
+Экспорт/импорт JSON в табе **Tools** переносит настройки между инстансами Privaro Cookie Consent Banner (не из Complianz).
 
 ## Google Consent Mode
 

@@ -1,6 +1,6 @@
 # Custom consent categories
 
-Site owners can define up to **5 custom consent categories** in **EU Cookie Suite → Banner → Categories**.
+Site owners can define **custom consent categories** in **Privaro Cookie Consent Banner → Banner → Categories**.
 
 ## When to use
 

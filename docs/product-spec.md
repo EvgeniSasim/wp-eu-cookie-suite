@@ -1,4 +1,4 @@
-# Спецификация продукта — WP EU Cookie Suite
+# Спецификация продукта — Privaro Cookie Consent Banner
 
 ## Цель
 
@@ -59,8 +59,8 @@
 ## Архитектура (кратко)
 
 ```
-wp-eu-cookie-suite/
-├── wp-eu-cookie-suite.php      # bootstrap
+privaro-cookie-consent-banner/
+├── privaro-cookie-consent-banner.php      # bootstrap
 ├── includes/
 │   ├── Plugin.php
 │   ├── Admin/

@@ -47,6 +47,23 @@ class Test_Settings_Transfer extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Legacy export plugin ids remain importable.
+	 */
+	public function test_validate_accepts_legacy_export_plugin_id(): void {
+		foreach ( array( 'wp-eu-cookie-suite', 'eu-cookie-consent-suite' ) as $legacy_id ) {
+			$result = SettingsTransfer::validate(
+				array(
+					'plugin'   => $legacy_id,
+					'settings' => array(),
+					'registry' => array(),
+				)
+			);
+
+			$this->assertTrue( $result );
+		}
+	}
+
+	/**
 	 * Import sanitizes URLs and booleans.
 	 */
 	public function test_sanitize_imported_settings(): void {

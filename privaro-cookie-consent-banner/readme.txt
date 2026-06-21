@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -96,6 +96,13 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.2.2 =
+* Restore full plugin name in Network Admin menu (Privaro Cookie Consent Banner).
+* JSON export uses effective settings (respects multisite network inherit).
+* Accept legacy export files from wp-eu-cookie-suite / eu-cookie-consent-suite slugs.
+* Remove network default settings on uninstall from the main site.
+* Documentation and dev docs aligned with Privaro Cookie Consent Banner branding.
 
 = 1.2.1 =
 * Fix fatal error on activation when a stale `vendor/autoload.php` exists from a previous install; always register the includes autoloader.
