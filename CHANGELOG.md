@@ -9,6 +9,15 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-21
+
+### Added
+
+- WordPress Multisite support: network-wide default settings (`wpeu_cs_network_settings`) and per-site inherit/override via `use_network_defaults`.
+- Network Admin settings page under Settings → Cookie Consent Banner.
+- Site Admin toggle “Use network defaults” with read-only inherited settings view.
+- `SettingsRepository` for effective settings resolution with PHPUnit coverage.
+
 ## [1.1.3] - 2026-06-11
 
 ### Fixed

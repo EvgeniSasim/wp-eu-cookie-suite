@@ -10,6 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use WPEU\CookieSuite\Consent\Categories;
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- WP Consent API compatibility functions.
 
@@ -64,7 +65,7 @@ if ( ! function_exists( 'wp_get_consent_type' ) ) {
 	 * @return string 'optin' or 'optout'.
 	 */
 	function wp_get_consent_type(): string {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$eu_mode  = $settings['eu_mode'] ?? true;
 		return $eu_mode ? 'optin' : 'optout';
 	}

@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Ensures Site Kit analytics respects consent.
@@ -39,7 +40,7 @@ final class GoogleSiteKit {
 	 * Whether Site Kit integration is enabled (default on when Site Kit is active).
 	 */
 	private function is_integration_enabled(): bool {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = SettingsRepository::instance()->get_effective_settings();
 		$integrations = $settings['enabled_integrations'] ?? array();
 
 		if ( ! array_key_exists( 'google_site_kit', $integrations ) ) {

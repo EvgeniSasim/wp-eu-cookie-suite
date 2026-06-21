@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Consent\BannerTexts;
 use WPEU\CookieSuite\Scanner\CookieRepository;
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Shortcodes class.
@@ -123,7 +124,7 @@ final class Shortcodes {
 	 * @return string
 	 */
 	public function render_cookie_policy( $atts, ?string $content = null ): string {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = SettingsRepository::instance()->get_effective_settings();
 		$locale       = BannerTexts::get_active_locale();
 		$policy_texts = $settings['policy_texts'][ $locale ] ?? array();
 

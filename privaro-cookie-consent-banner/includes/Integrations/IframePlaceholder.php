@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 use WPEU\CookieSuite\Frontend\IframeProcessor;
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Replaces blocked iframes with placeholders.
@@ -25,7 +26,7 @@ final class IframePlaceholder {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['iframe_placeholder'] ?? false;
 
 		if ( ! $enabled ) {

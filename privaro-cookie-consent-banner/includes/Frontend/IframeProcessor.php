@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
+use WPEU\CookieSuite\Settings\SettingsRepository;
 /**
  * Handles detection and replacement of iframes with placeholders.
  */
@@ -30,7 +30,7 @@ final class IframeProcessor {
 			return $content;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['iframe_placeholder'] ?? false;
 
 		if ( ! $enabled ) {

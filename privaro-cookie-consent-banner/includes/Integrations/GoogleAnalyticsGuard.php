@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 use WPEU\CookieSuite\Consent\Categories;
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Clears GA cookies without statistics consent and blocks enqueued gtag scripts.
@@ -40,7 +41,7 @@ final class GoogleAnalyticsGuard {
 	 * Whether the guard integration is enabled (default on).
 	 */
 	public function is_enabled(): bool {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = SettingsRepository::instance()->get_effective_settings();
 		$integrations = $settings['enabled_integrations'] ?? array();
 
 		if ( ! array_key_exists( 'ga_cookie_guard', $integrations ) ) {

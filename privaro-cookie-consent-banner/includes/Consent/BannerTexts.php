@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
+use WPEU\CookieSuite\Settings\SettingsRepository;
 /**
  * BannerTexts class.
  */
@@ -110,7 +110,7 @@ final class BannerTexts {
 	 */
 	public static function get_strings( string $locale ): array {
 		$defaults = self::get_defaults( $locale );
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$saved    = $settings['banner_texts'][ $locale ] ?? array();
 
 		$merged = array_merge( $defaults, $saved );
@@ -130,7 +130,7 @@ final class BannerTexts {
 	 * @return array<string, string>
 	 */
 	public static function get_locales(): array {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$locales  = array(
 			'en' => __( 'English', 'privaro-cookie-consent-banner' ),
 			'de' => __( 'German', 'privaro-cookie-consent-banner' ),

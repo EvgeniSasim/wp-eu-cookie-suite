@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Ensures theme-level analytics (ACF) respects consent.
@@ -26,7 +27,7 @@ final class ThemeAnalytics {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['theme_analytics'] ?? false;
 
 		if ( ! $enabled ) {
