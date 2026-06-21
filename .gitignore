@@ -7,3 +7,9 @@ vendor/
 composer.lock
 build/
 .phpunit.result.cache
+
+# Local dev / CI artifacts
+tests/e2e/test-results/
+tests/e2e/.env
+scripts/__pycache__/
+*.pyc

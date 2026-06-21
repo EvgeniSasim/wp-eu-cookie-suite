@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import { loginToWordPress, goToPluginSettings } from '../helpers/auth';
 
 test.describe('Admin Settings', () => {
+  // Mutates shared WP options — avoid parallel races.
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     await loginToWordPress(page);
   });

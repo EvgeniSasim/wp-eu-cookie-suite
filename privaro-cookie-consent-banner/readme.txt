@@ -97,6 +97,12 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 
 == Changelog ==
 
+= 1.3.1 =
+* Fix multisite inherit toggle so subsites can disable network defaults.
+* Limit read-only inherited UI to Banner and Integrations; keep Scanner, Cookies, and Consent Log editable.
+* Network Admin overview tab, network language/category management, and per-site consent logging while inheriting.
+* Fix missing consent revision bump handler on Tools tab.
+
 = 1.3.0 =
 * Consent log snapshots v2: banner texts, policy URLs/intro, category labels, UI settings, and SHA-256 content_hash for accountability.
 * Snapshot download JSON includes log record plus proof_snapshot bundle.
