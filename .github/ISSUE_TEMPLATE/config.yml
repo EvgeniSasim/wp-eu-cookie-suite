@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: WordPress.org support forum
+    url: https://wordpress.org/support/plugin/privaro-cookie-consent-banner/
+    about: Questions about using the plugin on a live site (when listed on WordPress.org).
+  - name: Security vulnerability
+    url: https://github.com/EvgeniSasim/wp-eu-cookie-suite/security/advisories/new
+    about: Report security issues privately (do not open a public issue).

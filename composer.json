@@ -1,6 +1,6 @@
 {
-  "name": "wpeu/cookie-suite",
-  "description": "Privaro Cookie Consent Banner WordPress plugin",
+  "name": "privaro/cookie-consent-banner",
+  "description": "Privaro Cookie Consent Banner — open-source WordPress plugin for EU/GDPR cookie consent",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "authors": [

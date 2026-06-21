@@ -1,6 +1,19 @@
 # Privaro Cookie Consent Banner
 
-WordPress-плагин cookie consent для EU/DE (GDPR, ePrivacy, TTDSG): баннер на [vanilla-cookieconsent](https://cookieconsent.orestbida.com/), блокировка скриптов, сканер cookies, мультиязычность, WP Consent API.
+[![CI](https://github.com/EvgeniSasim/wp-eu-cookie-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/EvgeniSasim/wp-eu-cookie-suite/actions/workflows/ci.yml)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](LICENSE)
+[![WordPress plugin requires PHP 8.1](https://img.shields.io/badge/PHP-8.1%2B-777bb4)](composer.json)
+[![WordPress 6.4+](https://img.shields.io/badge/WordPress-6.4%2B-blue)](privaro-cookie-consent-banner/readme.txt)
+
+Open-source WordPress plugin for EU/GDPR cookie consent: banner (CookieConsent v3), script blocking, cookie scanner, WP Consent API, Google Consent Mode v2, multisite network defaults.
+
+| | |
+|---|---|
+| **Plugin directory** | `privaro-cookie-consent-banner/` |
+| **WordPress.org** | [privaro-cookie-consent-banner](https://wordpress.org/plugins/privaro-cookie-consent-banner/) |
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| **Security** | [SECURITY.md](SECURITY.md) |
+| **Releases** | [GitHub Releases](https://github.com/EvgeniSasim/wp-eu-cookie-suite/releases) |
 
 **Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Breaking changes:** [BREAKING_CHANGES.md](BREAKING_CHANGES.md)
 
@@ -105,4 +118,8 @@ Roadmap: [prompts/jules-task-cc-roadmap.md](prompts/jules-task-cc-roadmap.md)
 
 ## Лицензия
 
-GPL-2.0-or-later
+[GPL-2.0-or-later](LICENSE) — свободное ПО. См. также [THIRD-PARTY.md](privaro-cookie-consent-banner/THIRD-PARTY.md) для bundled-библиотек.
+
+## Open source
+
+Issues, pull requests и security reports приветствуются. См. [CONTRIBUTING.md](CONTRIBUTING.md) и [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
