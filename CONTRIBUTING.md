@@ -40,6 +40,8 @@ vendor/bin/phpcbf   # auto-fix where possible
 
 Follow [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/). Plugin code lives in `privaro-cookie-consent-banner/`.
 
+For bootstrapping **new** open-source repos (CI, branch protection, WordPress.org), use the Cursor skill at [`.cursor/skills/oss-repo-setup/SKILL.md`](.cursor/skills/oss-repo-setup/SKILL.md).
+
 ## Pull request checklist
 
 - [ ] `vendor/bin/phpcs` passes (CI runs on PHP 8.1 and 8.2).
