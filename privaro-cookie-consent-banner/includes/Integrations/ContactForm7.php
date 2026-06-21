@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
 
 /**
  * Ensures CF7 reCAPTCHA respects consent.
@@ -23,7 +24,7 @@ final class ContactForm7 {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['cf7_recaptcha'] ?? false;
 
 		if ( ! $enabled ) {

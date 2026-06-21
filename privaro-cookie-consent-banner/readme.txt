@@ -4,7 +4,8 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.3
+Stable tag: 1.2.0
+Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +23,7 @@ Key features include:
 * **WP Consent API Support:** Fully compatible with the WordPress Consent API.
 * **Cookie Scanner & Inventory:** Automatically discover cookies used on your site and maintain a categorized inventory.
 * **Multilingual Support:** Ready for translation and supports Polylang/WPML.
+* **Multisite Support:** Network-wide default settings with per-site inherit or override.
 * **Consent Logging:** Optional local logging of consent events for audit purposes.
 
 = Privacy & Data Collection =
@@ -94,6 +96,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.2.0 =
+* WordPress Multisite: network default settings and per-site inherit/override toggle.
+* SettingsRepository resolves effective settings for frontend and consent flows.
 
 = 1.1.3 =
 * Prevent fatal error when legacy cookie plugins are still active during migration.

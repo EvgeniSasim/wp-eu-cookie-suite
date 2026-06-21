@@ -37,7 +37,11 @@ Branch: `main`
 | 21 | jules-task-cc-21-consent-records.md | [13639516324280863306](https://jules.google.com/session/13639516324280863306) | [#22](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/22) | merged |
 | 22 | jules-task-cc-22-wordpress-org-release.md | [7576984083680245419](https://jules.google.com/session/7576984083680245419) | [#23](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/23) | merged |
 | 23 | jules-task-cc-23-phpunit-coverage.md | [10280687574021748419](https://jules.google.com/session/10280687574021748419) | [#24](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/24) | merged |
-| 24 | jules-task-cc-24-playwright-e2e.md | [320287786204962829](https://jules.google.com/session/320287786204962829) | — | in progress |
+| 24 | jules-task-cc-24-playwright-e2e.md | [320287786204962829](https://jules.google.com/session/320287786204962829) | [#26](https://github.com/EvgeniSasim/wp-eu-cookie-suite/pull/26) | merged |
+| 25 | jules-task-cc-25-staging-deploy.md | — | — | **pending** — staging zip deploy + cookie audit |
+| 26 | jules-task-cc-26-multisite-network-settings.md | [8519204115108289871](https://jules.google.com/session/8519204115108289871) | — | **done sandbox, no PR** — код не запушен |
+| 26b | jules-task-cc-26b-multisite-pr-and-tests.md | [16874498731229164822](https://jules.google.com/session/16874498731229164822) | — | **done sandbox, no PR** — Cursor implemented v1.2.0 locally |
+| 27 | jules-task-cc-27-multisite-e2e.md | — | — | pending (after 26b merge) |
 
 ## Команды
 

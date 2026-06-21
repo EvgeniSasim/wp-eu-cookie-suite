@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
+use WPEU\CookieSuite\Settings\SettingsRepository;
 /**
  * Injects gtag consent defaults and updates after banner choices.
  */
@@ -34,7 +34,7 @@ final class GoogleConsentMode {
 	 * Whether Google Consent Mode is enabled.
 	 */
 	private function is_enabled(): bool {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::instance()->get_effective_settings();
 		return ! isset( $settings['google_consent_mode'] ) || ! empty( $settings['google_consent_mode'] );
 	}
 
