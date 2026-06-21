@@ -59,7 +59,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '1.1.3' );
+			define( 'WPEU_CS_VERSION', '1.2.0' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/privaro-cookie-consent-banner.php' );
@@ -93,17 +93,18 @@ final class Plugin {
 			update_option(
 				'wpeu_cs_settings',
 				array(
-					'blocker_enabled'           => true,
-					'eu_mode'                   => true,
-					'enabled_services'          => $enabled,
-					'enabled_categories'        => array( 'preferences', 'statistics', 'marketing' ),
-					'show_reject_all'           => true,
-					'google_consent_mode'       => true,
-					'consent_logging_enabled'   => true,
-					'consent_log_retention'     => 365,
-					'consent_log_store_ip'      => false,
-					'consent_revision'          => 0,
-					'version'                   => WPEU_CS_VERSION,
+					'blocker_enabled'         => true,
+					'eu_mode'                 => true,
+					'enabled_services'        => $enabled,
+					'enabled_categories'      => array( 'preferences', 'statistics', 'marketing' ),
+					'show_reject_all'         => true,
+					'google_consent_mode'     => true,
+					'consent_logging_enabled' => true,
+					'consent_log_retention'   => 365,
+					'consent_log_store_ip'    => false,
+					'consent_revision'        => 0,
+					'use_network_defaults'    => is_multisite(),
+					'version'                 => WPEU_CS_VERSION,
 				)
 			);
 		}

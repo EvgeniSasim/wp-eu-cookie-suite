@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Consent;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -34,7 +36,7 @@ final class GoogleConsentMode {
 	 * Whether Google Consent Mode is enabled.
 	 */
 	private function is_enabled(): bool {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		return ! isset( $settings['google_consent_mode'] ) || ! empty( $settings['google_consent_mode'] );
 	}
 

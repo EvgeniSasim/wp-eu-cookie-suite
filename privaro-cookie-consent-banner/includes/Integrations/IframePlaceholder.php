@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Integrations;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -25,7 +27,7 @@ final class IframePlaceholder {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['iframe_placeholder'] ?? false;
 
 		if ( ! $enabled ) {

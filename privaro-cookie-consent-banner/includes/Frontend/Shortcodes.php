@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Frontend;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -123,7 +125,7 @@ final class Shortcodes {
 	 * @return string
 	 */
 	public function render_cookie_policy( $atts, ?string $content = null ): string {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = SettingsRepository::get_effective_settings();
 		$locale       = BannerTexts::get_active_locale();
 		$policy_texts = $settings['policy_texts'][ $locale ] ?? array();
 

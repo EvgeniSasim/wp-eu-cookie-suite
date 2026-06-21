@@ -64,7 +64,7 @@ if ( ! function_exists( 'wp_get_consent_type' ) ) {
 	 * @return string 'optin' or 'optout'.
 	 */
 	function wp_get_consent_type(): string {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$eu_mode  = $settings['eu_mode'] ?? true;
 		return $eu_mode ? 'optin' : 'optout';
 	}

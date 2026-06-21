@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Consent;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -118,7 +120,7 @@ final class Categories {
 	 * @return array<string, array<string, string>>
 	 */
 	public static function get_custom(): array {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$stored   = $settings['custom_categories'] ?? array();
 
 		if ( ! is_array( $stored ) ) {
@@ -180,7 +182,7 @@ final class Categories {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function get_enabled_for_banner(): array {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$enabled  = $settings['enabled_categories'] ?? array( self::PREFERENCES, self::STATISTICS, self::MARKETING );
 
 		if ( ! is_array( $enabled ) ) {

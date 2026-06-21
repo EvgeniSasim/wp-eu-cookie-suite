@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Frontend;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -30,7 +32,7 @@ final class IframeProcessor {
 			return $content;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['iframe_placeholder'] ?? false;
 
 		if ( ! $enabled ) {

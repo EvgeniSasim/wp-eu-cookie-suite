@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Consent;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -37,7 +39,7 @@ final class ConsentLogger {
 	public function log( array $data ) {
 		global $wpdb;
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		if ( array_key_exists( 'consent_logging_enabled', $settings ) && empty( $settings['consent_logging_enabled'] ) ) {
 			return false;
 		}
@@ -217,7 +219,7 @@ final class ConsentLogger {
 	public function cleanup_expired_logs(): int {
 		global $wpdb;
 
-		$settings  = get_option( 'wpeu_cs_settings', array() );
+		$settings  = SettingsRepository::get_effective_settings();
 		$retention = (int) ( $settings['consent_log_retention'] ?? 365 );
 
 		if ( $retention <= 0 ) {

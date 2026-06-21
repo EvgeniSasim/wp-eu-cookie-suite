@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPEU\CookieSuite\Frontend;
 
+use WPEU\CookieSuite\Settings\SettingsRepository;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -37,7 +39,7 @@ final class ScriptBlocker {
 			return;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$blocker  = ! empty( $settings['blocker_enabled'] );
 		$iframes  = ! empty( $settings['enabled_integrations']['iframe_placeholder'] );
 
@@ -59,7 +61,7 @@ final class ScriptBlocker {
 			return $output;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$blocker  = ! empty( $settings['blocker_enabled'] );
 
 		if ( $blocker && str_contains( $output, '<script' ) ) {
@@ -170,7 +172,7 @@ final class ScriptBlocker {
 			}
 		}
 
-		$settings         = get_option( 'wpeu_cs_settings', array() );
+		$settings         = SettingsRepository::get_effective_settings();
 		$enabled_services = $settings['enabled_services'] ?? null;
 
 		$category = ScriptRegistry::find_category_for_script( $src, $content, $enabled_services );
@@ -222,7 +224,7 @@ final class ScriptBlocker {
 	 * Enqueue bootstrap JS to handle script unblocking.
 	 */
 	public function enqueue_bootstrap_js(): void {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = SettingsRepository::get_effective_settings();
 		$blocker  = ! empty( $settings['blocker_enabled'] );
 		$iframes  = ! empty( $settings['enabled_integrations']['iframe_placeholder'] );
 
