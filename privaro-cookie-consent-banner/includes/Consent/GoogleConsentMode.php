@@ -34,7 +34,7 @@ final class GoogleConsentMode {
 	 * Whether Google Consent Mode is enabled.
 	 */
 	private function is_enabled(): bool {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		return ! isset( $settings['google_consent_mode'] ) || ! empty( $settings['google_consent_mode'] );
 	}
 

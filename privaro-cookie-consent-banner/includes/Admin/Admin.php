@@ -34,6 +34,7 @@ final class Admin {
 	 */
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
+		add_action( 'network_admin_menu', array( $this, 'add_network_menu_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
 		add_action( 'admin_init', array( $this, 'maybe_cleanup_logs' ) );
@@ -47,7 +48,14 @@ final class Admin {
 	 * Handle admin actions (CRUD, export, etc).
 	 */
 	public function handle_actions(): void {
-		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		$is_network_admin = is_network_admin();
+		$capability       = $is_network_admin ? 'manage_network_options' : 'manage_options';
+
+		if ( ! current_user_can( $capability ) ) {
 			return;
 		}
 
@@ -62,6 +70,18 @@ final class Admin {
 		}
 
 		$repository = new \WPEU\CookieSuite\Scanner\CookieRepository();
+
+		if ( $is_network_admin && 'wpeu_cs_save_network_settings' === $action ) {
+			check_admin_referer( 'wpeu_cs_save_network_settings', 'wpeu_cs_network_settings_nonce' );
+			$this->handle_save_network_settings();
+			return;
+		}
+
+		if ( ! $is_network_admin && 'wpeu_cs_toggle_network_defaults' === $action ) {
+			check_admin_referer( 'wpeu_cs_toggle_network_defaults', 'wpeu_cs_toggle_nonce' );
+			$this->handle_toggle_network_defaults();
+			return;
+		}
 
 		switch ( $action ) {
 			case 'wpeu_cs_save_cookie':
@@ -149,7 +169,7 @@ final class Admin {
 			exit;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		if ( ! isset( $settings['language_labels'] ) ) {
 			$settings['language_labels'] = array();
 		}
@@ -180,7 +200,7 @@ final class Admin {
 	 * @param string $code Language code.
 	 */
 	private function handle_remove_language( string $code ): void {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 
 		unset( $settings['language_labels'][ $code ] );
 		unset( $settings['banner_texts'][ $code ] );
@@ -214,7 +234,7 @@ final class Admin {
 			exit;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		if ( ! isset( $settings['custom_categories'] ) || ! is_array( $settings['custom_categories'] ) ) {
 			$settings['custom_categories'] = array();
 		}
@@ -259,7 +279,7 @@ final class Admin {
 			exit;
 		}
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		unset( $settings['custom_categories'][ $slug ] );
 
 		if ( isset( $settings['enabled_categories'] ) && is_array( $settings['enabled_categories'] ) ) {
@@ -381,6 +401,32 @@ final class Admin {
 	}
 
 	/**
+	 * Handle saving network settings.
+	 */
+	private function handle_save_network_settings(): void {
+		$input      = isset( $_POST['wpeu_cs_settings'] ) ? (array) wp_unslash( $_POST['wpeu_cs_settings'] ) : array();
+		$sanitized  = $this->sanitize_settings( $input );
+		$active_tab = sanitize_key( $input['active_tab'] ?? 'banner' );
+
+		update_site_option( 'wpeu_cs_network_settings', $sanitized );
+
+		wp_safe_redirect( network_admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $active_tab . '&settings-updated=true' ) );
+		exit;
+	}
+
+	/**
+	 * Handle toggling "Use network defaults" for a site.
+	 */
+	private function handle_toggle_network_defaults(): void {
+		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings['use_network_defaults'] = ! empty( $_POST['use_network_defaults'] );
+		update_option( 'wpeu_cs_settings', $settings );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&settings-updated=true' ) );
+		exit;
+	}
+
+	/**
 	 * Handle individual log snapshot download.
 	 *
 	 * @param int $id Log ID.
@@ -448,6 +494,20 @@ final class Admin {
 	}
 
 	/**
+	 * Add network menu page.
+	 */
+	public function add_network_menu_page(): void {
+		add_menu_page(
+			__( 'Privaro Cookie Consent (Network)', 'privaro-cookie-consent-banner' ),
+			__( 'Privaro Cookie Consent', 'privaro-cookie-consent-banner' ),
+			'manage_network_options',
+			self::PAGE_SLUG,
+			array( $this, 'render_network_settings_page' ),
+			'dashicons-shield'
+		);
+	}
+
+	/**
 	 * Register settings.
 	 */
 	public function register_settings(): void {
@@ -469,8 +529,12 @@ final class Admin {
 	 * @return array Sanitized settings.
 	 */
 	public function sanitize_settings( array $input ): array {
-		$old_settings = get_option( 'wpeu_cs_settings', array() );
-		$sanitized    = $old_settings;
+		if ( is_network_admin() ) {
+			$old_settings = get_site_option( 'wpeu_cs_network_settings', array() );
+		} else {
+			$old_settings = get_option( 'wpeu_cs_settings', array() );
+		}
+		$sanitized = is_array( $old_settings ) ? $old_settings : array();
 
 		$active_tab = $input['active_tab'] ?? '';
 
@@ -617,6 +681,26 @@ final class Admin {
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
+			<?php if ( is_multisite() ) : ?>
+				<div class="wpeu-cs-multisite-toggle card" style="margin-top: 20px;">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
+						<?php wp_nonce_field( 'wpeu_cs_toggle_network_defaults', 'wpeu_cs_toggle_nonce' ); ?>
+						<input type="hidden" name="action" value="wpeu_cs_toggle_network_defaults">
+						<label>
+							<input type="checkbox" name="use_network_defaults" value="1" <?php checked( \WPEU\CookieSuite\Settings\SettingsRepository::is_using_network_defaults() ); ?>>
+							<strong><?php esc_html_e( 'Use network defaults', 'privaro-cookie-consent-banner' ); ?></strong>
+						</label>
+						<p class="description"><?php esc_html_e( 'When enabled, this site will inherit settings from the network administrator. Local changes will be ignored.', 'privaro-cookie-consent-banner' ); ?></p>
+						<?php submit_button( __( 'Save multisite preference', 'privaro-cookie-consent-banner' ), 'secondary' ); ?>
+					</form>
+				</div>
+				<?php if ( \WPEU\CookieSuite\Settings\SettingsRepository::is_using_network_defaults() ) : ?>
+					<div class="notice notice-info inline">
+						<p><?php esc_html_e( 'Settings are currently inherited from network defaults. Changes below will not take effect unless you disable "Use network defaults" above.', 'privaro-cookie-consent-banner' ); ?></p>
+					</div>
+				<?php endif; ?>
+			<?php endif; ?>
+
 			<nav class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $tab_id => $tab_label ) : ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab_id ) ); ?>" class="nav-tab <?php echo $active_tab === $tab_id ? 'nav-tab-active' : ''; ?>">
@@ -625,7 +709,7 @@ final class Admin {
 				<?php endforeach; ?>
 			</nav>
 
-			<div class="wpeu-cs-content">
+			<div class="wpeu-cs-content <?php echo \WPEU\CookieSuite\Settings\SettingsRepository::is_using_network_defaults() ? 'wpeu-cs-inherited' : ''; ?>">
 				<?php
 				switch ( $active_tab ) {
 					case 'dashboard':
@@ -679,7 +763,7 @@ final class Admin {
 
 					// Allow removal if not a core language and not currently detected site locale
 					$is_core = in_array( $code, array( 'en', 'de' ), true );
-					if ( ! $is_core ) {
+					if ( ! $is_core && ! is_network_admin() ) {
 						echo ' <a href="' . esc_url( $remove_url ) . '" class="wpeu-cs-remove-lang" onclick="return confirm(\'' . esc_js( __( 'Are you sure you want to remove this language? Settings for this language will be deleted.', 'privaro-cookie-consent-banner' ) ) . '\');" title="' . esc_attr__( 'Remove language', 'privaro-cookie-consent-banner' ) . '"><span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span></a>';
 					}
 
@@ -692,6 +776,7 @@ final class Admin {
 			<br class="clear">
 		</div>
 
+		<?php if ( ! is_network_admin() ) : ?>
 		<div class="wpeu-cs-add-lang-form card">
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
 				<?php wp_nonce_field( 'wpeu_cs_add_language', 'wpeu_cs_add_lang_nonce' ); ?>
@@ -712,6 +797,7 @@ final class Admin {
 				</div>
 			</form>
 		</div>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -781,6 +867,7 @@ final class Admin {
 			</tbody>
 		</table>
 
+		<?php if ( ! is_network_admin() ) : ?>
 		<div class="wpeu-cs-add-category-form card" style="margin-top: 12px; max-width: 900px;">
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
 				<?php wp_nonce_field( 'wpeu_cs_add_category', 'wpeu_cs_add_category_nonce' ); ?>
@@ -813,6 +900,7 @@ final class Admin {
 				<?php submit_button( __( 'Add Category', 'privaro-cookie-consent-banner' ), 'secondary' ); ?>
 			</form>
 		</div>
+		<?php endif; ?>
 		<hr>
 		<?php
 	}
@@ -821,7 +909,11 @@ final class Admin {
 	 * Render banner tab.
 	 */
 	private function render_banner_tab(): void {
-		$settings           = get_option( 'wpeu_cs_settings', array() );
+		if ( is_network_admin() ) {
+			$settings = get_site_option( 'wpeu_cs_network_settings', array() );
+		} else {
+			$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
+		}
 		$all_categories     = Categories::get_all();
 		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
 		$privacy_url        = $settings['privacy_policy_url'] ?? '';
@@ -835,10 +927,14 @@ final class Admin {
 		$theme              = $banner_ui['theme'] ?? 'light';
 		$primary_color      = $banner_ui['primary_color'] ?? '#30363c';
 
-		$locales        = BannerTexts::get_locales();
-		$lang_input     = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( (string) $_GET['lang'] ) ) : '';
+		$locales      = BannerTexts::get_locales();
+		$lang_input   = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( (string) $_GET['lang'] ) ) : '';
 		$current_lang   = array_key_exists( $lang_input, $locales ) ? $lang_input : 'en';
-		$texts          = BannerTexts::get_strings( $current_lang );
+		if ( is_network_admin() ) {
+			$texts = array_merge( BannerTexts::get_defaults( $current_lang ), $settings['banner_texts'][ $current_lang ] ?? array() );
+		} else {
+			$texts = BannerTexts::get_strings( $current_lang );
+		}
 
 		$message = isset( $_GET['message'] ) ? sanitize_key( wp_unslash( (string) $_GET['message'] ) ) : '';
 		if ( 'lang_added' === $message ) {
@@ -863,11 +959,15 @@ final class Admin {
 		$this->render_categories_management();
 		?>
 
+		<?php if ( ! is_network_admin() ) : ?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
+		<?php else : ?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
+		<?php endif; ?>
 
 			<h3>
 			<?php
@@ -1055,8 +1155,12 @@ final class Admin {
 
 			<input type="hidden" id="wpeu_cs_preview_nonce" value="<?php echo esc_attr( wp_create_nonce( 'wpeu-cs-preview' ) ); ?>">
 
-			<?php submit_button(); ?>
+			<?php if ( ! is_network_admin() ) : ?>
+				<?php submit_button(); ?>
+			<?php endif; ?>
+		<?php if ( ! is_network_admin() ) : ?>
 		</form>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -1086,7 +1190,7 @@ final class Admin {
 	 * Render dashboard tab.
 	 */
 	private function render_dashboard_tab(): void {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$version      = $settings['version'] ?? WPEU_CS_VERSION;
 		$blocker      = $settings['blocker_enabled'] ?? false;
 		$consent_api  = defined( 'WP_CONSENT_API_VERSION' );
@@ -1155,7 +1259,11 @@ final class Admin {
 	 * Render integrations tab.
 	 */
 	private function render_integrations_tab(): void {
-		$settings             = get_option( 'wpeu_cs_settings', array() );
+		if ( is_network_admin() ) {
+			$settings = get_site_option( 'wpeu_cs_network_settings', array() );
+		} else {
+			$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
+		}
 		$services             = ScriptRegistry::get_services();
 		$enabled_services     = $settings['enabled_services'] ?? array();
 		$enabled_integrations = $settings['enabled_integrations'] ?? array();
@@ -1165,11 +1273,15 @@ final class Admin {
 		$analytics_field      = $settings['theme_analytics_field'] ?? 'analytics';
 
 		?>
+		<?php if ( ! is_network_admin() ) : ?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'wpeu_cs_settings' );
 			?>
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="integrations">
+		<?php else : ?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="integrations">
+		<?php endif; ?>
 
 			<h2><?php esc_html_e( 'Google', 'privaro-cookie-consent-banner' ); ?></h2>
 			<table class="form-table" role="presentation">
@@ -1285,8 +1397,12 @@ final class Admin {
 				</tr>
 			</table>
 
-			<?php submit_button(); ?>
+			<?php if ( ! is_network_admin() ) : ?>
+				<?php submit_button(); ?>
+			<?php endif; ?>
+		<?php if ( ! is_network_admin() ) : ?>
 		</form>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -1472,7 +1588,11 @@ final class Admin {
 	 * Render tools tab.
 	 */
 	private function render_tools_tab(): void {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		if ( is_network_admin() ) {
+			$settings = get_site_option( 'wpeu_cs_network_settings', array() );
+		} else {
+			$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
+		}
 		$locales      = BannerTexts::get_locales();
 		$lang_input   = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( (string) $_GET['lang'] ) ) : '';
 		$current_lang = array_key_exists( $lang_input, $locales ) ? $lang_input : BannerTexts::get_active_locale();
@@ -1523,9 +1643,13 @@ final class Admin {
 		$this->render_language_selector( 'tools', $locales, $current_lang );
 		?>
 
+		<?php if ( ! is_network_admin() ) : ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'wpeu_cs_settings' ); ?>
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+		<?php else : ?>
+			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+		<?php endif; ?>
 
 			<div class="card">
 				<h3>
@@ -1554,16 +1678,24 @@ final class Admin {
 						</td>
 					</tr>
 				</table>
-				<?php submit_button(); ?>
+				<?php if ( ! is_network_admin() ) : ?>
+					<?php submit_button(); ?>
+				<?php endif; ?>
 			</div>
+		<?php if ( ! is_network_admin() ) : ?>
 		</form>
+		<?php endif; ?>
 
 
 		<div class="card">
 			<h3><?php esc_html_e( 'Consent Logging', 'privaro-cookie-consent-banner' ); ?></h3>
+			<?php if ( ! is_network_admin() ) : ?>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'wpeu_cs_settings' ); ?>
 				<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+			<?php else : ?>
+				<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+			<?php endif; ?>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Enable Logging', 'privaro-cookie-consent-banner' ); ?></th>
@@ -1593,10 +1725,15 @@ final class Admin {
 						</td>
 					</tr>
 				</table>
-				<?php submit_button(); ?>
+				<?php if ( ! is_network_admin() ) : ?>
+					<?php submit_button(); ?>
+				<?php endif; ?>
+			<?php if ( ! is_network_admin() ) : ?>
 			</form>
+			<?php endif; ?>
 		</div>
 
+		<?php if ( ! is_network_admin() ) : ?>
 		<div class="card">
 			<h3><?php esc_html_e( 'Consent revision', 'privaro-cookie-consent-banner' ); ?></h3>
 			<p><?php esc_html_e( 'Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated).', 'privaro-cookie-consent-banner' ); ?></p>
@@ -1638,6 +1775,7 @@ final class Admin {
 				<?php submit_button( __( 'Import JSON', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
 			</form>
 		</div>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -1672,7 +1810,7 @@ final class Admin {
 	public function ajax_log_consent(): void {
 		check_ajax_referer( 'wpeu-cs-log', 'nonce' );
 
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		if ( array_key_exists( 'consent_logging_enabled', $settings ) && empty( $settings['consent_logging_enabled'] ) ) {
 			wp_send_json_error( 'logging_disabled' );
 		}
@@ -1830,6 +1968,65 @@ final class Admin {
 		</html>
 		<?php
 		exit;
+	}
+
+	/**
+	 * Render network settings page.
+	 */
+	public function render_network_settings_page(): void {
+		if ( ! current_user_can( 'manage_network_options' ) ) {
+			return;
+		}
+
+		$tabs = array(
+			'banner'       => __( 'Banner Defaults', 'privaro-cookie-consent-banner' ),
+			'integrations' => __( 'Integration Defaults', 'privaro-cookie-consent-banner' ),
+			'tools'        => __( 'Tool Defaults', 'privaro-cookie-consent-banner' ),
+		);
+
+		$active_tab_input = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( (string) $_GET['tab'] ) ) : '';
+		$active_tab       = array_key_exists( $active_tab_input, $tabs ) ? $active_tab_input : 'banner';
+
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<p class="description"><?php esc_html_e( 'Configure default settings for all sites in the network.', 'privaro-cookie-consent-banner' ); ?></p>
+
+			<nav class="nav-tab-wrapper">
+				<?php foreach ( $tabs as $tab_id => $tab_label ) : ?>
+					<a href="<?php echo esc_url( network_admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $tab_id ) ); ?>" class="nav-tab <?php echo $active_tab === $tab_id ? 'nav-tab-active' : ''; ?>">
+						<?php echo esc_html( $tab_label ); ?>
+					</a>
+				<?php endforeach; ?>
+			</nav>
+
+			<div class="wpeu-cs-content">
+				<form method="post" action="<?php echo esc_url( network_admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ); ?>">
+					<?php wp_nonce_field( 'wpeu_cs_save_network_settings', 'wpeu_cs_network_settings_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_save_network_settings">
+					<input type="hidden" name="wpeu_cs_settings[active_tab]" value="<?php echo esc_attr( $active_tab ); ?>">
+
+					<?php
+					switch ( $active_tab ) {
+						case 'banner':
+							$this->render_banner_tab();
+							break;
+						case 'integrations':
+							$this->render_integrations_tab();
+							break;
+						case 'tools':
+							$this->render_tools_tab();
+							break;
+					}
+					?>
+
+					<?php if ( 'scanner' !== $active_tab && 'cookies' !== $active_tab && 'consent_log' !== $active_tab && 'dashboard' !== $active_tab ) : ?>
+						<?php submit_button( __( 'Save Network Defaults', 'privaro-cookie-consent-banner' ) ); ?>
+					<?php endif; ?>
+				</form>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**

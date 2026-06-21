@@ -33,7 +33,7 @@ final class SettingsTransfer {
 	 * @return array<string, mixed>
 	 */
 	public static function export(): array {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 
 		return array(
 			'plugin'         => 'privaro-cookie-consent-banner',
@@ -78,7 +78,7 @@ final class SettingsTransfer {
 	 * @return array<string, mixed>
 	 */
 	public static function sanitize_imported_settings( array $settings ): array {
-		$current  = get_option( 'wpeu_cs_settings', array() );
+		$current  = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$sanitized = is_array( $current ) ? $current : array();
 
 		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke' );

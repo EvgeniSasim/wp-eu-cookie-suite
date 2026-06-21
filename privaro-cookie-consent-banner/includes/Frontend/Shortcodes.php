@@ -123,7 +123,7 @@ final class Shortcodes {
 	 * @return string
 	 */
 	public function render_cookie_policy( $atts, ?string $content = null ): string {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$locale       = BannerTexts::get_active_locale();
 		$policy_texts = $settings['policy_texts'][ $locale ] ?? array();
 

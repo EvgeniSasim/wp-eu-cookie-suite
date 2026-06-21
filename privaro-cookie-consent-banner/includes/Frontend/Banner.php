@@ -81,7 +81,7 @@ final class Banner {
 		}
 
 		$config        = $this->get_config();
-		$settings      = get_option( 'wpeu_cs_settings', array() );
+		$settings      = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$banner_ui     = $settings['banner_ui'] ?? array();
 		$theme         = $banner_ui['theme'] ?? 'light';
 		$primary       = sanitize_hex_color( $banner_ui['primary_color'] ?? '' ) ?: '#30363c';
@@ -190,7 +190,7 @@ final class Banner {
 	 * @return array<string, mixed>
 	 */
 	private function get_config(): array {
-		$settings           = get_option( 'wpeu_cs_settings', array() );
+		$settings           = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$all_categories     = Categories::get_enabled_for_banner();
 		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
 		$show_reject_all    = $settings['show_reject_all'] ?? true;

@@ -283,3 +283,27 @@ input:checked + .slider:before {
 .wp-picker-container {
     vertical-align: middle;
 }
+
+/* Inherited settings indicator */
+.wpeu-cs-inherited {
+    opacity: 0.7;
+    pointer-events: none;
+    user-select: none;
+    position: relative;
+}
+
+.wpeu-cs-inherited::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.wpeu-cs-multisite-toggle {
+    margin-bottom: 20px;
+    border-left: 4px solid #2271b1;
+}

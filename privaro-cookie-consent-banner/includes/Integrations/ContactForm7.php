@@ -23,7 +23,7 @@ final class ContactForm7 {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$settings = get_option( 'wpeu_cs_settings', array() );
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$enabled  = $settings['enabled_integrations']['cf7_recaptcha'] ?? false;
 
 		if ( ! $enabled ) {

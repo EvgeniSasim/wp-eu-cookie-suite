@@ -23,6 +23,7 @@ if ( is_array( $wpeu_cs_settings ) && ! empty( $wpeu_cs_settings['keep_data_on_u
 
 // Remove settings and scan results.
 delete_option( 'wpeu_cs_settings' );
+delete_site_option( 'wpeu_cs_network_settings' );
 delete_option( 'wpeu_cs_scan_results' );
 delete_option( 'wpeu_cs_last_scan_time' );
 delete_option( 'wpeu_cs_last_log_cleanup' );

@@ -40,7 +40,7 @@ final class GoogleAnalyticsGuard {
 	 * Whether the guard integration is enabled (default on).
 	 */
 	public function is_enabled(): bool {
-		$settings     = get_option( 'wpeu_cs_settings', array() );
+		$settings     = \WPEU\CookieSuite\Settings\SettingsRepository::get_effective_settings();
 		$integrations = $settings['enabled_integrations'] ?? array();
 
 		if ( ! array_key_exists( 'ga_cookie_guard', $integrations ) ) {

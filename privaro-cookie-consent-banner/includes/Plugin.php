@@ -103,6 +103,7 @@ final class Plugin {
 					'consent_log_retention'     => 365,
 					'consent_log_store_ip'      => false,
 					'consent_revision'          => 0,
+					'use_network_defaults'      => is_multisite(),
 					'version'                   => WPEU_CS_VERSION,
 				)
 			);
