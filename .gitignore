@@ -13,3 +13,4 @@ tests/e2e/test-results/
 tests/e2e/.env
 scripts/__pycache__/
 *.pyc
+.venv-assets/

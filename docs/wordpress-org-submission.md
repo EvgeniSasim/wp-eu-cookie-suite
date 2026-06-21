@@ -27,8 +27,30 @@
 
 ### Структура SVN:
 - `/trunk`: Основная ветка разработки (копия содержимого папки `privaro-cookie-consent-banner`).
-- `/tags/1.0.0`: Копия trunk для релиза 1.0.0.
+- `/tags/1.3.1`: Копия trunk для релиза (версия = Stable tag).
 - `/assets`: Иконки, баннеры и скриншоты (из папки `wordpress-org/assets`).
+
+### Assets и релиз (скрипты)
+
+Сгенерировать PNG локально:
+
+```bash
+python3 -m venv .venv-assets && source .venv-assets/bin/activate
+pip install -r scripts/requirements-assets.txt
+python3 scripts/generate-wporg-assets.py
+```
+
+Загрузить assets в SVN:
+
+```bash
+bash scripts/svn-upload-assets.sh
+```
+
+Опубликовать trunk + tag:
+
+```bash
+bash scripts/svn-publish-release.sh 1.3.1
+```
 
 ### Инструкции по загрузке:
 1. Сделайте checkout репозитория:

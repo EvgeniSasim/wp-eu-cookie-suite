@@ -41,4 +41,18 @@ class ReadmeTest extends TestCase {
 
 		$this->assertEquals( $php_matches[1], $readme_matches[1], 'Plugin version and Stable tag do not match' );
 	}
+
+	public function test_changelog_contains_stable_tag() {
+		$readme_content = file_get_contents( $this->readme_path );
+
+		preg_match( '/Stable tag:\s*([\d\.]+)/i', $readme_content, $readme_matches );
+		$this->assertNotEmpty( $readme_matches, 'Stable tag not found in readme.txt' );
+
+		$stable_tag = $readme_matches[1];
+		$this->assertMatchesRegularExpression(
+			'/^= ' . preg_quote( $stable_tag, '/' ) . ' =/m',
+			$readme_content,
+			'readme.txt changelog must include an entry for the stable tag'
+		);
+	}
 }
