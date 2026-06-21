@@ -130,8 +130,11 @@ final class BannerTexts {
 	 * @return array<string, string>
 	 */
 	public static function get_locales(): array {
-		$settings = SettingsRepository::instance()->get_effective_settings();
-		$locales  = array(
+		$repository = SettingsRepository::instance();
+		$settings   = is_multisite() && is_network_admin()
+			? $repository->get_network_settings()
+			: $repository->get_effective_settings();
+		$locales    = array(
 			'en' => __( 'English', 'privaro-cookie-consent-banner' ),
 			'de' => __( 'German', 'privaro-cookie-consent-banner' ),
 		);

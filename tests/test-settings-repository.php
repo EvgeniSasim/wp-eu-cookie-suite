@@ -97,4 +97,30 @@ class Test_Settings_Repository extends WP_UnitTestCase {
 
 		$this->assertSame( $network, $result );
 	}
+
+	/**
+	 * Inherited network settings keep per-site consent logging values.
+	 */
+	public function test_multisite_inherit_merges_site_local_keys(): void {
+		$local   = array(
+			'use_network_defaults'      => true,
+			'consent_logging_enabled'   => true,
+			'consent_log_retention'     => 90,
+			'consent_log_store_ip'      => true,
+			'eu_mode'                   => false,
+		);
+		$network = array(
+			'eu_mode'                   => true,
+			'consent_logging_enabled'   => false,
+			'consent_log_retention'     => 365,
+			'consent_log_store_ip'      => false,
+		);
+
+		$result = SettingsRepository::apply_site_local_overrides( $network, $local );
+
+		$this->assertTrue( $result['eu_mode'] );
+		$this->assertTrue( $result['consent_logging_enabled'] );
+		$this->assertSame( 90, $result['consent_log_retention'] );
+		$this->assertTrue( $result['consent_log_store_ip'] );
+	}
 }

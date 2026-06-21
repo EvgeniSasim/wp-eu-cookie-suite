@@ -118,8 +118,11 @@ final class Categories {
 	 * @return array<string, array<string, string>>
 	 */
 	public static function get_custom(): array {
-		$settings = SettingsRepository::instance()->get_effective_settings();
-		$stored   = $settings['custom_categories'] ?? array();
+		$repository = SettingsRepository::instance();
+		$settings   = is_multisite() && is_network_admin()
+			? $repository->get_network_settings()
+			: $repository->get_effective_settings();
+		$stored     = $settings['custom_categories'] ?? array();
 
 		if ( ! is_array( $stored ) ) {
 			return array();

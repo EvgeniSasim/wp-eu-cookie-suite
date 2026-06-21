@@ -9,6 +9,22 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-06-21
+
+### Fixed
+
+- Multisite: unchecking **Use network defaults** now saves correctly (inherit toggle no longer reverted on save).
+- Multisite: only **Banner** and **Integrations** tabs are read-only while inheriting; Cookies, Scanner, Consent Log, and site consent logging stay editable.
+- Multisite: consent logging settings can be saved per subsite while still inheriting network banner defaults.
+- Network Admin: language selector, add/remove language, and category actions use network URLs and persist to network settings.
+- Network Admin: languages and custom categories read from network settings instead of the main site.
+- Added missing consent revision bump handler (fatal on Tools tab).
+
+### Added
+
+- Network Admin **Overview** tab explaining network vs per-site responsibilities (languages, scanner, consent log).
+- Warning when network defaults are empty or not yet saved.
+
 ## [1.3.0] - 2026-06-21
 
 ### Added

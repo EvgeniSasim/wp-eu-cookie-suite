@@ -23,6 +23,17 @@ final class SettingsRepository {
 	public const USE_NETWORK_DEFAULTS_KEY = 'use_network_defaults';
 
 	/**
+	 * Site-level keys that stay editable when inheriting network banner defaults.
+	 *
+	 * @var list<string>
+	 */
+	public const SITE_LOCAL_KEYS = array(
+		'consent_logging_enabled',
+		'consent_log_retention',
+		'consent_log_store_ip',
+	);
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var self|null
@@ -94,12 +105,45 @@ final class SettingsRepository {
 	 * @return array<string, mixed>
 	 */
 	public function get_effective_settings(): array {
-		return self::resolve_effective_settings(
+		$local = $this->get_local_settings();
+		$effective = self::resolve_effective_settings(
 			is_multisite(),
-			$this->get_local_settings(),
+			$local,
 			$this->get_network_settings(),
-			$this->resolve_use_network_defaults_flag( $this->get_local_settings(), is_multisite() )
+			$this->resolve_use_network_defaults_flag( $local, is_multisite() )
 		);
+
+		if ( is_multisite() && $this->is_using_network_defaults() ) {
+			$effective = self::apply_site_local_overrides( $effective, $local );
+		}
+
+		return $effective;
+	}
+
+	/**
+	 * Whether network-wide defaults have been saved at least once.
+	 *
+	 * @return bool
+	 */
+	public function has_network_defaults(): bool {
+		return ! empty( $this->get_network_settings() );
+	}
+
+	/**
+	 * Overlay per-site settings onto inherited network defaults.
+	 *
+	 * @param array $effective Resolved network (or fallback) settings.
+	 * @param array $local     Site option payload.
+	 * @return array<string, mixed>
+	 */
+	public static function apply_site_local_overrides( array $effective, array $local ): array {
+		foreach ( self::SITE_LOCAL_KEYS as $key ) {
+			if ( array_key_exists( $key, $local ) ) {
+				$effective[ $key ] = $local[ $key ];
+			}
+		}
+
+		return $effective;
 	}
 
 	/**
