@@ -430,11 +430,34 @@ final class Admin {
 		}
 
 		$filename = 'wpeu-consent-snapshot-' . $log['consent_uuid'] . '-' . gmdate( 'Ymd-His', strtotime( $log['created_at'] ) ) . '.json';
-		$data     = json_decode( $log['config_snapshot'], true );
+		$snapshot = json_decode( $log['config_snapshot'], true );
+		if ( ! is_array( $snapshot ) ) {
+			$snapshot = array();
+		}
+
+		$payload = array(
+			'exported_at'    => gmdate( 'c' ),
+			'log_record'     => array(
+				'id'              => (int) $log['id'],
+				'consent_uuid'    => $log['consent_uuid'],
+				'event_type'      => $log['event_type'],
+				'categories'      => json_decode( (string) $log['categories'], true ),
+				'consent_mode'    => $log['consent_mode'],
+				'page_url'        => $log['page_url'],
+				'locale'          => $log['locale'],
+				'banner_revision' => (int) $log['banner_revision'],
+				'plugin_version'  => $log['plugin_version'],
+				'created_at'      => $log['created_at'],
+				'wp_user_id'      => $log['wp_user_id'],
+				'ip_hash'         => $log['ip_hash'],
+				'user_agent'      => $log['user_agent'],
+			),
+			'proof_snapshot' => $snapshot,
+		);
 
 		header( 'Content-Type: application/json; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename=' . $filename );
-		echo wp_json_encode( $data, JSON_PRETTY_PRINT );
+		echo wp_json_encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 		exit;
 	}
 
@@ -1311,7 +1334,7 @@ final class Admin {
 		?>
 		<div class="wpeu-cs-consent-log-header">
 			<h2><?php esc_html_e( 'Consent Log', 'privaro-cookie-consent-banner' ); ?></h2>
-			<p class="description"><?php esc_html_e( 'Audit trail of visitor consent interactions. This is a technical aid for Art. 7(1) GDPR accountability.', 'privaro-cookie-consent-banner' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Audit trail of visitor consent interactions. Each entry stores a proof snapshot (banner texts, policy links, categories, content hash) for GDPR Art. 7(1) accountability.', 'privaro-cookie-consent-banner' ); ?></p>
 		</div>
 
 		<?php if ( ! $logging ) : ?>

@@ -9,6 +9,18 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-21
+
+### Added
+
+- Consent log proof snapshots v2: banner texts for visitor locale, policy URLs and intro, category labels/descriptions, banner UI settings, compliance flags, and `content_hash` (SHA-256).
+- Snapshot download export bundles `log_record` + `proof_snapshot` for audit archives.
+- PHPUnit coverage in `test-consent-snapshot.php`.
+
+### Changed
+
+- Updated `docs/compliance-consent-log.md` with snapshot v2 field reference.
+
 ## [1.2.3] - 2026-06-21
 
 ### Fixed
@@ -134,7 +146,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.0...v1.2.1

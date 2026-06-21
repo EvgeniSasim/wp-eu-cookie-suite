@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.3
+Stable tag: 1.3.0
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -96,6 +96,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.3.0 =
+* Consent log snapshots v2: banner texts, policy URLs/intro, category labels, UI settings, and SHA-256 content_hash for accountability.
+* Snapshot download JSON includes log record plus proof_snapshot bundle.
 
 = 1.2.3 =
 * Fix Consent Log list table not rendering rows reliably (explicit WP_List_Table columns and admin screen binding).

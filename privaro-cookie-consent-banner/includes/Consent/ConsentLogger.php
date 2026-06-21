@@ -21,6 +21,11 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
 final class ConsentLogger {
 
 	/**
+	 * Snapshot schema version stored in config_snapshot JSON.
+	 */
+	public const SNAPSHOT_VERSION = 2;
+
+	/**
 	 * Get the table name.
 	 *
 	 * @return string
@@ -67,7 +72,8 @@ final class ConsentLogger {
 		}
 
 		if ( empty( $data['config_snapshot'] ) ) {
-			$data['config_snapshot'] = $this->generate_snapshot( $settings );
+			$locale = sanitize_key( (string) ( $data['locale'] ?? '' ) );
+			$data['config_snapshot'] = self::build_consent_snapshot( $settings, $locale );
 		}
 
 		if ( is_array( $data['config_snapshot'] ) ) {
@@ -79,24 +85,107 @@ final class ConsentLogger {
 	}
 
 	/**
-	 * Generate a configuration snapshot.
+	 * Build proof-of-consent snapshot for a visitor locale.
 	 *
-	 * @param array $settings Plugin settings.
-	 * @return array
+	 * @param array  $settings Effective plugin settings at log time.
+	 * @param string $locale   Banner locale used for the interaction.
+	 * @return array<string, mixed>
 	 */
-	private function generate_snapshot( array $settings ): array {
+	public static function build_consent_snapshot( array $settings, string $locale = '' ): array {
 		global $wpdb;
+
+		$locale = sanitize_key( $locale );
+		if ( '' === $locale ) {
+			$locale = 'en';
+		}
 
 		$cookies_table = $wpdb->prefix . 'wpeu_cookies';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Plugin-owned table name.
 		$inventory_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$cookies_table}" );
 
-		return array(
-			'banner_revision'    => (int) ( $settings['consent_revision'] ?? 0 ),
-			'enabled_categories' => $settings['enabled_categories'] ?? array(),
-			'plugin_version'     => defined( 'WPEU_CS_VERSION' ) ? WPEU_CS_VERSION : '0.1.0',
-			'cookie_count'       => $inventory_count,
+		$enabled_slugs = $settings['enabled_categories'] ?? array( Categories::PREFERENCES, Categories::STATISTICS, Categories::MARKETING );
+		if ( ! is_array( $enabled_slugs ) ) {
+			$enabled_slugs = array();
+		}
+
+		$banner_ui = $settings['banner_ui'] ?? array();
+		if ( ! is_array( $banner_ui ) ) {
+			$banner_ui = array();
+		}
+
+		$saved_policy = $settings['policy_texts'][ $locale ] ?? array();
+		if ( ! is_array( $saved_policy ) ) {
+			$saved_policy = array();
+		}
+
+		$policy_texts = array(
+			'intro'    => sanitize_textarea_field( (string) ( $saved_policy['intro'] ?? '' ) ),
+			'template' => (string) ( $saved_policy['template'] ?? BannerTexts::get_default_policy_template( $locale ) ),
 		);
+
+		$categories_snapshot = array();
+		foreach ( Categories::get_all() as $slug => $category ) {
+			$categories_snapshot[ $slug ] = array(
+				'label'             => (string) ( $category['label'] ?? $slug ),
+				'description'       => (string) ( $category['description'] ?? '' ),
+				'enabled_in_banner' => Categories::NECESSARY === $slug || in_array( $slug, $enabled_slugs, true ),
+				'custom'            => ! empty( $category['custom'] ),
+				'integration_map'   => (string) ( $category['integration_map'] ?? $slug ),
+			);
+		}
+
+		$snapshot = array(
+			'snapshot_version'       => self::SNAPSHOT_VERSION,
+			'banner_revision'          => (int) ( $settings['consent_revision'] ?? 0 ),
+			'plugin_version'         => defined( 'WPEU_CS_VERSION' ) ? WPEU_CS_VERSION : '0.1.0',
+			'cookie_inventory_count' => $inventory_count,
+			'locale'                 => $locale,
+			'eu_mode'                => ! empty( $settings['eu_mode'] ),
+			'show_reject_all'        => ! empty( $settings['show_reject_all'] ),
+			'google_consent_mode'    => ! empty( $settings['google_consent_mode'] ),
+			'policy_urls'            => array(
+				'privacy_policy_url' => esc_url_raw( (string) ( $settings['privacy_policy_url'] ?? '' ) ),
+				'cookie_policy_url'  => esc_url_raw( (string) ( $settings['cookie_policy_url'] ?? '' ) ),
+			),
+			'banner_ui'              => array(
+				'layout'        => sanitize_text_field( (string) ( $banner_ui['layout'] ?? 'box' ) ),
+				'position'      => sanitize_text_field( (string) ( $banner_ui['position'] ?? 'bottom-right' ) ),
+				'theme'         => sanitize_text_field( (string) ( $banner_ui['theme'] ?? 'light' ) ),
+				'primary_color' => sanitize_hex_color( (string) ( $banner_ui['primary_color'] ?? '#30363c' ) ) ?: '#30363c',
+			),
+			'banner_texts'           => BannerTexts::get_strings( $locale ),
+			'policy_texts'           => $policy_texts,
+			'categories'             => $categories_snapshot,
+			'enabled_categories'     => $enabled_slugs,
+			'cookie_count'           => $inventory_count,
+		);
+
+		$snapshot['content_hash'] = self::hash_snapshot_evidence( $snapshot );
+
+		return $snapshot;
+	}
+
+	/**
+	 * SHA-256 fingerprint of the evidence payload shown to the visitor.
+	 *
+	 * @param array<string, mixed> $snapshot Snapshot without content_hash.
+	 * @return string
+	 */
+	public static function hash_snapshot_evidence( array $snapshot ): string {
+		$canonical = array(
+			'banner_revision'   => $snapshot['banner_revision'] ?? 0,
+			'locale'            => $snapshot['locale'] ?? '',
+			'eu_mode'           => ! empty( $snapshot['eu_mode'] ),
+			'show_reject_all'   => ! empty( $snapshot['show_reject_all'] ),
+			'google_consent_mode' => ! empty( $snapshot['google_consent_mode'] ),
+			'policy_urls'       => $snapshot['policy_urls'] ?? array(),
+			'banner_ui'         => $snapshot['banner_ui'] ?? array(),
+			'banner_texts'      => $snapshot['banner_texts'] ?? array(),
+			'policy_texts'      => $snapshot['policy_texts'] ?? array(),
+			'categories'        => $snapshot['categories'] ?? array(),
+		);
+
+		return hash( 'sha256', (string) wp_json_encode( $canonical, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 	}
 
 	/**

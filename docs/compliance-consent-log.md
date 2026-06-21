@@ -8,38 +8,55 @@ To satisfy **GDPR Article 7(1)** (accountability), the plugin provides a technic
 
 All consent interactions are stored in the `{prefix}wpeu_consent_log` table. Each entry includes:
 
-- **Consent UUID**: A randomly generated v4 UUID stored in a first-party cookie (`wpeu_consent_uuid`). This allows linking multiple events (e.g., initial consent and later revocation) to the same anonymous visitor without identifying them.
+- **Consent UUID**: A randomly generated v4 UUID stored in a first-party cookie (`wpeu_consent_uuid`). This links multiple events (initial consent, preference changes, revocation) to the same pseudonymous visitor without storing name or email.
 - **Event Type**: `accept_all`, `reject_all`, `save_preferences`, `revoke`, or `policy_revision`.
-- **Categories**: A JSON object of the consent status for each category (e.g., `{"statistics":true,"marketing":false}`).
-- **Consent Mode**: Whether the plugin was in "Strict EU Mode" (opt-in) or "Opt-out" mode.
-- **Context**: Page URL, visitor locale, and banner revision number.
+- **Categories**: JSON object of consent status per category (e.g. `{"statistics":true,"marketing":false}`).
+- **Consent Mode**: Whether the site used strict EU opt-in or opt-out mode.
+- **Context**: Page URL, visitor locale, banner revision number.
 - **Environment**: Plugin version and truncated User Agent.
-- **IP Hash (Optional)**: If enabled, a salted SHA-256 hash of the visitor's IP address is stored. This can be used as additional evidence of the visitor's identity in a legal dispute without storing the plain IP.
+- **WordPress user ID** (if logged in): Stronger link for members/customers only.
+- **IP Hash (Optional)**: If enabled in Tools, a salted SHA-256 hash of the visitor IP (pseudonym, not plain IP).
 
-### 2. Proof of Consent (Snapshots)
+### 2. Proof of Consent (Snapshots v2)
 
-For every log entry, the plugin stores a **Configuration Snapshot** (JSON). This snapshot contains the banner settings at that exact moment (enabled categories, banner revision, etc.).
+For every log entry, the plugin stores a **Configuration Snapshot** (JSON) in `config_snapshot`. Since v1.3.0 this includes:
 
-Admin users can download this snapshot from the **Consent Log** tab to demonstrate exactly what the visitor saw when they provided consent.
+| Field | Purpose |
+|-------|---------|
+| `snapshot_version` | Schema version (currently `2`) |
+| `banner_revision` | Policy/banner revision counter |
+| `policy_urls` | Privacy and cookie policy URLs shown in settings |
+| `banner_texts` | Full banner strings for the visitor locale |
+| `policy_texts` | Cookie policy intro + template text for that locale |
+| `categories` | Labels, descriptions, and which categories were offered |
+| `banner_ui` | Layout, position, theme, primary colour |
+| `eu_mode`, `show_reject_all`, `google_consent_mode` | Compliance-relevant UX flags |
+| `content_hash` | SHA-256 fingerprint of the evidence payload |
+
+Admin users can download a JSON export from **Consent Log → Download Snapshot**. The export bundles the log record plus `proof_snapshot` for archival or legal review.
+
+**Note:** Snapshots demonstrate what the visitor was shown at consent time. They do not by themselves identify a natural person unless the visitor was logged in or optional IP hash is enabled and your DPO accepts that processing.
+
+### 3. What is not stored (by design)
+
+- Full name, email, or plain IP (unless you add such data outside this plugin)
+- Cross-site tracking identifiers beyond the first-party UUID cookie
 
 ## Visitor rights
 
 ### Article 7(3): Right to withdraw consent
 
-The plugin ensures that withdrawing consent is as easy as giving it.
-The `[wpeu_revoke_consent]` shortcode can be used to place a "Revoke Consent" link or button on the Privacy Policy or Cookie Policy page.
+The `[wpeu_revoke_consent]` shortcode places a revoke link/button on policy pages. On revoke:
 
-When clicked:
-1. All `wpeu_*` consent cookies are cleared.
-2. The `wpeu_consent_uuid` is cleared.
-3. The CookieConsent v3 state is reset.
-4. A `revoke` event is logged to the database.
-5. The banner or preferences modal is shown again (or the page reloads).
+1. Consent cookies and `wpeu_consent_uuid` are cleared.
+2. CookieConsent state resets.
+3. A `revoke` event is logged (with snapshot).
+4. The banner or preferences modal reappears (or the page reloads, depending on settings).
 
 ## Data retention
 
-By default, consent logs are kept for **365 days**. This can be configured in the **Tools** tab. A background task (triggered when an admin visits the plugin settings) automatically deletes logs older than the retention period.
+Default retention: **365 days** (configurable under **Tools**). Expired rows are deleted when an admin visits the plugin settings (daily cleanup task).
 
 ## Disclaimer
 
-The Consent Log is a technical tool to aid accountability. It does not constitute legal advice. Site owners (Data Controllers) are responsible for ensuring their use of the plugin and the data collected complies with local laws and their own DPO requirements.
+The Consent Log is a technical accountability tool, not legal advice. Data controllers must ensure their use complies with applicable law and their DPO requirements.
