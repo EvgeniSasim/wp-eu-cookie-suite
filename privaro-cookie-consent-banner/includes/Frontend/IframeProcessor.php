@@ -107,28 +107,21 @@ final class IframeProcessor {
 		$services = ScriptRegistry::get_services();
 		$label    = $services[ $service_id ]['label'] ?? ucfirst( $service_id );
 
-		// Extract dimensions if possible.
 		$width  = '100%';
 		$height = '350px';
 		if ( preg_match( '/width=["\']([^"\']+)["\']/i', $original_tag, $w_matches ) ) {
-			$width = $w_matches[1];
-			if ( is_numeric( $width ) ) {
-				$width .= 'px';
-			}
+			$width = self::sanitize_css_dimension( $w_matches[1], $width );
 		}
 		if ( preg_match( '/height=["\']([^"\']+)["\']/i', $original_tag, $h_matches ) ) {
-			$height = $h_matches[1];
-			if ( is_numeric( $height ) ) {
-				$height .= 'px';
-			}
+			$height = self::sanitize_css_dimension( $h_matches[1], $height );
 		}
 
-		$style = "width: {$width}; height: {$height};";
+		$style = 'width: ' . $width . '; height: ' . $height . ';';
 
-		$text = sprintf(
+		$message = sprintf(
 			/* translators: %s: Service label (e.g. YouTube) */
 			__( 'Please accept %s cookies to view this content.', 'privaro-cookie-consent-banner' ),
-			'<strong>' . esc_html( $label ) . '</strong>'
+			esc_html( $label )
 		);
 
 		$button_text = __( 'Accept Cookies', 'privaro-cookie-consent-banner' );
@@ -144,10 +137,34 @@ final class IframeProcessor {
 			esc_attr( $style ),
 			esc_attr( $category ),
 			esc_attr( $service_id ),
-			$text,
+			esc_html( $message ),
 			esc_attr( $category ),
 			esc_html( $button_text ),
-			base64_encode( $original_tag )
+			esc_html( base64_encode( $original_tag ) )
 		);
+	}
+
+	/**
+	 * Sanitize a CSS width/height value from an iframe attribute.
+	 *
+	 * @param string $value   Raw attribute value.
+	 * @param string $default Fallback when invalid.
+	 * @return string
+	 */
+	private static function sanitize_css_dimension( string $value, string $default ): string {
+		$value = trim( $value );
+		if ( '' === $value ) {
+			return $default;
+		}
+
+		if ( preg_match( '/^\d+$/', $value ) ) {
+			return $value . 'px';
+		}
+
+		if ( preg_match( '/^\d+(\.\d+)?(px|%|em|rem|vh|vw)$/', $value ) ) {
+			return $value;
+		}
+
+		return $default;
 	}
 }

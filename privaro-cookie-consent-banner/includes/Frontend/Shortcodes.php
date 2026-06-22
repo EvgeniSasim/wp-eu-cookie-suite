@@ -133,17 +133,22 @@ final class Shortcodes {
 
 		$table = $this->render_cookie_table( array() );
 
+		$nested_content = '';
+		if ( null !== $content && '' !== $content ) {
+			$nested_content = do_shortcode( wp_kses_post( (string) $content ) );
+		}
+
 		$output = str_replace(
 			array( '{{intro}}', '{{table}}', '{{content}}' ),
 			array(
 				wpautop( esc_html( $intro ) ),
 				$table,
-				$content ? do_shortcode( $content ) : '',
+				$nested_content,
 			),
 			$template
 		);
 
-		return '<div class="wpeu-cookie-policy-wrapper">' . $output . '</div>';
+		return '<div class="wpeu-cookie-policy-wrapper">' . wp_kses_post( $output ) . '</div>';
 	}
 
 	/**
