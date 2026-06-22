@@ -59,7 +59,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '1.3.1' );
+			define( 'WPEU_CS_VERSION', '1.3.2' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/privaro-cookie-consent-banner.php' );
@@ -76,7 +76,6 @@ final class Plugin {
 	 * Activation hook.
 	 */
 	public function activate(): void {
-		$this->deactivate_legacy_plugins();
 		$this->create_tables();
 
 		if ( false === get_option( 'wpeu_cs_ip_hash_secret' ) ) {
@@ -113,23 +112,49 @@ final class Plugin {
 	}
 
 	/**
-	 * Deactivate legacy plugin slugs from before the rename.
+	 * Legacy plugin slugs from before the rename.
+	 *
+	 * @return array<string, string> Plugin basename => human-readable name.
 	 */
-	private function deactivate_legacy_plugins(): void {
-		if ( ! function_exists( 'deactivate_plugins' ) ) {
+	private function legacy_plugin_slugs(): array {
+		return array(
+			'wp-eu-cookie-suite/wp-eu-cookie-suite.php'         => 'WP EU Cookie Suite',
+			'eu-cookie-consent-suite/eu-cookie-consent-suite.php' => 'EU Cookie Consent Suite',
+		);
+	}
+
+	/**
+	 * Prompt the site owner to deactivate legacy plugins manually.
+	 */
+	public function maybe_show_legacy_plugin_notice(): void {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
-		$legacy = array(
-			'wp-eu-cookie-suite/wp-eu-cookie-suite.php',
-			'eu-cookie-consent-suite/eu-cookie-consent-suite.php',
-		);
-
-		foreach ( $legacy as $plugin ) {
-			if ( is_plugin_active( $plugin ) ) {
-				deactivate_plugins( $plugin, true );
+		$active_legacy = array();
+		foreach ( $this->legacy_plugin_slugs() as $basename => $label ) {
+			if ( is_plugin_active( $basename ) ) {
+				$active_legacy[] = $label;
 			}
 		}
+
+		if ( empty( $active_legacy ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning"><p>';
+		printf(
+			/* translators: %s: comma-separated legacy plugin names */
+			esc_html__( 'Privaro Cookie Consent Banner detected active legacy plugin(s): %s. Please deactivate them from the Plugins screen to avoid conflicts.', 'privaro-cookie-consent-banner' ),
+			esc_html( implode( ', ', $active_legacy ) )
+		);
+		echo ' <a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">';
+		esc_html_e( 'Go to Plugins', 'privaro-cookie-consent-banner' );
+		echo '</a></p></div>';
 	}
 
 	/**
@@ -196,6 +221,10 @@ final class Plugin {
 	 */
 	public function init(): void {
 		$this->create_tables();
+
+		if ( is_admin() ) {
+			add_action( 'admin_notices', array( $this, 'maybe_show_legacy_plugin_notice' ) );
+		}
 
 		new Consent\WpConsentBridge();
 		new Consent\GoogleConsentMode();

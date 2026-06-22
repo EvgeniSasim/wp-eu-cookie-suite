@@ -22,6 +22,17 @@
 3. Загрузите файл `build/privaro-cookie-consent-banner.zip`.
 4. Дождитесь ручного ревью от команды WordPress.org (обычно занимает 1-2 недели).
 
+## Повторная загрузка во время ревью
+
+Пока плагин на ручном ревью (до SVN-доступа), обновлённый ZIP можно загрузить автоматически:
+
+```bash
+bash scripts/build-release.sh
+WPORG_USER=your-username WPORG_PASS='app-password' bash scripts/wporg-upload-update.sh
+```
+
+Скрипт логинится на wordpress.org и отправляет `action=upload-additional` с комментарием для ревьюеров. Пароль не храните в репозитории.
+
 ## Работа с SVN (после аппрува)
 После одобрения вам будет предоставлен доступ к SVN-репозиторию.
 

@@ -23,10 +23,18 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
 final class ScriptBlocker {
 
 	/**
+	 * Output buffer level before this blocker started buffering.
+	 *
+	 * @var int
+	 */
+	private int $buffer_level = 0;
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
 		add_action( 'template_redirect', array( $this, 'maybe_start_buffer' ) );
+		add_action( 'shutdown', array( $this, 'end_buffer' ), 0 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_bootstrap_js' ), 5 );
 	}
 
@@ -46,7 +54,23 @@ final class ScriptBlocker {
 			return;
 		}
 
+		$this->buffer_level = ob_get_level();
 		ob_start( array( $this, 'process_output' ) );
+	}
+
+	/**
+	 * Flush the output buffer opened for script blocking.
+	 */
+	public function end_buffer(): void {
+		if ( 0 === $this->buffer_level ) {
+			return;
+		}
+
+		if ( ob_get_level() > $this->buffer_level ) {
+			ob_end_flush();
+		}
+
+		$this->buffer_level = 0;
 	}
 
 	/**

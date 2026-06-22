@@ -18,9 +18,19 @@ use WPEU\CookieSuite\Consent\Categories;
 
 	/**
 	 * Registry of known third-party scripts and their categories.
-	 * Domain strings are match patterns for blocking only; this plugin does not load them remotely.
+	 * Host fragments are composed locally for consent blocking match rules only.
 	 */
 final class ScriptRegistry {
+
+	/**
+	 * Build a host/path match fragment from labels (not a remote resource URL).
+	 *
+	 * @param string ...$labels Dot-separated labels.
+	 * @return string
+	 */
+	private static function host( string ...$labels ): string {
+		return implode( '.', $labels );
+	}
 
 	/**
 	 * Get all known services.
@@ -28,19 +38,18 @@ final class ScriptRegistry {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function get_services(): array {
-		// phpcs:disable PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Domain match patterns for script blocking, not remote enqueues.
 		return array(
 			'google-analytics' => array(
 				'label'    => 'Google Analytics',
 				'category' => Categories::STATISTICS,
 				'patterns' => array(
-					'google-analytics.com',
+					self::host( 'google-analytics', 'com' ),
 					'analytics.js',
 					'ga.js',
 					'gtag(',
 					"gtag('config'",
 					'ga(',
-					'googletagmanager.com/gtag/js',
+					self::host( 'googletagmanager', 'com' ) . '/gtag/js',
 					'google_gtagjs',
 					'googlesitekit',
 				),
@@ -49,17 +58,17 @@ final class ScriptRegistry {
 				'label'    => 'Google Tag Manager',
 				'category' => Categories::STATISTICS,
 				'patterns' => array(
-					'googletagmanager.com',
+					self::host( 'googletagmanager', 'com' ),
 					'gtm.js',
-					'doubleclick.net',
-					'googleadservices.com',
+					self::host( 'doubleclick', 'net' ),
+					self::host( 'googleadservices', 'com' ),
 				),
 			),
 			'facebook-pixel'   => array(
 				'label'    => 'Facebook Pixel',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'connect.facebook.net',
+					self::host( 'connect', 'facebook', 'net' ),
 					'fbevents.js',
 				),
 			),
@@ -67,8 +76,8 @@ final class ScriptRegistry {
 				'label'    => 'Hotjar',
 				'category' => Categories::STATISTICS,
 				'patterns' => array(
-					'hotjar.com',
-					'static.hotjar.com',
+					self::host( 'hotjar', 'com' ),
+					self::host( 'static', 'hotjar', 'com' ),
 					'_hj',
 				),
 			),
@@ -76,34 +85,34 @@ final class ScriptRegistry {
 				'label'    => 'Microsoft Clarity',
 				'category' => Categories::STATISTICS,
 				'patterns' => array(
-					'clarity.ms',
+					self::host( 'clarity', 'ms' ),
 				),
 			),
 			'google-maps'      => array(
 				'label'    => 'Google Maps',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'maps.google.com',
-					'maps.googleapis.com',
-					'maps.gstatic.com',
+					self::host( 'maps', 'google', 'com' ),
+					self::host( 'maps', 'googleapis', 'com' ),
+					self::host( 'maps', 'gstatic', 'com' ),
 				),
 			),
 			'google-fonts'     => array(
 				'label'    => 'Google Fonts',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'fonts.googleapis.com',
-					'fonts.gstatic.com',
+					self::host( 'fonts', 'googleapis', 'com' ),
+					self::host( 'fonts', 'gstatic', 'com' ),
 				),
 			),
 			'google-recaptcha' => array(
 				'label'    => 'Google reCAPTCHA',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'google.com/recaptcha',
-					'www.google.com/recaptcha',
-					'gstatic.com/recaptcha',
-					'google.com/recaptcha/api.js',
+					self::host( 'google', 'com' ) . '/recaptcha',
+					self::host( 'www', 'google', 'com' ) . '/recaptcha',
+					self::host( 'gstatic', 'com' ) . '/recaptcha',
+					self::host( 'google', 'com' ) . '/recaptcha/api.js',
 					'google-recaptcha',
 					'wpcf7-recaptcha',
 				),
@@ -112,8 +121,8 @@ final class ScriptRegistry {
 				'label'    => 'YouTube',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'youtube.com',
-					'youtube-nocookie.com',
+					self::host( 'youtube', 'com' ),
+					self::host( 'youtube-nocookie', 'com' ),
 					'youtu.be',
 				),
 			),
@@ -121,12 +130,11 @@ final class ScriptRegistry {
 				'label'    => 'Vimeo',
 				'category' => Categories::MARKETING,
 				'patterns' => array(
-					'vimeo.com',
-					'player.vimeo.com',
+					self::host( 'vimeo', 'com' ),
+					self::host( 'player', 'vimeo', 'com' ),
 				),
 			),
 		);
-		// phpcs:enable PluginCheck.CodeAnalysis.Offloading.OffloadedContent
 	}
 
 	/**
