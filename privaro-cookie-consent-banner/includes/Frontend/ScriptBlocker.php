@@ -23,63 +23,89 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
 final class ScriptBlocker {
 
 	/**
-	 * Output buffer level before this blocker started buffering.
-	 *
-	 * @var int
-	 */
-	private int $buffer_level = 0;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		add_action( 'template_redirect', array( $this, 'maybe_start_buffer' ) );
-		add_action( 'shutdown', array( $this, 'end_buffer' ), 0 );
+		if ( function_exists( 'wp_should_output_buffer_template_for_enhancement' ) ) {
+			add_filter( 'wp_should_output_buffer_template_for_enhancement', array( $this, 'should_buffer_template' ) );
+			add_filter( 'wp_template_enhancement_output_buffer', array( $this, 'process_output' ), 10, 2 );
+		} else {
+			add_action( 'template_redirect', array( $this, 'start_legacy_output_buffer' ), 0 );
+		}
+
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_bootstrap_js' ), 5 );
 	}
 
 	/**
-	 * Start output buffer if necessary.
+	 * Opt in to the WordPress 6.9+ template enhancement output buffer when blocking is active.
+	 *
+	 * @param bool $should Whether a template enhancement buffer should start.
+	 * @return bool
 	 */
-	public function maybe_start_buffer(): void {
-		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || is_feed() ) {
+	public function should_buffer_template( $should = false ): bool {
+		if ( ! $this->should_process_frontend_output() ) {
+			return (bool) $should;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Start a legacy output buffer and close it on shutdown in the same registration flow.
+	 */
+	public function start_legacy_output_buffer(): void {
+		if ( ! $this->should_process_frontend_output() ) {
 			return;
+		}
+
+		$depth_before = ob_get_level();
+		ob_start();
+
+		add_action(
+			'shutdown',
+			function () use ( $depth_before ): void {
+				if ( ob_get_level() !== $depth_before + 1 ) {
+					return;
+				}
+
+				$output = ob_get_clean();
+				if ( ! is_string( $output ) || '' === $output ) {
+					return;
+				}
+
+				echo $this->process_output( $output );
+			},
+			0
+		);
+	}
+
+	/**
+	 * Whether script/iframe processing should run on the current frontend request.
+	 *
+	 * @return bool
+	 */
+	private function should_process_frontend_output(): bool {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || is_feed() ) {
+			return false;
 		}
 
 		$settings = SettingsRepository::instance()->get_effective_settings();
 		$blocker  = ! empty( $settings['blocker_enabled'] );
 		$iframes  = ! empty( $settings['enabled_integrations']['iframe_placeholder'] );
 
-		if ( ! $blocker && ! $iframes ) {
-			return;
-		}
-
-		$this->buffer_level = ob_get_level();
-		ob_start( array( $this, 'process_output' ) );
-	}
-
-	/**
-	 * Flush the output buffer opened for script blocking.
-	 */
-	public function end_buffer(): void {
-		if ( 0 === $this->buffer_level ) {
-			return;
-		}
-
-		if ( ob_get_level() > $this->buffer_level ) {
-			ob_end_flush();
-		}
-
-		$this->buffer_level = 0;
+		return $blocker || $iframes;
 	}
 
 	/**
 	 * Process HTML output and block scripts.
 	 *
-	 * @param string $output The HTML output.
+	 * @param string $output          The HTML output.
+	 * @param string $original_output Unfiltered buffer HTML (WP 6.9+ only).
 	 * @return string The processed HTML.
 	 */
-	public function process_output( string $output ): string {
+	public function process_output( string $output, string $original_output = '' ): string {
+		unset( $original_output );
+
 		if ( empty( $output ) ) {
 			return $output;
 		}

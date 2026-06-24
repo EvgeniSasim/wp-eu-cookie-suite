@@ -2287,31 +2287,7 @@ final class Admin {
 					return $settings;
 				}
 
-				$post = wp_unslash( $_POST['settings'] );
-
-				if ( isset( $post['banner_ui'] ) && is_array( $post['banner_ui'] ) ) {
-					$ui                      = $post['banner_ui'];
-					$settings['banner_ui'] = array(
-						'layout'        => in_array( $ui['layout'] ?? 'box', array( 'box', 'bar' ), true ) ? $ui['layout'] : 'box',
-						'position'      => sanitize_text_field( $ui['position'] ?? 'bottom-right' ),
-						'theme'         => in_array( $ui['theme'] ?? 'light', array( 'light', 'dark' ), true ) ? $ui['theme'] : 'light',
-						'primary_color' => sanitize_hex_color( $ui['primary_color'] ?? '' ) ?: '#30363c',
-					);
-				}
-				if ( isset( $post['banner_texts'] ) && is_array( $post['banner_texts'] ) ) {
-					$settings['banner_texts'] = $post['banner_texts'];
-				}
-				if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
-					$settings['enabled_categories'] = array_map( 'sanitize_text_field', $post['enabled_categories'] );
-				}
-				if ( array_key_exists( 'show_reject_all', $post ) ) {
-					$settings['show_reject_all'] = filter_var( $post['show_reject_all'], FILTER_VALIDATE_BOOLEAN );
-				}
-				if ( array_key_exists( 'eu_mode', $post ) ) {
-					$settings['eu_mode'] = filter_var( $post['eu_mode'], FILTER_VALIDATE_BOOLEAN );
-				}
-
-				return $settings;
+				return $this->merge_preview_settings_from_post( $settings, wp_unslash( $_POST['settings'] ) );
 			}
 		);
 
@@ -2341,6 +2317,64 @@ final class Admin {
 		</html>
 		<?php
 		exit;
+	}
+
+	/**
+	 * Merge sanitized preview POST values into settings for the admin banner preview.
+	 *
+	 * @param array<string, mixed> $settings Current settings.
+	 * @param array<string, mixed> $post     Unslashed preview POST payload.
+	 * @return array<string, mixed>
+	 */
+	private function merge_preview_settings_from_post( array $settings, array $post ): array {
+		if ( isset( $post['banner_ui'] ) && is_array( $post['banner_ui'] ) ) {
+			$ui                      = $post['banner_ui'];
+			$allowed_layouts         = array( 'box', 'bar' );
+			$allowed_positions       = array( 'bottom-left', 'bottom-center', 'bottom-right', 'center' );
+			$allowed_themes          = array( 'light', 'dark' );
+			$layout                  = sanitize_text_field( (string) ( $ui['layout'] ?? 'box' ) );
+			$position                = sanitize_text_field( (string) ( $ui['position'] ?? 'bottom-right' ) );
+			$theme                   = sanitize_text_field( (string) ( $ui['theme'] ?? 'light' ) );
+			$settings['banner_ui'] = array(
+				'layout'        => in_array( $layout, $allowed_layouts, true ) ? $layout : 'box',
+				'position'      => in_array( $position, $allowed_positions, true ) ? $position : 'bottom-right',
+				'theme'         => in_array( $theme, $allowed_themes, true ) ? $theme : 'light',
+				'primary_color' => sanitize_hex_color( (string) ( $ui['primary_color'] ?? '' ) ) ?: '#30363c',
+			);
+		}
+
+		if ( isset( $post['banner_texts'] ) && is_array( $post['banner_texts'] ) ) {
+			$settings['banner_texts'] = array();
+			foreach ( $post['banner_texts'] as $locale => $texts ) {
+				if ( ! is_array( $texts ) ) {
+					continue;
+				}
+				$settings['banner_texts'][ sanitize_key( (string) $locale ) ] = array_map(
+					'sanitize_text_field',
+					$texts
+				);
+			}
+		}
+
+		if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
+			$allowed_categories = array_keys( Categories::get_all() );
+			$settings['enabled_categories'] = array_values(
+				array_intersect(
+					array_map( 'sanitize_key', $post['enabled_categories'] ),
+					$allowed_categories
+				)
+			);
+		}
+
+		if ( array_key_exists( 'show_reject_all', $post ) ) {
+			$settings['show_reject_all'] = filter_var( $post['show_reject_all'], FILTER_VALIDATE_BOOLEAN );
+		}
+
+		if ( array_key_exists( 'eu_mode', $post ) ) {
+			$settings['eu_mode'] = filter_var( $post['eu_mode'], FILTER_VALIDATE_BOOLEAN );
+		}
+
+		return $settings;
 	}
 
 	/**

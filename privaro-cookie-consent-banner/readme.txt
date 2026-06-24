@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -96,6 +96,9 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Comprehensive integration settings including Google Consent Mode v2.
 
 == Changelog ==
+
+= 1.3.3 =
+* WordPress.org review fixes: safer output buffering, sanitized preview settings, validated consent JSON cookie.
 
 = 1.3.2 =
 * WordPress.org review fixes: local-only blocking patterns, no silent plugin deactivation, escaped shortcode/iframe output, explicit output buffer close.

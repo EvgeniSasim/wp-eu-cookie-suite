@@ -166,6 +166,23 @@ class Test_Categories extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Unknown keys in consent JSON are ignored.
+	 */
+	public function test_user_has_consent_ignores_unknown_json_keys(): void {
+		$_COOKIE['wpeu_consent'] = rawurlencode(
+			wp_json_encode(
+				array(
+					'marketing' => true,
+					'<script>'  => true,
+				)
+			)
+		);
+
+		$this->assertTrue( wpeu_cs_user_has_consent( 'marketing' ) );
+		$this->assertFalse( wpeu_cs_user_has_consent( '<script>' ) );
+	}
+
+	/**
 	 * wp_has_consent respects custom category integration map.
 	 */
 	public function test_wp_has_consent_custom_category_mapping(): void {

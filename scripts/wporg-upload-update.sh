@@ -12,7 +12,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ZIP_PATH="${1:-${REPO_ROOT}/build/privaro-cookie-consent-banner.zip}"
-COMMENT="${2:-Privaro Cookie Consent Banner 1.3.2 — WordPress.org review fixes (blocking patterns, escaping, output buffer, legacy plugin notice). Request slug: privaro-cookie-consent-banner.}"
+COMMENT="${2:-Privaro Cookie Consent Banner 1.3.3 — WordPress.org review fixes (output buffer, preview sanitization, consent cookie validation). Request slug: privaro-cookie-consent-banner.}"
 
 if [[ -z "${WPORG_USER:-}" || -z "${WPORG_PASS:-}" ]]; then
 	echo "Set WPORG_USER and WPORG_PASS environment variables." >&2
