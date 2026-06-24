@@ -73,6 +73,7 @@ final class ScriptBlocker {
 					return;
 				}
 
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Full-page HTML is post-processed for consent blocking.
 				echo $this->process_output( $output );
 			},
 			0
