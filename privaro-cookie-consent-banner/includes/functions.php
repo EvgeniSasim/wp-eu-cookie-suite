@@ -10,6 +10,49 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'wpeu_cs_parse_consent_cookie' ) ) {
+	/**
+	 * Parse and validate the wpeu_consent JSON cookie into category booleans.
+	 *
+	 * @return array<string, bool>
+	 */
+	function wpeu_cs_parse_consent_cookie(): array {
+		if ( ! isset( $_COOKIE['wpeu_consent'] ) ) {
+			return array();
+		}
+
+		$raw = wp_unslash( (string) $_COOKIE['wpeu_consent'] );
+		$raw = wp_check_invalid_utf8( $raw, true );
+		if ( '' === $raw || strlen( $raw ) > 2048 ) {
+			return array();
+		}
+
+		$decoded_raw  = rawurldecode( $raw );
+		$consent_data = json_decode( $decoded_raw, true );
+		if ( ! is_array( $consent_data ) ) {
+			$consent_data = json_decode( $raw, true );
+		}
+
+		if ( ! is_array( $consent_data ) ) {
+			return array();
+		}
+
+		$allowed_categories = array_keys( \WPEU\CookieSuite\Consent\Categories::get_all() );
+		$sanitized          = array();
+
+		foreach ( $consent_data as $category => $value ) {
+			$category = sanitize_key( (string) $category );
+			if ( ! in_array( $category, $allowed_categories, true ) ) {
+				continue;
+			}
+
+			$sanitized[ $category ] = filter_var( $value, FILTER_VALIDATE_BOOLEAN );
+		}
+
+		return $sanitized;
+	}
+}
+
 if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 	/**
 	 * Check if the user has consented to a specific category.
@@ -28,18 +71,8 @@ if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 			return '1' === $value || 'allow' === $value;
 		}
 
-		if ( ! isset( $_COOKIE['wpeu_consent'] ) ) {
-			return false;
-		}
-
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON consent payload is decoded immediately.
-		$raw          = wp_unslash( $_COOKIE['wpeu_consent'] );
-		$consent_data = json_decode( rawurldecode( $raw ), true );
-		if ( ! is_array( $consent_data ) ) {
-			$consent_data = json_decode( $raw, true );
-		}
-
-		if ( ! is_array( $consent_data ) || ! array_key_exists( $category, $consent_data ) ) {
+		$consent_data = wpeu_cs_parse_consent_cookie();
+		if ( ! array_key_exists( $category, $consent_data ) ) {
 			return false;
 		}
 

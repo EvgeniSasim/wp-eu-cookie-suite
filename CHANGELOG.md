@@ -9,6 +9,14 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-06-24
+
+### Fixed
+
+- WordPress.org review: use WP 6.9 template enhancement output buffer when available; legacy buffer opens and closes in one flow.
+- WordPress.org review: sanitize admin banner preview POST settings (including banner texts).
+- WordPress.org review: validate and sanitize `wpeu_consent` JSON cookie after decode.
+
 ## [1.3.2] - 2026-06-21
 
 ### Fixed
@@ -171,7 +179,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.2.3...v1.3.0
