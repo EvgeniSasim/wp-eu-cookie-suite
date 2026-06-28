@@ -9,32 +9,71 @@ Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-GDPR and EU cookie consent banner with script blocking, cookie scanner, and Google Consent Mode v2.
+Professional GDPR cookie consent for WordPress: opt-in banner, script blocking, scanner, consent log, and Google Consent Mode v2.
 
 == Description ==
 
-Privaro Cookie Consent Banner is a comprehensive solution for managing cookie consent on your WordPress site, designed for compliance with GDPR, ePrivacy, and other privacy regulations. It features a modern, accessible banner powered by vanilla-cookieconsent v3, automatic script blocking, and a built-in cookie scanner.
+**Privaro Cookie Consent Banner** helps you run a privacy-conscious WordPress site in the EU and beyond. Visitors get a clear, accessible cookie banner (powered by CookieConsent v3). Third-party scripts and embeds stay blocked until consent is granted — no “accept-only” dark patterns.
 
-Key features include:
-* **Customizable Cookie Banner:** Fully responsive UI with light/dark modes and multiple layouts.
-* **Consent Categories:** Necessary, Preferences, Statistics, Marketing, plus optional custom categories.
-* **Automatic Script Blocking:** Blocks third-party scripts (GA, Pixel, etc.) and iframes (YouTube, Vimeo, Google Maps) until consent is granted.
-* **Google Consent Mode v2:** Native support for GCM v2, including integration with Google Site Kit.
-* **WP Consent API Support:** Fully compatible with the WordPress Consent API.
-* **Cookie Scanner & Inventory:** Automatically discover cookies used on your site and maintain a categorized inventory.
-* **Multilingual Support:** Ready for translation and supports Polylang/WPML.
-* **Multisite Support:** Network-wide default settings with per-site inherit or override.
-* **Consent Logging:** Optional local logging of consent events for audit purposes.
+= Why site owners choose Privaro =
+
+* **Opt-in by default** — Statistics and marketing are off until the visitor accepts. *Reject all* is always available.
+* **Real script blocking** — GA4, GTM, Meta Pixel, Hotjar, Microsoft Clarity, and custom rules via output buffering.
+* **Embed placeholders** — YouTube, Vimeo, and Google Maps load only after marketing consent.
+* **Cookie scanner** — Discover cookies on your own site (no external SaaS scanner).
+* **Policy helpers** — Shortcodes for cookie policy, declaration table, and “Cookie settings” footer link.
+* **Google Consent Mode v2** — Default `denied`, updates on banner choice; works with Google Site Kit.
+* **WP Consent API** — Compatible bridge (includes polyfill when the API plugin is not installed).
+* **Multisite** — Network defaults with per-site inherit or override.
+* **Consent log (optional)** — Local audit trail with proof snapshots; data never leaves your server.
+
+= Key features =
+
+* **Customizable banner** — Light/dark themes, bar or box layout, primary color, live admin preview.
+* **Consent categories** — Necessary, Preferences, Statistics, Marketing, plus custom categories.
+* **Cookie inventory** — Manual edits, scanner import, CSV export.
+* **Integrations** — Google Site Kit, Contact Form 7 (reCAPTCHA deferred), iframe placeholders.
+* **Tools** — JSON export/import of settings between sites.
+* **Languages** — Editable EN/DE strings; Polylang/WPML-friendly.
+
+= Quick setup =
+
+1. Activate the plugin and open **Privaro Cookie Consent Banner** in wp-admin.
+2. Configure the **Banner** tab (texts, colors, policy URLs).
+3. Enable **Integrations** → Google Consent Mode v2 and Script blocker if you use analytics/ads.
+4. Run the **Scanner** and save cookies to your inventory.
+5. Add `[wpeu_cookie_policy]` / `[wpeu_cookie_declaration]` to your legal pages and `[wpeu_manage_consent]` to the footer.
+6. Test in a private browser window — analytics tags should stay blocked until consent.
+
+**Legal note:** This plugin provides technical compliance tools, not legal advice. You are responsible for policy texts and regulatory compliance.
 
 = Privacy & Data Collection =
 By default, the plugin does not collect or transmit any personal data to third-party servers. If the "Consent Logging" feature is enabled in settings, the plugin stores anonymized records of consent decisions in your local database. These records include a random UUID, the selected categories, the page URL, and (optional) an anonymized IP hash. This data is used solely for compliance accountability and is not shared with any third parties.
 
 == Installation ==
 
-1. Upload the `privaro-cookie-consent-banner` folder to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Navigate to 'Privaro Cookie Consent Banner' in the WordPress admin to configure your banner and settings.
-4. Run the Cookie Scanner to populate your cookie inventory.
+= From WordPress.org (recommended) =
+
+1. Go to **Plugins → Add New** in your WordPress admin.
+2. Search for **Privaro Cookie Consent Banner**.
+3. Click **Install Now**, then **Activate**.
+
+= Manual upload =
+
+1. Upload the `privaro-cookie-consent-banner` folder to `/wp-content/plugins/`.
+2. Activate the plugin through the **Plugins** menu in WordPress.
+3. Open **Privaro Cookie Consent Banner** in the admin sidebar.
+
+= After activation =
+
+1. Configure the **Banner** tab (appearance, texts, privacy/cookie policy URLs).
+2. Enable **Integrations** (Consent Mode v2, script blocker) if you use Google Analytics, GTM, or ads.
+3. Run the **Scanner** and review cookies in the **Cookies** tab.
+4. Add shortcodes to your site: `[wpeu_cookie_policy]`, `[wpeu_cookie_declaration]`, `[wpeu_manage_consent]`.
+
+= Multisite =
+
+Network-activate the plugin, then set defaults under **Network Admin → Privaro Cookie Consent Banner**. Each site may inherit or override network settings.
 
 == Credits ==
 
@@ -42,17 +81,47 @@ This plugin bundles vanilla-cookieconsent v3 (MIT). See the plugin source header
 
 == FAQ ==
 
+= Is this plugin free and open source? =
+Yes. Privaro Cookie Consent Banner is GPL-licensed. Core compliance features (banner, blocking, scanner, Consent Mode) are included without a premium tier.
+
+= Does it use opt-in consent for EU visitors? =
+Yes. Statistics and marketing categories require explicit consent. Reject all must remain available alongside accept options.
+
 = How do I enable Google Consent Mode v2? =
-Go to the 'Integrations' tab in the plugin settings and ensure 'Google Consent Mode v2' is enabled. The plugin will automatically inject the necessary default consent states.
+Open **Integrations** in the plugin settings and enable **Google Consent Mode v2**. The plugin sets default consent to denied and updates Google tags after the visitor chooses in the banner.
 
 = Does this plugin block YouTube videos? =
-Yes, the plugin includes an Iframe Processor that automatically replaces YouTube, Vimeo, and Google Maps iframes with a placeholder until the user grants 'Marketing' consent.
+Yes. An iframe processor replaces YouTube, Vimeo, and Google Maps embeds with a placeholder until the visitor grants **Marketing** consent.
+
+= What scripts are blocked before consent? =
+Known patterns include Google Analytics (GA4), Google Tag Manager, Meta Pixel, Hotjar, Microsoft Clarity, and custom URLs you add under Integrations. Blocking uses output buffering on your site's HTML.
 
 = Where is the consent log stored? =
-The consent log is stored entirely within your WordPress database in a custom table (`wp_wpeu_consent_log`). No data is sent to external servers. You can manage the retention period in the settings.
+Entirely in your WordPress database (`wp_wpeu_consent_log`). No data is sent to external servers. Retention is configurable in settings.
 
-= Can I customize banner colors? =
-Yes. Use the Primary Color picker on the Banner settings tab. Light and dark themes are supported.
+= Can I customize banner colors and layout? =
+Yes. Use the Primary Color picker, layout (bar/box), and light/dark theme on the **Banner** tab. A live preview is available in the admin.
+
+= How do visitors reopen cookie settings later? =
+Add the `[wpeu_manage_consent]` shortcode to your footer or template. Optional attributes: `style="button"` and `label="Cookie settings"`.
+
+= Does it work with Google Site Kit? =
+Yes. The plugin integrates with Site Kit so analytics tags respect consent state.
+
+= Multilingual sites? =
+Edit banner strings per language in settings. The plugin supports Polylang/WPML workflows via standard WordPress translation hooks.
+
+= Multisite support? =
+Yes. Network-wide defaults with per-site inherit or override. Scanner, cookie list, and consent log remain editable on subsites when inheriting.
+
+= Does the scanner send data to a third party? =
+No. The scanner fetches your own site URLs via the WordPress HTTP API and parses responses locally.
+
+= Can I migrate from Complianz? =
+There is no automatic importer. Map categories manually, copy custom block rules, replace shortcodes, run the scanner, and test on staging before deactivating Complianz. See the GitHub README migration checklist.
+
+= What are the system requirements? =
+PHP 8.1 or newer and WordPress 6.4 or newer.
 
 == External services ==
 
@@ -90,10 +159,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 
 == Screenshots ==
 
-1. The customizable cookie consent banner.
-2. Cookie inventory management in the admin dashboard.
-3. Consent logging for audit and compliance.
-4. Comprehensive integration settings including Google Consent Mode v2.
+1. Cookie consent banner with live admin preview, primary color, and reject-all support.
+2. Cookie inventory — scanner results, categories, and blocking status.
+3. Consent log — local audit trail with proof snapshots.
+4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
 
