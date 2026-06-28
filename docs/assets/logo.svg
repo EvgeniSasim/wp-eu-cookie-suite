@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Privaro Cookie Consent Banner">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0052cc"/>
+      <stop offset="100%" stop-color="#002060"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <path d="M64 24 L92 36 L92 68 L64 96 L36 68 L36 36 Z" fill="#ffffff"/>
+  <circle cx="58" cy="58" r="16" fill="#eab308" stroke="#b45309" stroke-width="2"/>
+  <circle cx="52" cy="54" r="2.5" fill="#92400e"/>
+  <circle cx="62" cy="62" r="2" fill="#92400e"/>
+  <circle cx="66" cy="52" r="2" fill="#92400e"/>
+  <path d="M72 48 A16 16 0 0 1 88 58" fill="url(#bg)"/>
+  <path d="M78 66 L86 74 L98 58" fill="none" stroke="#16a34a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
