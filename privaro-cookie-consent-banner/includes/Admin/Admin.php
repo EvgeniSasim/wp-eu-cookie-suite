@@ -2287,6 +2287,10 @@ final class Admin {
 					return $settings;
 				}
 
+				if ( ! is_array( $settings ) ) {
+					$settings = array();
+				}
+
 				return $this->merge_preview_settings_from_post( $settings, wp_unslash( $_POST['settings'] ) );
 			}
 		);
@@ -2357,7 +2361,7 @@ final class Admin {
 		}
 
 		if ( isset( $post['enabled_categories'] ) && is_array( $post['enabled_categories'] ) ) {
-			$allowed_categories = array_keys( Categories::get_all() );
+			$allowed_categories             = $this->get_allowed_category_slugs_for_preview( $settings );
 			$settings['enabled_categories'] = array_values(
 				array_intersect(
 					array_map( 'sanitize_key', $post['enabled_categories'] ),
@@ -2375,6 +2379,32 @@ final class Admin {
 		}
 
 		return $settings;
+	}
+
+	/**
+	 * Category slugs allowed in preview POST without loading settings again.
+	 *
+	 * Avoids Categories::get_all() while the option_wpeu_cs_settings preview filter is active.
+	 *
+	 * @param array<string, mixed> $settings Settings array being merged.
+	 * @return list<string>
+	 */
+	private function get_allowed_category_slugs_for_preview( array $settings ): array {
+		$allowed = Categories::get_builtin_slugs();
+		$custom  = $settings['custom_categories'] ?? array();
+
+		if ( ! is_array( $custom ) ) {
+			return $allowed;
+		}
+
+		foreach ( array_keys( $custom ) as $slug ) {
+			$slug = sanitize_key( (string) $slug );
+			if ( Categories::is_valid_slug( $slug ) ) {
+				$allowed[] = $slug;
+			}
+		}
+
+		return $allowed;
 	}
 
 	/**

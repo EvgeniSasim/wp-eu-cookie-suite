@@ -2,9 +2,9 @@
 Contributors: evgenij347
 Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,6 +165,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.3.4 =
+* Fix Live Preview fatal recursion (admin AJAX 500) when validating enabled categories.
+* Marked compatible with WordPress 7.1.
 
 = 1.3.3 =
 * WordPress.org review fixes: safer output buffering, sanitized preview settings, validated consent JSON cookie.
