@@ -84,4 +84,40 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 		$this->assertStringContainsString( 'window.CookieConsent', $response );
 		$this->assertStringContainsString( 'cc.run(', $response );
 	}
+
+	/**
+	 * Preview must not recurse when validating enabled_categories (regression v1.3.3).
+	 */
+	public function test_ajax_preview_with_enabled_categories_does_not_recurse(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'custom_categories' => array(
+					'analytics' => array(
+						'label'           => 'Analytics',
+						'description'     => 'Custom analytics cookies',
+						'integration_map' => 'statistics',
+					),
+				),
+			)
+		);
+
+		$nonce = wp_create_nonce( 'wpeu-cs-preview' );
+
+		$_POST['nonce']    = $nonce;
+		$_POST['settings'] = array(
+			'enabled_categories' => array( 'statistics', 'analytics' ),
+		);
+
+		try {
+			$this->_handleAjax( 'wpeu_cs_preview' );
+		} catch ( WPAjaxDieStopException $e ) {
+			// Expected for exit.
+		}
+
+		$response = $this->_last_response;
+
+		$this->assertStringContainsString( '<!DOCTYPE html>', $response );
+		$this->assertStringContainsString( 'window.CookieConsent', $response );
+	}
 }

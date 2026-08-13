@@ -9,6 +9,16 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.4] - 2026-08-13
+
+### Fixed
+
+- Live Preview: avoid infinite recursion (and admin-ajax 500) when sanitizing `enabled_categories` under the preview settings filter.
+
+### Changed
+
+- `Tested up to` bumped to WordPress 7.1 (no editor/media/Abilities API surface in this plugin).
+
 ## [1.3.3] - 2026-06-24
 
 ### Fixed
@@ -179,7 +189,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...HEAD
+[1.3.4]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.0...v1.3.1
