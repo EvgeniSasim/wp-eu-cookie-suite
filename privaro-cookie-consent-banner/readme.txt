@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,6 +165,11 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.3.5 =
+* Fix consent cookies flickering after accept (disable CookieConsent auto script/cookie management; align cookie path/domain with WordPress).
+* Fix GA cookie guard clearing analytics cookies right after statistics consent is granted.
+* Add admin fields to translate preferences modal intro title/description and cookie settings link label.
 
 = 1.3.4 =
 * Fix Live Preview fatal recursion (admin AJAX 500) when validating enabled categories.

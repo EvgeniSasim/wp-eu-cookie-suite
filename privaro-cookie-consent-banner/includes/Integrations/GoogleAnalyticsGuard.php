@@ -245,13 +245,15 @@ final class GoogleAnalyticsGuard {
 			return;
 		}
 
-		$has_consent = wpeu_cs_user_has_consent( Categories::STATISTICS ) ? 'true' : 'false';
+		$has_consent      = wpeu_cs_user_has_consent( Categories::STATISTICS ) ? 'true' : 'false';
+		$integration_map  = wp_json_encode( Categories::get_integration_map_by_slug() );
 
 		wp_register_script( 'wpeu-cs-ga-guard', false, array(), WPEU_CS_VERSION, true );
 		wp_enqueue_script( 'wpeu-cs-ga-guard' );
 		wp_add_inline_script(
 			'wpeu-cs-ga-guard',
 			'(function(){var hasStatistics=' . $has_consent . ';'
+			. 'var integrationMap=' . $integration_map . ';'
 			. 'function isGaCookie(name){return/^(_ga(_[\\w]+)?|_gid|_gat)/.test(name);}'
 			. 'function clearGaCookies(){var hostParts=location.hostname.split(".");var domains=[location.hostname];'
 			. 'if(hostParts.length>1){domains.push("."+hostParts.slice(-2).join("."));}'
@@ -259,10 +261,14 @@ final class GoogleAnalyticsGuard {
 			. 'domains.forEach(function(domain){document.cookie=name+"=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain="+domain;'
 			. 'document.cookie=name+"=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";});});}'
 			. 'function statisticsGranted(detail){if(!detail||typeof detail!=="object"){return false;}'
-			. 'if(detail.statistics===true||detail.statistics==="allow"||detail.statistics===1){return true;}'
-			. 'if(detail.categories&&detail.categories.statistics){return true;}return false;}'
-			. 'if(!hasStatistics){clearGaCookies();}'
-			. 'document.addEventListener("wpeu-consent-updated",function(event){if(!statisticsGranted(event.detail||{})){clearGaCookies();}});'
+			. 'return Object.keys(detail).some(function(slug){if(!detail[slug]){return false;}'
+			. 'var mapped=integrationMap[slug]||slug;return mapped==="statistics";});}'
+			. 'function documentHasStatisticsConsent(){if(/(?:^|;\\s*)wpeu_statistics=1(?:;|$)/.test(document.cookie)){return true;}'
+			. 'return document.cookie.split(";").some(function(part){var match=part.trim().match(/^wpeu_([^=]+)=1$/);'
+			. 'if(!match){return false;}var mapped=integrationMap[match[1]]||match[1];return mapped==="statistics";});}'
+			. 'if(!hasStatistics&&!documentHasStatisticsConsent()){clearGaCookies();}'
+			. 'document.addEventListener("wpeu-consent-updated",function(event){if(statisticsGranted(event.detail||{})){return;}'
+			. 'clearGaCookies();});'
 			. 'document.addEventListener("wpeu-consent-revoked",function(){clearGaCookies();});})();'
 		);
 	}

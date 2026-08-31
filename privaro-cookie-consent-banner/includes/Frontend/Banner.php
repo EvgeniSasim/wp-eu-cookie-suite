@@ -88,9 +88,11 @@ final class Banner {
 		$primary       = sanitize_hex_color( $banner_ui['primary_color'] ?? '' ) ?: '#30363c';
 		$is_preview    = defined( 'WPEU_CS_PREVIEW' );
 		$cookie_secure = is_ssl() && ! $is_preview;
-		$wp_consent_map = Categories::get_wp_consent_map();
-		$locale         = BannerTexts::get_active_locale();
+		$wp_consent_map   = Categories::get_wp_consent_map();
+		$locale           = BannerTexts::get_active_locale();
 		$reload_on_revoke = ! empty( $settings['reload_on_revoke'] );
+		$cookie_path_js   = wp_json_encode( COOKIEPATH );
+		$cookie_domain_js = wp_json_encode( COOKIE_DOMAIN );
 
 		wp_add_inline_style(
 			'wpeu-cs-frontend',
@@ -110,11 +112,16 @@ final class Banner {
 			);
 		}
 
-		$secure_js   = $cookie_secure ? "'; Secure'" : "''";
+		$secure_js     = $cookie_secure ? "'; Secure'" : "''";
 		$is_preview_js = $is_preview ? 'true' : 'false';
-		$reload_js   = $reload_on_revoke ? 'true' : 'false';
+		$reload_js     = $reload_on_revoke ? 'true' : 'false';
 
 		$script = '(function(){window.addEventListener("load",function(){'
+			. 'const cookiePath=' . $cookie_path_js . ';'
+			. 'const cookieDomain=' . $cookie_domain_js . ';'
+			. 'const cookieDomainAttr=cookieDomain?"; domain="+cookieDomain:"";'
+			. 'const cookieMaxAge=function(maxAge,secureAttr){'
+			. 'return "; path="+cookiePath+"; max-age="+maxAge+"; SameSite=Lax"+secureAttr+cookieDomainAttr;};'
 			. 'const cc=window.CookieConsent;if(!cc||typeof cc.run!=="function"){return;}'
 			. 'const isPreview=' . $is_preview_js . ';'
 			. 'if(!isPreview&&typeof window.wp_set_consent!=="function"){'
@@ -129,7 +136,7 @@ final class Banner {
 			. 'const r=Math.random()*16|0,v=c==="x"?r:(r&0x3|0x8);return v.toString(16);});};'
 			. 'let wpeuUuid=getWpeuUuid();'
 			. 'const ensureWpeuUuid=function(){if(isPreview){return "";}if(wpeuUuid){return wpeuUuid;}'
-			. 'wpeuUuid=generateWpeuUuid();document.cookie="wpeu_consent_uuid="+wpeuUuid+"; path=/; max-age=34128000; SameSite=Lax"+' . $secure_js . ';'
+			. 'wpeuUuid=generateWpeuUuid();document.cookie="wpeu_consent_uuid="+wpeuUuid+cookieMaxAge(34128000,' . $secure_js . ');'
 			. 'return wpeuUuid;};'
 			. 'const logConsentEvent=function(eventType,categories){if(isPreview||!ensureWpeuUuid()){return;}'
 			. 'const data=new FormData();data.append("action","wpeu_cs_log_consent");'
@@ -139,17 +146,20 @@ final class Banner {
 			. 'data.append("locale",' . wp_json_encode( $locale ) . ');'
 			. 'if(categories){Object.keys(categories).forEach(function(cat){data.append("categories["+cat+"]",categories[cat]?1:0);});}'
 			. 'fetch(' . wp_json_encode( admin_url( 'admin-ajax.php' ) ) . ',{method:"POST",body:data}).catch(function(err){console.error("WPEU Log Error:",err);});};'
-			. 'const syncWpeuCookies=function(){if(typeof cc.validConsent==="function"&&!cc.validConsent()){return {};}'
+			. 'const syncWpeuCookies=function(){'
+			. 'if(typeof cc.getConfig!=="function"||typeof cc.acceptedCategory!=="function"){return {};}'
+			. 'const consentIsValid=typeof cc.validConsent!=="function"||cc.validConsent();'
+			. 'if(!consentIsValid){return {};}'
 			. 'const categories=Object.keys(cc.getConfig().categories);const consentData={};'
 			. 'const mapping=' . wp_json_encode( $wp_consent_map ) . ';'
 			. 'const secureAttr=' . $secure_js . ';const wpConsentState={};'
 			. 'Object.keys(mapping).forEach(function(slug){const wpCat=mapping[slug];'
 			. 'if(wpCat&&typeof wpConsentState[wpCat]==="undefined"){wpConsentState[wpCat]=false;}});'
-			. 'categories.forEach(function(cat){const accepted=cc.acceptedCategory(cat);consentData[cat]=accepted;'
-			. 'document.cookie="wpeu_"+cat+"="+(accepted?"1":"0")+"; path=/; max-age=31536000; SameSite=Lax"+secureAttr;'
+			. 'categories.forEach(function(cat){const accepted=!!cc.acceptedCategory(cat);consentData[cat]=accepted;'
+			. 'document.cookie="wpeu_"+cat+"="+(accepted?"1":"0")+cookieMaxAge(31536000,secureAttr);'
 			. 'const wpCat=mapping[cat];if(wpCat&&accepted){wpConsentState[wpCat]=true;}});'
 			. 'Object.keys(wpConsentState).forEach(function(wpCat){window.wp_set_consent(wpCat,wpConsentState[wpCat]?"allow":"deny");});'
-			. 'document.cookie="wpeu_consent="+encodeURIComponent(JSON.stringify(consentData))+"; path=/; max-age=31536000; SameSite=Lax"+secureAttr;'
+			. 'document.cookie="wpeu_consent="+encodeURIComponent(JSON.stringify(consentData))+cookieMaxAge(31536000,secureAttr);'
 			. 'document.dispatchEvent(new CustomEvent("wpeu-consent-updated",{detail:consentData}));return consentData;};'
 			. 'const logConsentFromState=function(consentData){const categories=Object.keys(cc.getConfig().categories);'
 			. 'let eventType="save_preferences";const allEnabled=categories.filter(function(c){return !cc.getConfig().categories[c].readOnly;});'
@@ -166,9 +176,10 @@ final class Banner {
 			. 'if(isPreview&&typeof cc.show==="function"){cc.show(true);return;}'
 			. 'window.addEventListener("wpeu-cs-revoke",function(){const secureAttr=' . $secure_js . ';'
 			. 'const categories=Object.keys(cc.getConfig().categories);logConsentEvent("revoke",{});'
-			. 'categories.forEach(function(cat){document.cookie="wpeu_"+cat+"=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;});'
-			. 'document.cookie="wpeu_consent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;'
-			. 'document.cookie="wpeu_consent_uuid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr;'
+			. 'const revokeAttrs="; path="+cookiePath+"; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr+cookieDomainAttr;'
+			. 'categories.forEach(function(cat){document.cookie="wpeu_"+cat+"="+revokeAttrs;});'
+			. 'document.cookie="wpeu_consent="+revokeAttrs;'
+			. 'document.cookie="wpeu_consent_uuid="+revokeAttrs;'
 			. 'cc.reset(true);wpeuUuid="";document.dispatchEvent(new CustomEvent("wpeu-consent-revoked"));'
 			. 'if(' . $reload_js . '){window.location.reload();}else{cc.run(ccConfig);if(typeof cc.show==="function"){cc.show(true);}}});'
 			. '});})();';
@@ -237,10 +248,24 @@ final class Banner {
 
 		$footer_html = implode( ' | ', $footer_links );
 
+		$cc_cookie = array(
+			'name'             => 'wpeu_cc',
+			'path'             => COOKIEPATH,
+			'expiresAfterDays' => 365,
+			'sameSite'         => 'Lax',
+			'secure'           => is_ssl(),
+		);
+		if ( COOKIE_DOMAIN ) {
+			$cc_cookie['domain'] = COOKIE_DOMAIN;
+		}
+
 		$config = array(
-			'revision'   => max( 0, (int) ( $settings['consent_revision'] ?? 0 ) ),
-			'mode'       => $eu_mode ? 'opt-in' : 'opt-out',
-			'guiOptions' => array(
+			'revision'          => max( 0, (int) ( $settings['consent_revision'] ?? 0 ) ),
+			'mode'              => $eu_mode ? 'opt-in' : 'opt-out',
+			'manageScriptTags'  => false,
+			'autoClearCookies'  => false,
+			'cookie'            => $cc_cookie,
+			'guiOptions'        => array(
 				'consentModal' => array(
 					'layout'             => $layout,
 					'position'           => $position,
@@ -281,11 +306,9 @@ final class Banner {
 		);
 
 		if ( defined( 'WPEU_CS_PREVIEW' ) ) {
-			$config['autoShow'] = false;
-			$config['cookie']   = array(
-				'name'             => 'wpeu_cs_preview_cc',
-				'expiresAfterDays' => 1,
-			);
+			$config['autoShow']                   = false;
+			$config['cookie']['name']             = 'wpeu_cs_preview_cc';
+			$config['cookie']['expiresAfterDays'] = 1;
 		}
 
 		return $config;
