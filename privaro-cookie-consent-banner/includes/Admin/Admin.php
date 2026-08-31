@@ -1430,6 +1430,20 @@ final class Admin {
 					</td>
 				</tr>
 				<tr>
+					<th scope="row"><?php esc_html_e( 'Preferences Intro Title', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][preferences_intro_title]" value="<?php echo esc_attr( $texts['preferences_intro_title'] ?? '' ); ?>" class="large-text">
+						<p class="description"><?php esc_html_e( 'Heading above the category list in the preferences modal.', 'privaro-cookie-consent-banner' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Preferences Intro Description', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<textarea name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][preferences_intro_description]" rows="2" class="large-text"><?php echo esc_textarea( $texts['preferences_intro_description'] ?? '' ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Intro text shown under the heading in the preferences modal.', 'privaro-cookie-consent-banner' ); ?></p>
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><?php esc_html_e( 'Accept All Button', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][accept_all_btn]" value="<?php echo esc_attr( $texts['accept_all_btn'] ?? '' ); ?>" class="regular-text">
@@ -1445,6 +1459,13 @@ final class Admin {
 					<th scope="row"><?php esc_html_e( 'Manage Preferences Button', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][show_preferences_btn]" value="<?php echo esc_attr( $texts['show_preferences_btn'] ?? '' ); ?>" class="regular-text">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Cookie Settings Link Label', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][manage_consent_label]" value="<?php echo esc_attr( $texts['manage_consent_label'] ?? '' ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Label for the [wpeu_manage_consent] shortcode link.', 'privaro-cookie-consent-banner' ); ?></p>
 					</td>
 				</tr>
 				<tr>

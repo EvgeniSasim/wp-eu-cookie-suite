@@ -9,6 +9,17 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.5] - 2026-08-31
+
+### Fixed
+
+- Consent cookies no longer flicker or disappear after accept: disable CookieConsent `manageScriptTags` / `autoClearCookies` (handled by plugin ScriptBlocker); write `wpeu_*` and CC cookies with WordPress `COOKIEPATH` / `COOKIE_DOMAIN`.
+- GA cookie guard no longer clears `_ga` cookies immediately after statistics consent (integration-map aware check; respect client-side `wpeu_*` cookies before cleanup).
+
+### Added
+
+- Banner admin: editable **Preferences Intro Title/Description** and **Cookie Settings Link Label** per language.
+
 ## [1.3.4] - 2026-08-13
 
 ### Fixed
@@ -189,7 +200,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...HEAD
+[1.3.5]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...v1.3.5
 [1.3.4]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.1...v1.3.2

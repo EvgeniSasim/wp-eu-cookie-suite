@@ -3,7 +3,7 @@
  * Plugin Name:       Privaro Cookie Consent Banner
  * Plugin URI:        https://profiles.wordpress.org/evgenij347/
  * Description:       EU/GDPR cookie consent with CookieConsent UI, script blocking, scanner, and WP Consent API.
- * Version:           1.3.4
+ * Version:           1.3.5
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Evgenii Sasim
