@@ -147,4 +147,39 @@ class Test_Multilingual extends WP_UnitTestCase {
 		$this->assertArrayNotHasKey( 'language_labels', $sanitized );
 		$this->assertArrayNotHasKey( 'ru', $sanitized['banner_texts'] ?? array() );
 	}
+
+	public function test_normalize_locale_code_accepts_html_lang_and_wp_locale(): void {
+		$this->assertSame( 'ru', BannerTexts::normalize_locale_code( 'ru' ) );
+		$this->assertSame( 'ru', BannerTexts::normalize_locale_code( 'RU' ) );
+		$this->assertSame( 'ru', BannerTexts::normalize_locale_code( 'ru-RU' ) );
+		$this->assertSame( 'ru', BannerTexts::normalize_locale_code( 'ru_RU' ) );
+		$this->assertSame( 'pt', BannerTexts::normalize_locale_code( 'pt-BR' ) );
+		$this->assertSame( '', BannerTexts::normalize_locale_code( '!!!' ) );
+		$this->assertTrue( BannerTexts::is_valid_locale_code( 'ru-RU' ) );
+		$this->assertFalse( BannerTexts::is_valid_locale_code( 'x' ) );
+	}
+
+	public function test_get_strings_reads_legacy_ru_ru_key(): void {
+		$admin = new Admin();
+		$admin->register_settings();
+		$write = new ReflectionMethod( Admin::class, 'write_context_settings' );
+		$write->setAccessible( true );
+		$write->invoke(
+			$admin,
+			array(
+				'banner_texts' => array(
+					'ru-ru' => array(
+						'consent_modal_title' => 'Мы используем cookies',
+					),
+				),
+			)
+		);
+
+		$strings = BannerTexts::get_strings( 'ru' );
+		$this->assertSame( 'Мы используем cookies', $strings['consent_modal_title'] );
+
+		$locales = BannerTexts::get_locales();
+		$this->assertArrayHasKey( 'ru', $locales );
+		$this->assertArrayNotHasKey( 'ru-ru', $locales );
+	}
 }

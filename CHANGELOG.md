@@ -9,6 +9,14 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.7] - 2026-10-02
+
+### Fixed
+
+- Admin Live Preview no longer hijacks scroll/focus on every keystroke in Localized Texts (preview updates on blur/Refresh; iframe write preserves scroll).
+- Language codes normalized to the primary subtag (`ru-RU`, `ru_RU`, `RU` → `ru`) so saved translations match frontend `lang` / `get_locale()` detection; legacy `ru-ru` keys still resolve.
+- Clearer Add Language help text with the site’s detected locale hint.
+
 ## [1.3.6] - 2026-10-02
 
 ### Fixed
@@ -211,7 +219,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...HEAD
+[1.3.7]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...v1.3.7
 [1.3.6]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...v1.3.5
 [1.3.4]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...v1.3.4

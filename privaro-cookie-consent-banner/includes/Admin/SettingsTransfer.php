@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
+use WPEU\CookieSuite\Consent\BannerTexts;
 use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Frontend\ScriptRegistry;
 use WPEU\CookieSuite\Settings\SettingsRepository;
@@ -153,7 +154,11 @@ final class SettingsTransfer {
 				if ( ! is_array( $texts ) ) {
 					continue;
 				}
-				$sanitized['banner_texts'][ sanitize_key( (string) $locale ) ] = array_map( 'sanitize_text_field', $texts );
+				$locale = BannerTexts::normalize_locale_code( (string) $locale );
+				if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
+					continue;
+				}
+				$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
 			}
 		}
 
@@ -163,7 +168,11 @@ final class SettingsTransfer {
 				if ( ! is_array( $texts ) ) {
 					continue;
 				}
-				$sanitized['policy_texts'][ sanitize_key( (string) $locale ) ] = array(
+				$locale = BannerTexts::normalize_locale_code( (string) $locale );
+				if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
+					continue;
+				}
+				$sanitized['policy_texts'][ $locale ] = array(
 					'intro'    => sanitize_textarea_field( $texts['intro'] ?? '' ),
 					'template' => wp_kses_post( $texts['template'] ?? '' ),
 				);

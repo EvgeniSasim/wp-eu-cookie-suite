@@ -194,10 +194,10 @@ final class Admin {
 			wp_die( esc_html__( 'Cannot modify languages while using network defaults.', 'privaro-cookie-consent-banner' ) );
 		}
 
-		$code  = sanitize_key( wp_unslash( (string) ( $_POST['wpeu_cs_new_lang_code'] ?? '' ) ) );
+		$code  = BannerTexts::normalize_locale_code( wp_unslash( (string) ( $_POST['wpeu_cs_new_lang_code'] ?? '' ) ) );
 		$label = sanitize_text_field( wp_unslash( (string) ( $_POST['wpeu_cs_new_lang_label'] ?? '' ) ) );
 
-		if ( strlen( $code ) < 2 || strlen( $code ) > 5 ) {
+		if ( ! BannerTexts::is_valid_locale_code( $code ) ) {
 			$tab = sanitize_key( (string) ( $_POST['active_tab'] ?? 'banner' ) );
 			$this->redirect_to_plugin_tab( $tab, array( 'message' => 'invalid_code' ) );
 		}
@@ -248,11 +248,24 @@ final class Admin {
 			wp_die( esc_html__( 'Cannot modify languages while using network defaults.', 'privaro-cookie-consent-banner' ) );
 		}
 
+		$code     = BannerTexts::normalize_locale_code( $code );
 		$settings = $this->read_context_settings();
 
 		unset( $settings['language_labels'][ $code ] );
 		unset( $settings['banner_texts'][ $code ] );
 		unset( $settings['policy_texts'][ $code ] );
+
+		// Also clear legacy keys (ru-ru, ru_ru) that normalize to the same code.
+		foreach ( array( 'language_labels', 'banner_texts', 'policy_texts' ) as $bucket ) {
+			if ( empty( $settings[ $bucket ] ) || ! is_array( $settings[ $bucket ] ) ) {
+				continue;
+			}
+			foreach ( array_keys( $settings[ $bucket ] ) as $stored_code ) {
+				if ( BannerTexts::normalize_locale_code( (string) $stored_code ) === $code ) {
+					unset( $settings[ $bucket ][ $stored_code ] );
+				}
+			}
+		}
 
 		$this->write_context_settings( $settings );
 
@@ -688,7 +701,11 @@ final class Admin {
 					if ( ! is_array( $texts ) ) {
 						continue;
 					}
-					$sanitized['banner_texts'][ sanitize_key( $locale ) ] = array_map( 'sanitize_text_field', $texts );
+					$locale = BannerTexts::normalize_locale_code( (string) $locale );
+					if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
+						continue;
+					}
+					$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
 				}
 			}
 
@@ -742,7 +759,11 @@ final class Admin {
 					if ( ! is_array( $texts ) ) {
 						continue;
 					}
-					$sanitized['policy_texts'][ sanitize_key( $locale ) ] = array(
+					$locale = BannerTexts::normalize_locale_code( (string) $locale );
+					if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
+						continue;
+					}
+					$sanitized['policy_texts'][ $locale ] = array(
 						'intro'    => sanitize_textarea_field( $texts['intro'] ?? '' ),
 						'template' => wp_kses_post( $texts['template'] ?? '' ),
 					);
@@ -1189,18 +1210,43 @@ final class Admin {
 				<input type="hidden" name="active_tab" value="<?php echo esc_attr( $active_tab ); ?>">
 
 				<h4 style="margin-top: 0;"><?php esc_html_e( 'Add Language', 'privaro-cookie-consent-banner' ); ?></h4>
+				<?php
+				$detected_site_locale = BannerTexts::normalize_locale_code( get_locale() );
+				$detected_wp_locale   = get_locale();
+				?>
 				<div style="display: flex; gap: 10px; align-items: flex-end;">
 					<div>
-						<label for="new_lang_code" style="display: block; font-size: 11px;"><?php esc_html_e( 'Code (e.g. fr)', 'privaro-cookie-consent-banner' ); ?></label>
-						<input type="text" name="wpeu_cs_new_lang_code" id="new_lang_code" value="" class="small-text" required maxlength="5" pattern="[A-Za-z0-9_-]{2,5}" title="<?php esc_attr_e( '2–5 letters/numbers (e.g. ru, fr, pt)', 'privaro-cookie-consent-banner' ); ?>">
+						<label for="new_lang_code" style="display: block; font-size: 11px;"><?php esc_html_e( 'Language code', 'privaro-cookie-consent-banner' ); ?></label>
+						<input type="text" name="wpeu_cs_new_lang_code" id="new_lang_code" value="" class="small-text" required maxlength="8" pattern="[A-Za-z]{2,3}([_-][A-Za-z0-9]+)?" placeholder="ru" title="<?php esc_attr_e( '2–3 letter language code, e.g. ru (not ru-RU)', 'privaro-cookie-consent-banner' ); ?>">
 					</div>
 					<div>
 						<label for="new_lang_label" style="display: block; font-size: 11px;"><?php esc_html_e( 'Display Name', 'privaro-cookie-consent-banner' ); ?></label>
-						<input type="text" name="wpeu_cs_new_lang_label" id="new_lang_label" value="" class="regular-text" required placeholder="Français">
+						<input type="text" name="wpeu_cs_new_lang_label" id="new_lang_label" value="" class="regular-text" required placeholder="Русский">
 					</div>
 					<?php submit_button( __( 'Add', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
 				</div>
-				<p class="description"><?php esc_html_e( 'After adding a language, open its tab above to edit banner and button texts.', 'privaro-cookie-consent-banner' ); ?></p>
+				<p class="description">
+					<?php
+					echo esc_html__(
+						'Enter the ISO language code only (ru, de, fr, pl). Do not use full locale tags like ru-RU or ru_RU — they are normalized to ru automatically.',
+						'privaro-cookie-consent-banner'
+					);
+					?>
+					<?php if ( $detected_site_locale ) : ?>
+						<br>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: 1: WordPress locale like ru_RU, 2: language code like ru */
+								__( 'This site locale is %1$s → use code %2$s for matching banner texts on the frontend.', 'privaro-cookie-consent-banner' ),
+								$detected_wp_locale,
+								$detected_site_locale
+							)
+						);
+						?>
+					<?php endif; ?>
+				</p>
+				<p class="description"><?php esc_html_e( 'After adding a language, open its tab above to edit banner and button texts, then click Save Changes.', 'privaro-cookie-consent-banner' ); ?></p>
 			</form>
 			<?php endif; ?>
 		</div>
@@ -1335,10 +1381,10 @@ final class Admin {
 		$theme              = $banner_ui['theme'] ?? 'light';
 		$primary_color      = $banner_ui['primary_color'] ?? '#30363c';
 
-		$locales        = BannerTexts::get_locales();
-		$lang_input     = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( (string) $_GET['lang'] ) ) : '';
-		$current_lang   = array_key_exists( $lang_input, $locales ) ? $lang_input : 'en';
-		$texts          = BannerTexts::get_strings( $current_lang );
+		$locales      = BannerTexts::get_locales();
+		$lang_input   = isset( $_GET['lang'] ) ? BannerTexts::normalize_locale_code( wp_unslash( (string) $_GET['lang'] ) ) : '';
+		$current_lang = ( '' !== $lang_input && array_key_exists( $lang_input, $locales ) ) ? $lang_input : 'en';
+		$texts        = BannerTexts::get_strings( $current_lang );
 
 		$message = isset( $_GET['message'] ) ? sanitize_key( wp_unslash( (string) $_GET['message'] ) ) : '';
 		if ( 'lang_added' === $message ) {
@@ -1346,7 +1392,7 @@ final class Admin {
 		} elseif ( 'lang_removed' === $message ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'invalid_code' === $message ) {
-			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use 2-5 characters.', 'privaro-cookie-consent-banner' ) . '</p></div>';
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use a 2–3 letter ISO code such as ru, de, or fr (not ru-RU).', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'category_added' === $message ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Custom category added.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'category_removed' === $message ) {
@@ -2007,8 +2053,8 @@ final class Admin {
 		$settings     = $this->get_tools_tab_settings();
 		$inheriting   = 'site' === $this->settings_context && SettingsRepository::instance()->is_using_network_defaults();
 		$locales      = BannerTexts::get_locales();
-		$lang_input   = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( (string) $_GET['lang'] ) ) : '';
-		$current_lang = array_key_exists( $lang_input, $locales ) ? $lang_input : BannerTexts::get_active_locale();
+		$lang_input   = isset( $_GET['lang'] ) ? BannerTexts::normalize_locale_code( wp_unslash( (string) $_GET['lang'] ) ) : '';
+		$current_lang = ( '' !== $lang_input && array_key_exists( $lang_input, $locales ) ) ? $lang_input : BannerTexts::get_active_locale();
 
 		$policy_texts = $settings['policy_texts'][ $current_lang ] ?? array();
 		$intro        = $policy_texts['intro'] ?? '';
@@ -2305,7 +2351,7 @@ final class Admin {
 
 		$preview_locale = '';
 		if ( isset( $_POST['settings']['preview_locale'] ) ) {
-			$preview_locale = sanitize_key( wp_unslash( (string) $_POST['settings']['preview_locale'] ) );
+			$preview_locale = BannerTexts::normalize_locale_code( wp_unslash( (string) $_POST['settings']['preview_locale'] ) );
 		}
 
 		if ( $preview_locale ) {
@@ -2391,7 +2437,11 @@ final class Admin {
 				if ( ! is_array( $texts ) ) {
 					continue;
 				}
-				$settings['banner_texts'][ sanitize_key( (string) $locale ) ] = array_map(
+				$locale = BannerTexts::normalize_locale_code( (string) $locale );
+				if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
+					continue;
+				}
+				$settings['banner_texts'][ $locale ] = array_map(
 					'sanitize_text_field',
 					$texts
 				);
