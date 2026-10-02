@@ -20,12 +20,73 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
 final class BannerTexts {
 
 	/**
+	 * Normalize a locale/language code to the primary language subtag.
+	 *
+	 * Accepts `ru`, `ru-RU`, `ru_RU`, `RU` → `ru`. Matches WordPress/Polylang/WPML
+	 * language codes used by get_active_locale().
+	 *
+	 * @param string $code Raw locale code.
+	 * @return string Lowercase primary subtag, or empty string if invalid.
+	 */
+	public static function normalize_locale_code( string $code ): string {
+		$code = strtolower( trim( $code ) );
+		$code = str_replace( '_', '-', $code );
+
+		if ( preg_match( '/^([a-z]{2,3})(?:-[a-z0-9]+)*$/', $code, $matches ) ) {
+			return $matches[1];
+		}
+
+		return '';
+	}
+
+	/**
+	 * Whether a raw or normalized locale code is usable for banner texts.
+	 *
+	 * @param string $code Locale code.
+	 */
+	public static function is_valid_locale_code( string $code ): bool {
+		$normalized = self::normalize_locale_code( $code );
+		return (bool) preg_match( '/^[a-z]{2,3}$/', $normalized );
+	}
+
+	/**
+	 * Resolve saved banner text map for a locale, including legacy keys (ru-ru, ru_ru).
+	 *
+	 * @param array<string, mixed> $settings Effective settings.
+	 * @param string               $locale   Normalized locale.
+	 * @return array<string, string>
+	 */
+	public static function find_banner_texts_for_locale( array $settings, string $locale ): array {
+		$locale = self::normalize_locale_code( $locale );
+		$all    = $settings['banner_texts'] ?? array();
+		if ( ! is_array( $all ) || '' === $locale ) {
+			return array();
+		}
+
+		if ( isset( $all[ $locale ] ) && is_array( $all[ $locale ] ) ) {
+			return $all[ $locale ];
+		}
+
+		foreach ( $all as $key => $texts ) {
+			if ( ! is_array( $texts ) ) {
+				continue;
+			}
+			if ( self::normalize_locale_code( (string) $key ) === $locale ) {
+				return $texts;
+			}
+		}
+
+		return array();
+	}
+
+	/**
 	 * Get default strings for a locale.
 	 *
 	 * @param string $locale Locale (e.g., 'en', 'de').
 	 * @return array<string, string>
 	 */
 	public static function get_defaults( string $locale = 'en' ): array {
+		$locale = self::normalize_locale_code( $locale ) ?: 'en';
 		$defaults = array(
 			'en' => array(
 				'consent_modal_title'           => __( 'We use cookies', 'privaro-cookie-consent-banner' ),
@@ -90,16 +151,17 @@ final class BannerTexts {
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML integration hook.
 			$locale = apply_filters( 'wpml_current_language', null ) ?: 'en';
 		} else {
-			$wp_locale = get_locale();
-			$locale    = substr( $wp_locale, 0, 2 );
+			$locale = get_locale();
 		}
+
+		$locale = self::normalize_locale_code( (string) $locale ) ?: 'en';
 
 		/**
 		 * Filter the detected banner locale.
 		 *
 		 * @param string $locale The detected locale.
 		 */
-		return (string) apply_filters( 'wpeu_cs_banner_locale', $locale );
+		return self::normalize_locale_code( (string) apply_filters( 'wpeu_cs_banner_locale', $locale ) ) ?: 'en';
 	}
 
 	/**
@@ -109,9 +171,10 @@ final class BannerTexts {
 	 * @return array<string, string>
 	 */
 	public static function get_strings( string $locale ): array {
+		$locale   = self::normalize_locale_code( $locale ) ?: 'en';
 		$defaults = self::get_defaults( $locale );
 		$settings = SettingsRepository::instance()->get_effective_settings();
-		$saved    = $settings['banner_texts'][ $locale ] ?? array();
+		$saved    = self::find_banner_texts_for_locale( $settings, $locale );
 
 		$merged = array_merge( $defaults, $saved );
 
@@ -139,52 +202,57 @@ final class BannerTexts {
 			'de' => __( 'German', 'privaro-cookie-consent-banner' ),
 		);
 
-		// 1. Site locale
-		$site_locale = substr( get_locale(), 0, 2 );
-		if ( ! isset( $locales[ $site_locale ] ) ) {
-			$locales[ $site_locale ] = strtoupper( $site_locale );
-		}
+		$add_locale = static function ( string $code, string $label = '' ) use ( &$locales ): void {
+			$code = self::normalize_locale_code( $code );
+			if ( '' === $code ) {
+				return;
+			}
+			if ( '' !== $label ) {
+				$locales[ $code ] = $label;
+				return;
+			}
+			if ( ! isset( $locales[ $code ] ) ) {
+				$locales[ $code ] = strtoupper( $code );
+			}
+		};
 
-		// 2. Polylang
+		// 1. Site locale (ru_RU → ru).
+		$add_locale( get_locale() );
+
+		// 2. Polylang.
 		if ( function_exists( 'pll_languages_list' ) ) {
 			$pll_locales = pll_languages_list();
 			if ( is_array( $pll_locales ) ) {
 				foreach ( $pll_locales as $code ) {
-					if ( ! isset( $locales[ $code ] ) ) {
-						$locales[ $code ] = strtoupper( $code );
-					}
+					$add_locale( (string) $code );
 				}
 			}
 		}
 
-		// 3. WPML
+		// 3. WPML.
 		if ( function_exists( 'icl_get_languages' ) ) {
 			$wpml_locales = icl_get_languages();
 			if ( is_array( $wpml_locales ) ) {
 				foreach ( $wpml_locales as $lang ) {
-					$code = $lang['language_code'] ?? '';
-					if ( $code && ! isset( $locales[ $code ] ) ) {
-						$locales[ $code ] = $lang['native_name'] ?? strtoupper( $code );
-					}
+					$code = (string) ( $lang['language_code'] ?? '' );
+					$add_locale( $code, (string) ( $lang['native_name'] ?? '' ) );
 				}
 			}
 		}
 
-		// 4. Saved in settings
+		// 4. Saved in settings (normalize legacy ru-RU / ru-ru keys).
 		$saved_banner_locales = array_keys( $settings['banner_texts'] ?? array() );
 		$saved_policy_locales = array_keys( $settings['policy_texts'] ?? array() );
 		$all_saved            = array_unique( array_merge( $saved_banner_locales, $saved_policy_locales ) );
 
 		foreach ( $all_saved as $code ) {
-			if ( ! isset( $locales[ $code ] ) ) {
-				$locales[ $code ] = strtoupper( $code );
-			}
+			$add_locale( (string) $code );
 		}
 
-		// 5. Custom labels from settings
+		// 5. Custom labels from settings.
 		if ( isset( $settings['language_labels'] ) && is_array( $settings['language_labels'] ) ) {
 			foreach ( $settings['language_labels'] as $code => $label ) {
-				$locales[ $code ] = $label;
+				$add_locale( (string) $code, sanitize_text_field( (string) $label ) );
 			}
 		}
 

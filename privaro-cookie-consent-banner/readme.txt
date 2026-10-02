@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,6 +165,10 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.3.7 =
+* Fix Live Preview jumping the page on every keystroke while editing banner texts.
+* Normalize language codes (ru-RU / ru_RU → ru) so frontend matches admin translations; clearer Add Language help text.
 
 = 1.3.6 =
 * Fix adding new languages (e.g. RU): Settings API sanitize no longer discards programmatic saves, so language tabs and banner texts persist.

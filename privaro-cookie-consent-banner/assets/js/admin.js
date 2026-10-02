@@ -8,7 +8,6 @@
 		const $progress = $('#wpeu-cs-scan-progress');
 		const $progressBar = $('.wpeu-cs-progress-fill');
 		const $status = $('.wpeu-cs-progress-status');
-		const $resultsWrapper = $('#wpeu-cs-scan-results-wrapper');
 		const nonce = $('#wpeu_cs_scanner_nonce').val();
 
 		if ($startBtn.length) {
@@ -67,8 +66,7 @@
 					url: urls[index],
 					nonce: nonce
 				},
-				success: function(response) {
-					// We continue even if one URL fails
+				success: function() {
 					scanUrls(urls, index + 1);
 				},
 				error: function() {
@@ -83,7 +81,6 @@
 			$status.text(message);
 
 			if (success) {
-				// Reload results table
 				setTimeout(() => {
 					window.location.reload();
 				}, 1000);
@@ -95,9 +92,19 @@
 		const $refreshBtn = $('#wpeu-cs-refresh-preview');
 		const previewNonce = $('#wpeu_cs_preview_nonce').val();
 		let previewTimer = null;
+		let previewXhr = null;
+
+		function normalizeLocaleCode(code) {
+			if (!code) {
+				return 'en';
+			}
+			code = String(code).toLowerCase().trim().replace(/_/g, '-');
+			const match = code.match(/^([a-z]{2,3})(?:-[a-z0-9]+)*$/);
+			return match ? match[1] : 'en';
+		}
 
 		function getPreviewLang() {
-			return new URLSearchParams(window.location.search).get('lang') || 'en';
+			return normalizeLocaleCode(new URLSearchParams(window.location.search).get('lang') || 'en');
 		}
 
 		function getPrimaryColor() {
@@ -114,15 +121,32 @@
 			if (!iframe) {
 				return;
 			}
+
+			// Preserve page scroll — rewriting iframe content otherwise jumps to Live Preview.
+			const scrollX = window.scrollX;
+			const scrollY = window.scrollY;
+			const active = document.activeElement;
+
 			if ('srcdoc' in iframe) {
-				iframe.src = 'about:blank';
+				// Do not set src=about:blank first: that forces a load and scrolls the page.
 				iframe.srcdoc = html;
-				return;
+			} else if (iframe.contentWindow && iframe.contentWindow.document) {
+				const doc = iframe.contentWindow.document;
+				doc.open();
+				doc.write(html);
+				doc.close();
 			}
-			const doc = iframe.contentWindow.document;
-			doc.open();
-			doc.write(html);
-			doc.close();
+
+			requestAnimationFrame(function() {
+				window.scrollTo(scrollX, scrollY);
+				if (active && typeof active.focus === 'function' && document.contains(active)) {
+					try {
+						active.focus({ preventScroll: true });
+					} catch (e) {
+						active.focus();
+					}
+				}
+			});
 		}
 
 		function showPreviewError(message) {
@@ -166,7 +190,11 @@
 				$refreshBtn.prop('disabled', true).text('Updating...');
 			}
 
-			$.ajax({
+			if (previewXhr && typeof previewXhr.abort === 'function') {
+				previewXhr.abort();
+			}
+
+			previewXhr = $.ajax({
 				url: ajaxurl,
 				type: 'POST',
 				dataType: 'html',
@@ -182,10 +210,14 @@
 					}
 					writePreviewHtml(response);
 				},
-				error: function() {
+				error: function(xhr, status) {
+					if (status === 'abort') {
+						return;
+					}
 					showPreviewError('Preview failed to load.');
 				},
 				complete: function() {
+					previewXhr = null;
 					if ($refreshBtn.length) {
 						$refreshBtn.prop('disabled', false).text('Refresh Preview');
 					}
@@ -193,25 +225,50 @@
 			});
 		}
 
-		function schedulePreviewUpdate() {
+		function schedulePreviewUpdate(delay) {
 			clearTimeout(previewTimer);
-			previewTimer = setTimeout(updatePreview, 250);
+			previewTimer = setTimeout(updatePreview, typeof delay === 'number' ? delay : 400);
 		}
 
 		$('.wpeu-cs-color-picker').wpColorPicker({
-			change: schedulePreviewUpdate,
-			clear: schedulePreviewUpdate
+			change: function() {
+				schedulePreviewUpdate(300);
+			},
+			clear: function() {
+				schedulePreviewUpdate(300);
+			}
 		});
 
 		if ($previewFrame.length && previewNonce) {
 			updatePreview();
 			if ($refreshBtn.length) {
-				$refreshBtn.on('click', updatePreview);
+				$refreshBtn.on('click', function(e) {
+					e.preventDefault();
+					updatePreview();
+				});
 			}
-			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', schedulePreviewUpdate);
-			$('input[name="wpeu_cs_settings[eu_mode]"], input[name="wpeu_cs_settings[show_reject_all]"], input[name="wpeu_cs_settings[enabled_categories][]"]').on('change', schedulePreviewUpdate);
-			$('input[name^="wpeu_cs_settings[banner_texts]"], textarea[name^="wpeu_cs_settings[banner_texts]"], #wpeu-cs-banner-primary-color').on('input', schedulePreviewUpdate);
+			$('#wpeu-cs-banner-layout, #wpeu-cs-banner-position, #wpeu-cs-banner-theme').on('change', function() {
+				schedulePreviewUpdate(200);
+			});
+			$('input[name="wpeu_cs_settings[eu_mode]"], input[name="wpeu_cs_settings[show_reject_all]"], input[name="wpeu_cs_settings[enabled_categories][]"]').on('change', function() {
+				schedulePreviewUpdate(200);
+			});
+			// Do not refresh preview on every keystroke — that scrolls the page to the iframe.
+			// Update when the field loses focus (change) or when Refresh is clicked.
+			$('input[name^="wpeu_cs_settings[banner_texts]"], textarea[name^="wpeu_cs_settings[banner_texts]"], #wpeu-cs-banner-primary-color').on('change', function() {
+				schedulePreviewUpdate(150);
+			});
 		}
+
+		// Normalize language code input (ru-RU → ru) before submit.
+		$('#new_lang_code').on('blur', function() {
+			const $input = $(this);
+			const raw = $input.val();
+			if (!raw) {
+				return;
+			}
+			$input.val(normalizeLocaleCode(raw));
+		});
 
 		// Scanner-only: import scan results
 		$(document).on('click', '#wpeu-cs-import-scan', function() {
