@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,6 +165,11 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.3.6 =
+* Fix adding new languages (e.g. RU): Settings API sanitize no longer discards programmatic saves, so language tabs and banner texts persist.
+* Clarified Add Language UI when the site inherits multisite network defaults.
+* Reconfirmed compatibility with WordPress 7.1.x (current stable 7.1.2).
 
 = 1.3.5 =
 * Fix consent cookies flickering after accept (disable CookieConsent auto script/cookie management; align cookie path/domain with WordPress).

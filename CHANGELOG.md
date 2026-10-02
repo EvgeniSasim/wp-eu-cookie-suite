@@ -9,6 +9,17 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.6] - 2026-10-02
+
+### Fixed
+
+- Adding a language (e.g. `ru`) now persists: full programmatic settings writes bypass Settings API sanitize that expected a form `active_tab` and previously discarded `language_labels` / `banner_texts`.
+- Clearer Add Language UI when the site inherits multisite network defaults.
+
+### Changed
+
+- Compatibility reconfirmed against WordPress 7.1.2 (`Tested up to: 7.1` already covers the 7.1.x line; no plugin surface for editor/media/Abilities API changes).
+
 ## [1.3.5] - 2026-08-31
 
 ### Fixed
@@ -200,7 +211,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...HEAD
+[1.3.6]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...v1.3.5
 [1.3.4]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.2...v1.3.3

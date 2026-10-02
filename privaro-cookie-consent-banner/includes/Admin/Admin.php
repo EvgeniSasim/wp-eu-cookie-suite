@@ -203,17 +203,23 @@ final class Admin {
 		}
 
 		$settings = $this->read_context_settings();
-		if ( ! isset( $settings['language_labels'] ) ) {
+		if ( ! isset( $settings['language_labels'] ) || ! is_array( $settings['language_labels'] ) ) {
 			$settings['language_labels'] = array();
+		}
+		if ( ! isset( $settings['banner_texts'] ) || ! is_array( $settings['banner_texts'] ) ) {
+			$settings['banner_texts'] = array();
+		}
+		if ( ! isset( $settings['policy_texts'] ) || ! is_array( $settings['policy_texts'] ) ) {
+			$settings['policy_texts'] = array();
 		}
 
 		$settings['language_labels'][ $code ] = $label ?: strtoupper( $code );
 
-		// Prefill banner texts and policy texts from English defaults if not exists
-		if ( ! isset( $settings['banner_texts'][ $code ] ) ) {
+		// Prefill banner texts and policy texts from English defaults if not exists.
+		if ( empty( $settings['banner_texts'][ $code ] ) || ! is_array( $settings['banner_texts'][ $code ] ) ) {
 			$settings['banner_texts'][ $code ] = BannerTexts::get_defaults( 'en' );
 		}
-		if ( ! isset( $settings['policy_texts'][ $code ] ) ) {
+		if ( empty( $settings['policy_texts'][ $code ] ) || ! is_array( $settings['policy_texts'][ $code ] ) ) {
 			$settings['policy_texts'][ $code ] = array(
 				'intro'    => '',
 				'template' => BannerTexts::get_default_policy_template( 'en' ),
@@ -1058,7 +1064,13 @@ final class Admin {
 			return;
 		}
 
+		// update_option() runs Settings API sanitize_option_{name}. That callback expects a
+		// partial form submit with active_tab and would discard full programmatic writes
+		// (add/remove language, categories, revision bump). Temporarily remove it.
+		$filter = 'sanitize_option_wpeu_cs_settings';
+		remove_all_filters( $filter );
 		update_option( 'wpeu_cs_settings', $settings );
+		add_filter( $filter, array( $this, 'sanitize_settings' ) );
 	}
 
 	/**
@@ -1152,9 +1164,9 @@ final class Admin {
 					echo '<li>';
 					echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $current ) . '">' . esc_html( $label ) . '</a>';
 
-					// Allow removal if not a core language and not currently detected site locale
+					// Allow removal if not a core language and settings are editable.
 					$is_core = in_array( $code, array( 'en', 'de' ), true );
-					if ( ! $is_core ) {
+					if ( ! $is_core && ! $this->is_settings_readonly( $active_tab ) ) {
 						echo ' <a href="' . esc_url( $remove_url ) . '" class="wpeu-cs-remove-lang" onclick="return confirm(\'' . esc_js( __( 'Are you sure you want to remove this language? Settings for this language will be deleted.', 'privaro-cookie-consent-banner' ) ) . '\');" title="' . esc_attr__( 'Remove language', 'privaro-cookie-consent-banner' ) . '"><span class="dashicons dashicons-no-alt" style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span></a>';
 					}
 
@@ -1168,6 +1180,9 @@ final class Admin {
 		</div>
 
 		<div class="wpeu-cs-add-lang-form card">
+			<?php if ( $this->is_settings_readonly( $active_tab ) ) : ?>
+				<p class="description"><?php esc_html_e( 'Languages are managed in Network Admin while this site uses network defaults. Disable “Use network defaults” to add languages on this site.', 'privaro-cookie-consent-banner' ); ?></p>
+			<?php else : ?>
 			<form method="post" action="<?php echo esc_url( $base_url ); ?>">
 				<?php wp_nonce_field( 'wpeu_cs_add_language', 'wpeu_cs_add_lang_nonce' ); ?>
 				<input type="hidden" name="action" value="wpeu_cs_add_language">
@@ -1177,7 +1192,7 @@ final class Admin {
 				<div style="display: flex; gap: 10px; align-items: flex-end;">
 					<div>
 						<label for="new_lang_code" style="display: block; font-size: 11px;"><?php esc_html_e( 'Code (e.g. fr)', 'privaro-cookie-consent-banner' ); ?></label>
-						<input type="text" name="wpeu_cs_new_lang_code" id="new_lang_code" value="" class="small-text" required maxlength="5">
+						<input type="text" name="wpeu_cs_new_lang_code" id="new_lang_code" value="" class="small-text" required maxlength="5" pattern="[A-Za-z0-9_-]{2,5}" title="<?php esc_attr_e( '2–5 letters/numbers (e.g. ru, fr, pt)', 'privaro-cookie-consent-banner' ); ?>">
 					</div>
 					<div>
 						<label for="new_lang_label" style="display: block; font-size: 11px;"><?php esc_html_e( 'Display Name', 'privaro-cookie-consent-banner' ); ?></label>
@@ -1185,7 +1200,9 @@ final class Admin {
 					</div>
 					<?php submit_button( __( 'Add', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
 				</div>
+				<p class="description"><?php esc_html_e( 'After adding a language, open its tab above to edit banner and button texts.', 'privaro-cookie-consent-banner' ); ?></p>
 			</form>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
