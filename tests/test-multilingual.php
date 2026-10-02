@@ -5,6 +5,7 @@
  * @package WPEU\CookieSuite
  */
 
+use WPEU\CookieSuite\Admin\Admin;
 use WPEU\CookieSuite\Consent\BannerTexts;
 
 /**
@@ -27,14 +28,17 @@ class Test_Multilingual extends WP_UnitTestCase {
 	}
 
 	public function test_get_locales_from_settings(): void {
-		update_option( 'wpeu_cs_settings', array(
-			'banner_texts' => array(
-				'fr' => array( 'consent_modal_title' => 'Cookies' ),
-			),
-			'language_labels' => array(
-				'fr' => 'Français',
-			),
-		) );
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'banner_texts'    => array(
+					'fr' => array( 'consent_modal_title' => 'Cookies' ),
+				),
+				'language_labels' => array(
+					'fr' => 'Français',
+				),
+			)
+		);
 
 		$locales = BannerTexts::get_locales();
 		$this->assertArrayHasKey( 'fr', $locales );
@@ -42,10 +46,13 @@ class Test_Multilingual extends WP_UnitTestCase {
 	}
 
 	public function test_get_locales_filter(): void {
-		add_filter( 'wpeu_cs_locales', function( $locales ) {
-			$locales['it'] = 'Italiano';
-			return $locales;
-		} );
+		add_filter(
+			'wpeu_cs_locales',
+			function ( $locales ) {
+				$locales['it'] = 'Italiano';
+				return $locales;
+			}
+		);
 
 		$locales = BannerTexts::get_locales();
 		$this->assertArrayHasKey( 'it', $locales );
@@ -53,8 +60,8 @@ class Test_Multilingual extends WP_UnitTestCase {
 	}
 
 	public function test_get_strings_fallback(): void {
-		// No FR settings saved
-		$strings = BannerTexts::get_strings( 'fr' );
+		// No FR settings saved.
+		$strings     = BannerTexts::get_strings( 'fr' );
 		$en_defaults = BannerTexts::get_defaults( 'en' );
 
 		$this->assertEquals( $en_defaults['consent_modal_title'], $strings['consent_modal_title'] );
@@ -67,5 +74,77 @@ class Test_Multilingual extends WP_UnitTestCase {
 
 		$this->assertEquals( $template_en, $template_fr );
 		$this->assertNotEquals( $template_de, $template_fr );
+	}
+
+	/**
+	 * Settings API sanitize must not discard programmatic language writes (regression).
+	 */
+	public function test_write_context_settings_persists_new_language(): void {
+		$admin = new Admin();
+		$admin->register_settings();
+
+		$write = new ReflectionMethod( Admin::class, 'write_context_settings' );
+		$write->setAccessible( true );
+
+		$baseline = array(
+			'banner_texts' => array(
+				'en' => array( 'consent_modal_title' => 'We use cookies' ),
+			),
+		);
+		$write->invoke( $admin, $baseline );
+
+		$payload                       = $baseline;
+		$payload['language_labels']    = array( 'ru' => 'Русский' );
+		$payload['banner_texts']['ru'] = BannerTexts::get_defaults( 'en' );
+		$payload['policy_texts']       = array(
+			'ru' => array(
+				'intro'    => '',
+				'template' => BannerTexts::get_default_policy_template( 'en' ),
+			),
+		);
+
+		$write->invoke( $admin, $payload );
+
+		$saved = get_option( 'wpeu_cs_settings', array() );
+		$this->assertSame( 'Русский', $saved['language_labels']['ru'] ?? null );
+		$this->assertArrayHasKey( 'ru', $saved['banner_texts'] ?? array() );
+		$this->assertNotEmpty( $saved['banner_texts']['ru']['consent_modal_title'] ?? '' );
+
+		$locales = BannerTexts::get_locales();
+		$this->assertArrayHasKey( 'ru', $locales );
+		$this->assertSame( 'Русский', $locales['ru'] );
+	}
+
+	/**
+	 * Without sanitize bypass, a full update_option payload is treated as a form submit and dropped.
+	 */
+	public function test_settings_sanitize_without_active_tab_preserves_old_option(): void {
+		$admin = new Admin();
+		$admin->register_settings();
+
+		$write = new ReflectionMethod( Admin::class, 'write_context_settings' );
+		$write->setAccessible( true );
+		$write->invoke(
+			$admin,
+			array(
+				'banner_texts' => array(
+					'en' => array( 'consent_modal_title' => 'EN' ),
+				),
+			)
+		);
+
+		// Simulate what broke add-language before the fix: sanitize sees a full payload
+		// with no active_tab and returns the previous option unchanged.
+		$attempt = array(
+			'banner_texts'    => array(
+				'en' => array( 'consent_modal_title' => 'EN' ),
+				'ru' => BannerTexts::get_defaults( 'en' ),
+			),
+			'language_labels' => array( 'ru' => 'Русский' ),
+		);
+
+		$sanitized = $admin->sanitize_settings( $attempt );
+		$this->assertArrayNotHasKey( 'language_labels', $sanitized );
+		$this->assertArrayNotHasKey( 'ru', $sanitized['banner_texts'] ?? array() );
 	}
 }
