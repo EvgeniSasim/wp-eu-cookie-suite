@@ -311,10 +311,10 @@ final class Banner {
 	/**
 	 * Build one CookieConsent language translation block.
 	 *
-	 * @param array<string, string>        $texts           Banner strings.
-	 * @param array<string, array<string, mixed>> $all_categories Enabled categories.
-	 * @param bool                         $show_reject_all Whether reject button is shown.
-	 * @param string                       $footer_html     Consent modal footer HTML.
+	 * @param array  $texts           Banner strings.
+	 * @param array  $all_categories  Enabled categories.
+	 * @param bool   $show_reject_all Whether reject button is shown.
+	 * @param string $footer_html     Consent modal footer HTML.
 	 * @return array<string, mixed>
 	 */
 	private function build_cc_translation( array $texts, array $all_categories, bool $show_reject_all, string $footer_html ): array {
