@@ -9,6 +9,14 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-04
+
+### Added
+
+- Integrations: opt-in **Block unknown third-party scripts** — unmatched cross-origin scripts/styles are gated as marketing (same-origin theme/plugin scripts unchanged; default off for safer upgrades).
+- Banner: **per-language Privacy / Cookie Policy URLs** (Localized texts), with site-wide defaults as fallback; consent snapshots store the resolved locale URLs.
+- Dashboard **Getting started** checklist with deep links; Tools tab **section nav** (Cookie policy, Consent logging, Consent revision, Import / Export).
+
 ## [1.3.9] - 2026-10-04
 
 ### Fixed
@@ -245,7 +253,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.9...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.9...v1.4.0
 [1.3.9]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.8...v1.3.9
 [1.3.8]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...v1.3.8
 [1.3.7]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...v1.3.7

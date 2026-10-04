@@ -267,7 +267,43 @@ final class ScriptBlocker {
 			}
 		}
 
+		// Opt-in: block unknown cross-origin scripts as marketing until consented.
+		if ( ! empty( $settings['block_unknown_third_party'] ) && $this->is_third_party_src( $src ) ) {
+			return 'marketing';
+		}
+
 		return null;
+	}
+
+	/**
+	 * Whether a script/link src points at a different host than this site.
+	 *
+	 * Relative, same-host, data:, and blob: URLs are treated as first-party.
+	 *
+	 * @param string $src Script or stylesheet URL.
+	 */
+	private function is_third_party_src( string $src ): bool {
+		$src = trim( $src );
+		if ( '' === $src ) {
+			return false;
+		}
+
+		$lower = strtolower( $src );
+		if ( str_starts_with( $lower, 'data:' ) || str_starts_with( $lower, 'blob:' ) ) {
+			return false;
+		}
+
+		$host = wp_parse_url( $src, PHP_URL_HOST );
+		if ( ! is_string( $host ) || '' === $host ) {
+			return false;
+		}
+
+		$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
+		if ( ! is_string( $site_host ) || '' === $site_host ) {
+			return false;
+		}
+
+		return strtolower( $host ) !== strtolower( $site_host );
 	}
 
 	/**

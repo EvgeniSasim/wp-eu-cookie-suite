@@ -148,4 +148,42 @@ class Test_Banner extends WP_UnitTestCase {
 		$this->assertTrue( $config['categories']['necessary']['enabled'] );
 		$this->assertTrue( $config['categories']['necessary']['readOnly'] );
 	}
+
+	/**
+	 * Per-language policy URLs override site-wide defaults in the consent footer.
+	 */
+	public function test_get_config_per_language_policy_urls(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'privacy_policy_url' => 'https://example.com/privacy',
+				'cookie_policy_url'  => 'https://example.com/cookies',
+				'banner_texts'       => array(
+					'en' => array(
+						'privacy_policy_url' => 'https://example.com/en/privacy',
+						'cookie_policy_url'  => 'https://example.com/en/cookies',
+					),
+					'de' => array(
+						'privacy_policy_url' => 'https://example.com/de/datenschutz',
+					),
+				),
+				'language_labels'    => array(
+					'de' => 'Deutsch',
+				),
+			)
+		);
+
+		$banner = new Banner();
+		$method = new ReflectionMethod( Banner::class, 'get_config' );
+		$method->setAccessible( true );
+		$config = $method->invoke( $banner );
+
+		$en_footer = $config['language']['translations']['en']['consentModal']['footer'] ?? '';
+		$de_footer = $config['language']['translations']['de']['consentModal']['footer'] ?? '';
+
+		$this->assertStringContainsString( 'https://example.com/en/privacy', $en_footer );
+		$this->assertStringContainsString( 'https://example.com/en/cookies', $en_footer );
+		$this->assertStringContainsString( 'https://example.com/de/datenschutz', $de_footer );
+		$this->assertStringContainsString( 'https://example.com/cookies', $de_footer );
+	}
 }

@@ -123,6 +123,12 @@ final class ConsentLogger {
 			'template' => (string) ( $saved_policy['template'] ?? BannerTexts::get_default_policy_template( $locale ) ),
 		);
 
+		$resolved_urls = BannerTexts::resolve_policy_urls( $locale, $settings );
+		$policy_urls   = array(
+			'privacy_policy_url' => esc_url_raw( $resolved_urls['privacy_policy_url'] ),
+			'cookie_policy_url'  => esc_url_raw( $resolved_urls['cookie_policy_url'] ),
+		);
+
 		$categories_snapshot = array();
 		foreach ( Categories::get_all() as $slug => $category ) {
 			$categories_snapshot[ $slug ] = array(
@@ -143,10 +149,7 @@ final class ConsentLogger {
 			'eu_mode'                => ! empty( $settings['eu_mode'] ),
 			'show_reject_all'        => ! empty( $settings['show_reject_all'] ),
 			'google_consent_mode'    => ! empty( $settings['google_consent_mode'] ),
-			'policy_urls'            => array(
-				'privacy_policy_url' => esc_url_raw( (string) ( $settings['privacy_policy_url'] ?? '' ) ),
-				'cookie_policy_url'  => esc_url_raw( (string) ( $settings['cookie_policy_url'] ?? '' ) ),
-			),
+			'policy_urls'            => $policy_urls,
 			'banner_ui'              => array(
 				'layout'        => sanitize_text_field( (string) ( $banner_ui['layout'] ?? 'box' ) ),
 				'position'      => sanitize_text_field( (string) ( $banner_ui['position'] ?? 'bottom-right' ) ),

@@ -89,7 +89,7 @@ final class SettingsTransfer {
 		$current  = get_option( 'wpeu_cs_settings', array() );
 		$sanitized = is_array( $current ) ? $current : array();
 
-		$bool_keys = array( 'blocker_enabled', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke', 'use_network_defaults' );
+		$bool_keys = array( 'blocker_enabled', 'block_unknown_third_party', 'eu_mode', 'show_reject_all', 'google_consent_mode', 'keep_data_on_uninstall', 'consent_logging_enabled', 'consent_log_store_ip', 'reload_on_revoke', 'use_network_defaults' );
 		foreach ( $bool_keys as $key ) {
 			if ( array_key_exists( $key, $settings ) ) {
 				$sanitized[ $key ] = (bool) $settings[ $key ];
@@ -150,6 +150,7 @@ final class SettingsTransfer {
 
 		if ( isset( $settings['banner_texts'] ) && is_array( $settings['banner_texts'] ) ) {
 			$sanitized['banner_texts'] = array();
+			$url_text_keys             = array( 'privacy_policy_url', 'cookie_policy_url' );
 			foreach ( $settings['banner_texts'] as $locale => $texts ) {
 				if ( ! is_array( $texts ) ) {
 					continue;
@@ -158,7 +159,16 @@ final class SettingsTransfer {
 				if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
 					continue;
 				}
-				$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+				$clean = array();
+				foreach ( $texts as $key => $value ) {
+					$key = sanitize_key( (string) $key );
+					if ( in_array( $key, $url_text_keys, true ) ) {
+						$clean[ $key ] = esc_url_raw( (string) $value );
+					} else {
+						$clean[ $key ] = sanitize_text_field( (string) $value );
+					}
+				}
+				$sanitized['banner_texts'][ $locale ] = $clean;
 			}
 		}
 

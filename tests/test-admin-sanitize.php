@@ -62,27 +62,51 @@ class Test_Admin_Sanitize extends WP_UnitTestCase {
 	 */
 	public function test_sanitize_integrations_tab(): void {
 		$input = array(
-			'active_tab'            => 'integrations',
-			'blocker_enabled'       => '1',
-			'google_consent_mode'   => '1',
-			'enabled_services'      => array(
+			'active_tab'                => 'integrations',
+			'blocker_enabled'           => '1',
+			'block_unknown_third_party' => '1',
+			'google_consent_mode'       => '1',
+			'enabled_services'          => array(
 				'youtube' => '1',
 				'vimeo'   => '0',
 			),
-			'enabled_integrations'  => array( 'google_site_kit' => '1' ),
-			'theme_analytics_field' => 'custom_analytics',
-			'custom_block_rules'    => "rule1\nrule2",
+			'enabled_integrations'      => array( 'google_site_kit' => '1' ),
+			'theme_analytics_field'     => 'custom_analytics',
+			'custom_block_rules'        => "rule1\nrule2",
 		);
 
 		$sanitized = $this->admin->sanitize_settings( $input );
 
 		$this->assertTrue( $sanitized['blocker_enabled'] );
+		$this->assertTrue( $sanitized['block_unknown_third_party'] );
 		$this->assertTrue( $sanitized['google_consent_mode'] );
 		$this->assertTrue( $sanitized['enabled_services']['youtube'] );
 		$this->assertFalse( $sanitized['enabled_services']['vimeo'] );
 		$this->assertTrue( $sanitized['enabled_integrations']['google_site_kit'] );
 		$this->assertSame( 'custom_analytics', $sanitized['theme_analytics_field'] );
 		$this->assertSame( "rule1\nrule2", $sanitized['custom_block_rules'] );
+	}
+
+	/**
+	 * Per-language policy URLs are sanitized as URLs inside banner_texts.
+	 */
+	public function test_sanitize_banner_per_language_policy_urls(): void {
+		$input = array(
+			'active_tab' => 'banner',
+			'banner_texts' => array(
+				'de' => array(
+					'consent_modal_title' => 'Titel',
+					'privacy_policy_url'  => 'https://example.com/de/privacy',
+					'cookie_policy_url'   => 'https://example.com/de/cookies',
+				),
+			),
+		);
+
+		$sanitized = $this->admin->sanitize_settings( $input );
+
+		$this->assertSame( 'Titel', $sanitized['banner_texts']['de']['consent_modal_title'] );
+		$this->assertSame( 'https://example.com/de/privacy', $sanitized['banner_texts']['de']['privacy_policy_url'] );
+		$this->assertSame( 'https://example.com/de/cookies', $sanitized['banner_texts']['de']['cookie_policy_url'] );
 	}
 
 	/**
