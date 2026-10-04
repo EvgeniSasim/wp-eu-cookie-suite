@@ -21,17 +21,33 @@ class Test_Ajax_Log_Consent extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Run AJAX action and return decoded JSON when available.
+	 *
+	 * @param string $action Action name.
+	 * @return array<string, mixed>|string|null
+	 */
+	private function run_ajax( string $action ) {
+		try {
+			$this->_handleAjax( $action );
+		} catch ( WPAjaxDieContinueException | WPAjaxDieStopException $e ) {
+			$message = $e->getMessage();
+			if ( '-1' === (string) $message || -1 === $message ) {
+				return -1;
+			}
+			unset( $e );
+		}
+
+		$decoded = json_decode( $this->_last_response, true );
+		return is_array( $decoded ) ? $decoded : $this->_last_response;
+	}
+
+	/**
 	 * Test wpeu_cs_log_consent: invalid nonce.
 	 */
 	public function test_log_consent_invalid_nonce(): void {
 		$_POST['nonce'] = 'invalid';
-		try {
-			$this->_handleAjax( 'wpeu_cs_log_consent' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-		$this->assertSame( -1, $this->_last_response );
+		$result         = $this->run_ajax( 'wpeu_cs_log_consent' );
+		$this->assertSame( -1, $result );
 	}
 
 	/**
@@ -41,13 +57,8 @@ class Test_Ajax_Log_Consent extends WP_Ajax_UnitTestCase {
 		$_POST['nonce'] = wp_create_nonce( 'wpeu-cs-log' );
 		update_option( 'wpeu_cs_settings', array( 'consent_logging_enabled' => false ) );
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_log_consent' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_log_consent' );
+		$this->assertIsArray( $response );
 		$this->assertFalse( $response['success'] );
 		$this->assertSame( 'logging_disabled', $response['data'] );
 	}
@@ -77,22 +88,15 @@ class Test_Ajax_Log_Consent extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_log_consent' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_log_consent' );
+		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 		$this->assertArrayHasKey( 'log_id', $response['data'] );
 
-		// Verify database row.
 		global $wpdb;
 		$table = $wpdb->prefix . 'wpeu_consent_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $response['data']['log_id'] ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $response['data']['log_id'] ), ARRAY_A );
 
 		$this->assertNotNull( $row );
 		$this->assertSame( '550e8400-e29b-41d4-a716-446655440000', $row['consent_uuid'] );
@@ -120,20 +124,14 @@ class Test_Ajax_Log_Consent extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_log_consent' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_log_consent' );
+		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 
 		global $wpdb;
 		$table = $wpdb->prefix . 'wpeu_consent_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $response['data']['log_id'] ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $response['data']['log_id'] ), ARRAY_A );
 		$this->assertNull( $row['ip_hash'] );
 	}
 }

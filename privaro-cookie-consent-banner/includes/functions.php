@@ -72,11 +72,18 @@ if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 		}
 
 		$consent_data = wpeu_cs_parse_consent_cookie();
-		if ( ! array_key_exists( $category, $consent_data ) ) {
-			return false;
+		if ( array_key_exists( $category, $consent_data ) ) {
+			return (bool) $consent_data[ $category ];
 		}
 
-		return (bool) $consent_data[ $category ];
+		// Opt-out: no decision yet → treat optional categories as allowed.
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::instance()->get_effective_settings();
+		$eu_mode  = ! isset( $settings['eu_mode'] ) || ! empty( $settings['eu_mode'] );
+		if ( ! $eu_mode ) {
+			return true;
+		}
+
+		return false;
 	}
 }
 

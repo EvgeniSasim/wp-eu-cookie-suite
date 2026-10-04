@@ -27,29 +27,39 @@ class Test_Scanner_Ajax extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Run an AJAX action and capture JSON (wp_send_json_* throws ContinueException).
+	 *
+	 * @param string $action AJAX action name.
+	 * @return array<string, mixed>|null
+	 */
+	private function run_ajax( string $action ): ?array {
+		try {
+			$this->_handleAjax( $action );
+		} catch ( WPAjaxDieContinueException | WPAjaxDieStopException $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			unset( $e );
+		}
+
+		$decoded = json_decode( $this->_last_response, true );
+		return is_array( $decoded ) ? $decoded : null;
+	}
+
+	/**
 	 * Test wpeu_cs_get_scan_urls: nonce and capability.
 	 */
 	public function test_get_scan_urls_permissions(): void {
-		// No nonce.
+		// No nonce → check_ajax_referer dies with -1 (no JSON body).
 		try {
 			$this->_handleAjax( 'wpeu_cs_get_scan_urls' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
+			$this->fail( 'Expected AJAX die for missing nonce.' );
+		} catch ( WPAjaxDieStopException | WPAjaxDieContinueException $e ) {
+			$this->assertSame( '-1', (string) $e->getMessage() );
 		}
-		$response = json_decode( $this->_last_response, true );
-		$this->assertFalse( $response['success'] );
 
 		// Non-admin user.
 		wp_set_current_user( $this->factory->user->create( array( 'role' => 'subscriber' ) ) );
 		$_POST['nonce'] = wp_create_nonce( 'wpeu-cs-scanner' );
-		try {
-			$this->_handleAjax( 'wpeu_cs_get_scan_urls' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-		$response = json_decode( $this->_last_response, true );
+		$response       = $this->run_ajax( 'wpeu_cs_get_scan_urls' );
+		$this->assertIsArray( $response );
 		$this->assertFalse( $response['success'] );
 		$this->assertSame( 'Insufficient permissions.', $response['data']['message'] );
 	}
@@ -61,13 +71,8 @@ class Test_Scanner_Ajax extends WP_Ajax_UnitTestCase {
 		$_POST['nonce'] = wp_create_nonce( 'wpeu-cs-scanner' );
 		update_option( 'wpeu_cs_last_scan_time', time() );
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_get_scan_urls' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_get_scan_urls' );
+		$this->assertIsArray( $response );
 		$this->assertFalse( $response['success'] );
 		$this->assertSame( 'Please wait at least one minute between scans.', $response['data']['message'] );
 	}
@@ -79,14 +84,8 @@ class Test_Scanner_Ajax extends WP_Ajax_UnitTestCase {
 		$_POST['nonce'] = wp_create_nonce( 'wpeu-cs-scanner' );
 		delete_option( 'wpeu_cs_last_scan_time' );
 
-		// Mock sitemaps if needed, but the fallback should at least return home URL.
-		try {
-			$this->_handleAjax( 'wpeu_cs_get_scan_urls' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_get_scan_urls' );
+		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 		$this->assertContains( home_url( '/' ), $response['data']['urls'] );
 	}
@@ -119,14 +118,8 @@ class Test_Scanner_Ajax extends WP_Ajax_UnitTestCase {
 			3
 		);
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_scan_url' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_scan_url' );
+		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 
 		$cookies = $response['data']['results']['cookies'];
@@ -162,14 +155,8 @@ class Test_Scanner_Ajax extends WP_Ajax_UnitTestCase {
 		);
 		update_option( 'wpeu_cs_scan_results', $scan_results );
 
-		try {
-			$this->_handleAjax( 'wpeu_cs_import_scan' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected.
-			unset( $e );
-		}
-
-		$response = json_decode( $this->_last_response, true );
+		$response = $this->run_ajax( 'wpeu_cs_import_scan' );
+		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 		$this->assertStringContainsString( 'Imported 1 items', $response['data']['message'] );
 

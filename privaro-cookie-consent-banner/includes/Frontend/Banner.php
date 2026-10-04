@@ -24,6 +24,31 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
 final class Banner {
 
 	/**
+	 * Whether the current request is an admin Live Preview render.
+	 *
+	 * Prefer this over the WPEU_CS_PREVIEW constant so PHPUnit can reset state.
+	 *
+	 * @var bool
+	 */
+	private static bool $preview_mode = false;
+
+	/**
+	 * Enable or disable preview mode for this request.
+	 *
+	 * @param bool $enabled Preview flag.
+	 */
+	public static function set_preview_mode( bool $enabled ): void {
+		self::$preview_mode = $enabled;
+	}
+
+	/**
+	 * Whether banner assets should render in Live Preview mode.
+	 */
+	public static function is_preview_mode(): bool {
+		return self::$preview_mode;
+	}
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -35,7 +60,7 @@ final class Banner {
 	 * Enqueue assets.
 	 */
 	public function enqueue_assets(): void {
-		if ( ( is_admin() && ! defined( 'WPEU_CS_PREVIEW' ) ) || is_login() ) {
+		if ( ( is_admin() && ! self::is_preview_mode() ) || is_login() ) {
 			return;
 		}
 
@@ -73,7 +98,7 @@ final class Banner {
 	 * Attach inline banner styles and CookieConsent bootstrap via wp_enqueue API.
 	 */
 	public function attach_inline_assets(): void {
-		if ( ( is_admin() && ! defined( 'WPEU_CS_PREVIEW' ) ) || is_login() ) {
+		if ( ( is_admin() && ! self::is_preview_mode() ) || is_login() ) {
 			return;
 		}
 
@@ -86,7 +111,7 @@ final class Banner {
 		$banner_ui     = $settings['banner_ui'] ?? array();
 		$theme         = $banner_ui['theme'] ?? 'light';
 		$primary       = sanitize_hex_color( $banner_ui['primary_color'] ?? '' ) ?: '#30363c';
-		$is_preview    = defined( 'WPEU_CS_PREVIEW' );
+		$is_preview    = self::is_preview_mode();
 		$cookie_secure = is_ssl() && ! $is_preview;
 		$wp_consent_map   = Categories::get_wp_consent_map();
 		$locale           = BannerTexts::get_active_locale();
@@ -177,10 +202,16 @@ final class Banner {
 			. 'window.addEventListener("wpeu-cs-revoke",function(){const secureAttr=' . $secure_js . ';'
 			. 'const categories=Object.keys(cc.getConfig().categories);logConsentEvent("revoke",{});'
 			. 'const revokeAttrs="; path="+cookiePath+"; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"+secureAttr+cookieDomainAttr;'
-			. 'categories.forEach(function(cat){document.cookie="wpeu_"+cat+"="+revokeAttrs;});'
+			. 'const deniedDetail={};const mapping=' . wp_json_encode( $wp_consent_map ) . ';'
+			. 'const wpConsentState={};'
+			. 'Object.keys(mapping).forEach(function(slug){const wpCat=mapping[slug];if(wpCat){wpConsentState[wpCat]=false;}});'
+			. 'categories.forEach(function(cat){deniedDetail[cat]=false;document.cookie="wpeu_"+cat+"="+revokeAttrs;});'
 			. 'document.cookie="wpeu_consent="+revokeAttrs;'
 			. 'document.cookie="wpeu_consent_uuid="+revokeAttrs;'
-			. 'cc.reset(true);wpeuUuid="";document.dispatchEvent(new CustomEvent("wpeu-consent-revoked"));'
+			. 'Object.keys(wpConsentState).forEach(function(wpCat){if(typeof window.wp_set_consent==="function"){window.wp_set_consent(wpCat,"deny");}});'
+			. 'cc.reset(true);wpeuUuid="";'
+			. 'document.dispatchEvent(new CustomEvent("wpeu-consent-updated",{detail:deniedDetail}));'
+			. 'document.dispatchEvent(new CustomEvent("wpeu-consent-revoked"));'
 			. 'if(' . $reload_js . '){window.location.reload();}else{cc.run(ccConfig);if(typeof cc.show==="function"){cc.show(true);}}});'
 			. '});})();';
 
@@ -202,54 +233,53 @@ final class Banner {
 	 * @return array<string, mixed>
 	 */
 	private function get_config(): array {
-		$settings       = SettingsRepository::instance()->get_effective_settings();
-		$all_categories = Categories::get_enabled_for_banner();
-		$show_reject_all = $settings['show_reject_all'] ?? true;
-		$privacy_url    = $settings['privacy_policy_url'] ?? '';
-		$cookie_url     = $settings['cookie_policy_url'] ?? '';
-		$eu_mode        = $settings['eu_mode'] ?? true;
+		$settings        = SettingsRepository::instance()->get_effective_settings();
+		$all_categories  = Categories::get_enabled_for_banner();
+		$eu_mode         = ! isset( $settings['eu_mode'] ) || ! empty( $settings['eu_mode'] );
+		$show_reject_all = ! empty( $settings['show_reject_all'] );
+		// ePrivacy: refuse must be as easy as accept while in EU opt-in mode.
+		if ( $eu_mode ) {
+			$show_reject_all = true;
+		}
+		$privacy_url = $settings['privacy_policy_url'] ?? '';
+		$cookie_url  = $settings['cookie_policy_url'] ?? '';
 
-		$banner_ui   = is_array( $settings['banner_ui'] ?? null ) ? $settings['banner_ui'] : array();
-		$layout_raw  = (string) ( $banner_ui['layout'] ?? 'box' );
-		$layout      = in_array( $layout_raw, array( 'box', 'bar' ), true ) ? $layout_raw : 'box';
-		$position    = self::map_consent_modal_position( (string) ( $banner_ui['position'] ?? 'bottom-right' ) );
+		$banner_ui  = is_array( $settings['banner_ui'] ?? null ) ? $settings['banner_ui'] : array();
+		$layout_raw = (string) ( $banner_ui['layout'] ?? 'box' );
+		$layout     = in_array( $layout_raw, array( 'box', 'bar' ), true ) ? $layout_raw : 'box';
+		$position   = self::map_consent_modal_position( (string) ( $banner_ui['position'] ?? 'bottom-right' ) );
 
 		$locale = BannerTexts::get_active_locale();
 
 		$categories_config = array();
 		foreach ( $all_categories as $id => $category ) {
+			$read_only = ! empty( $category['read_only'] );
+			// Opt-out: optional categories start enabled; opt-in (EU): disabled until consent.
+			$enabled = $read_only ? true : ( $eu_mode ? false : true );
 			$categories_config[ $id ] = array(
-				'readOnly' => $category['read_only'] ?? false,
-				'enabled'  => $category['enabled'] ?? false,
+				'readOnly' => $read_only,
+				'enabled'  => $enabled,
 			);
 		}
-
-		$footer_links = array();
-		if ( ! empty( $privacy_url ) ) {
-			$footer_links[] = '<a href="' . esc_url( $privacy_url ) . '">' . __( 'Privacy Policy', 'privaro-cookie-consent-banner' ) . '</a>';
-		}
-		if ( ! empty( $cookie_url ) ) {
-			$footer_links[] = '<a href="' . esc_url( $cookie_url ) . '">' . __( 'Cookie Policy', 'privaro-cookie-consent-banner' ) . '</a>';
-		}
-
-		$footer_html = implode( ' | ', $footer_links );
 
 		// Ship every configured locale so CookieConsent can match <html lang="ru-RU"> → ru.
 		$translations = array();
 		foreach ( array_keys( BannerTexts::get_locales() ) as $lang_code ) {
+			$texts = BannerTexts::get_strings( $lang_code );
 			$translations[ $lang_code ] = $this->build_cc_translation(
-				BannerTexts::get_strings( $lang_code ),
+				$texts,
 				$all_categories,
-				(bool) $show_reject_all,
-				$footer_html
+				$show_reject_all,
+				$this->build_footer_html( $privacy_url, $cookie_url, $texts )
 			);
 		}
 		if ( ! isset( $translations[ $locale ] ) ) {
+			$texts = BannerTexts::get_strings( $locale );
 			$translations[ $locale ] = $this->build_cc_translation(
-				BannerTexts::get_strings( $locale ),
+				$texts,
 				$all_categories,
-				(bool) $show_reject_all,
-				$footer_html
+				$show_reject_all,
+				$this->build_footer_html( $privacy_url, $cookie_url, $texts )
 			);
 		}
 
@@ -260,7 +290,7 @@ final class Banner {
 
 		// Document lang (e.g. ru-RU) wins over PHP site locale when translations exist.
 		// Preview forces locale via filter — skip autoDetect so admin tab language is shown.
-		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
+		if ( ! self::is_preview_mode() ) {
 			$language['autoDetect'] = 'document';
 		}
 
@@ -299,13 +329,34 @@ final class Banner {
 			'language'   => $language,
 		);
 
-		if ( defined( 'WPEU_CS_PREVIEW' ) ) {
+		if ( self::is_preview_mode() ) {
 			$config['autoShow']                   = false;
 			$config['cookie']['name']             = 'wpeu_cs_preview_cc';
 			$config['cookie']['expiresAfterDays'] = 1;
 		}
 
 		return $config;
+	}
+
+	/**
+	 * Build consent modal footer links using per-locale labels.
+	 *
+	 * @param string               $privacy_url Privacy policy URL.
+	 * @param string               $cookie_url  Cookie policy URL.
+	 * @param array<string,string> $texts       Locale banner strings.
+	 */
+	private function build_footer_html( string $privacy_url, string $cookie_url, array $texts ): string {
+		$footer_links = array();
+		if ( '' !== $privacy_url ) {
+			$label = (string) ( $texts['privacy_policy_link'] ?? 'Privacy Policy' );
+			$footer_links[] = '<a href="' . esc_url( $privacy_url ) . '">' . esc_html( $label ) . '</a>';
+		}
+		if ( '' !== $cookie_url ) {
+			$label = (string) ( $texts['cookie_policy_link'] ?? 'Cookie Policy' );
+			$footer_links[] = '<a href="' . esc_url( $cookie_url ) . '">' . esc_html( $label ) . '</a>';
+		}
+
+		return implode( ' | ', $footer_links );
 	}
 
 	/**

@@ -59,7 +59,7 @@ final class Plugin {
 	 */
 	private function define_constants(): void {
 		if ( ! defined( 'WPEU_CS_VERSION' ) ) {
-			define( 'WPEU_CS_VERSION', '1.3.8' );
+			define( 'WPEU_CS_VERSION', '1.3.9' );
 		}
 		if ( ! defined( 'WPEU_CS_FILE' ) ) {
 			define( 'WPEU_CS_FILE', dirname( __DIR__ ) . '/privaro-cookie-consent-banner.php' );
@@ -221,6 +221,12 @@ final class Plugin {
 	 */
 	public function init(): void {
 		$this->create_tables();
+
+		load_plugin_textdomain(
+			'privaro-cookie-consent-banner',
+			false,
+			dirname( plugin_basename( WPEU_CS_FILE ) ) . '/languages'
+		);
 
 		if ( is_admin() ) {
 			add_action( 'admin_notices', array( $this, 'maybe_show_legacy_plugin_notice' ) );

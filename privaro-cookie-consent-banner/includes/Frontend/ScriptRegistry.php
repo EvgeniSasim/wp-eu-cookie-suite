@@ -60,8 +60,18 @@ final class ScriptRegistry {
 				'patterns' => array(
 					self::host( 'googletagmanager', 'com' ),
 					'gtm.js',
+					'gtm.start',
+					'GTM-',
+				),
+			),
+			'google-ads'       => array(
+				'label'    => 'Google Ads / DoubleClick',
+				'category' => Categories::MARKETING,
+				'patterns' => array(
 					self::host( 'doubleclick', 'net' ),
 					self::host( 'googleadservices', 'com' ),
+					self::host( 'googlesyndication', 'com' ),
+					self::host( 'googleads', 'g', 'doubleclick', 'net' ),
 				),
 			),
 			'facebook-pixel'   => array(

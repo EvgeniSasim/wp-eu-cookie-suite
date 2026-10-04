@@ -4,6 +4,11 @@
 (function($) {
 	'use strict';
 	$(function() {
+		const i18n = (window.wpeuCsAdmin && window.wpeuCsAdmin.i18n) ? window.wpeuCsAdmin.i18n : {};
+		const t = function(key, fallback) {
+			return i18n[key] || fallback;
+		};
+
 		const $startBtn = $('#wpeu-cs-start-scan');
 		const $progress = $('#wpeu-cs-scan-progress');
 		const $progressBar = $('.wpeu-cs-progress-fill');
@@ -16,7 +21,7 @@
 				$startBtn.siblings('.spinner').addClass('is-active');
 				$progress.show();
 				$progressBar.css('width', '0%');
-				$status.text('Initializing scan...');
+				$status.text(t('initializingScan', 'Initializing scan...'));
 
 				getUrls();
 			});
@@ -34,29 +39,35 @@
 					if (response.success) {
 						const urls = response.data.urls;
 						if (urls.length === 0) {
-							finishScan('No URLs found to scan.');
+							finishScan(t('noUrls', 'No URLs found to scan.'));
 							return;
 						}
 						scanUrls(urls, 0);
 					} else {
-						finishScan(response.data.message || 'Error fetching URLs.');
+						finishScan(response.data.message || t('errorFetchingUrls', 'Error fetching URLs.'));
 					}
 				},
 				error: function() {
-					finishScan('Network error while fetching URLs.');
+					finishScan(t('networkErrorUrls', 'Network error while fetching URLs.'));
 				}
 			});
 		}
 
 		function scanUrls(urls, index) {
 			if (index >= urls.length) {
-				finishScan('Scan complete!', true);
+				finishScan(t('scanComplete', 'Scan complete!'), true);
 				return;
 			}
 
 			const progress = Math.round(((index + 1) / urls.length) * 100);
 			$progressBar.css('width', progress + '%');
-			$status.text(`Scanning (${index + 1}/${urls.length}): ${urls[index]}`);
+			const template = t('scanningProgress', 'Scanning (%1$d/%2$d): %3$s');
+			$status.text(
+				template
+					.replace('%1$d', String(index + 1))
+					.replace('%2$d', String(urls.length))
+					.replace('%3$s', urls[index])
+			);
 
 			$.ajax({
 				url: ajaxurl,
@@ -91,8 +102,25 @@
 		const $previewFrame = $('#wpeu-cs-banner-preview');
 		const $refreshBtn = $('#wpeu-cs-refresh-preview');
 		const previewNonce = $('#wpeu_cs_preview_nonce').val();
+		const $euMode = $('input[name="wpeu_cs_settings[eu_mode]"]');
+		const $rejectAll = $('input[name="wpeu_cs_settings[show_reject_all]"]');
 		let previewTimer = null;
 		let previewXhr = null;
+
+		function syncRejectAllWithEuMode() {
+			if (!$euMode.length || !$rejectAll.length) {
+				return;
+			}
+			const euOn = $euMode.is(':checked');
+			if (euOn) {
+				$rejectAll.prop('checked', true).prop('disabled', true);
+			} else {
+				$rejectAll.prop('disabled', false);
+			}
+		}
+
+		syncRejectAllWithEuMode();
+		$euMode.on('change', syncRejectAllWithEuMode);
 
 		function normalizeLocaleCode(code) {
 			if (!code) {
@@ -165,8 +193,8 @@
 				},
 				banner_texts: {},
 				enabled_categories: [],
-				show_reject_all: $('input[name="wpeu_cs_settings[show_reject_all]"]').is(':checked'),
-				eu_mode: $('input[name="wpeu_cs_settings[eu_mode]"]').is(':checked')
+				show_reject_all: $rejectAll.is(':checked') || $euMode.is(':checked'),
+				eu_mode: $euMode.is(':checked')
 			};
 
 			$('input[name="wpeu_cs_settings[enabled_categories][]"]:checked').each(function() {
@@ -187,7 +215,7 @@
 			}
 
 			if ($refreshBtn.length) {
-				$refreshBtn.prop('disabled', true).text('Updating...');
+				$refreshBtn.prop('disabled', true).text(t('updatingPreview', 'Updating...'));
 			}
 
 			if (previewXhr && typeof previewXhr.abort === 'function') {
@@ -205,7 +233,7 @@
 				},
 				success: function(response) {
 					if (!response || response.indexOf('CookieConsent') === -1) {
-						showPreviewError('Preview response invalid.');
+						showPreviewError(t('previewInvalid', 'Preview response invalid.'));
 						return;
 					}
 					writePreviewHtml(response);
@@ -214,12 +242,12 @@
 					if (status === 'abort') {
 						return;
 					}
-					showPreviewError('Preview failed to load.');
+					showPreviewError(t('previewFailed', 'Preview failed to load.'));
 				},
 				complete: function() {
 					previewXhr = null;
 					if ($refreshBtn.length) {
-						$refreshBtn.prop('disabled', false).text('Refresh Preview');
+						$refreshBtn.prop('disabled', false).text(t('refreshPreview', 'Refresh Preview'));
 					}
 				}
 			});
@@ -288,13 +316,13 @@
 						alert(response.data.message);
 						window.location.href = window.location.href.replace('tab=scanner', 'tab=cookies');
 					} else {
-						alert(response.data.message || 'Error importing items.');
+						alert(response.data.message || t('importError', 'Error importing items.'));
 						$btn.prop('disabled', false);
 						$btn.siblings('.spinner').removeClass('is-active');
 					}
 				},
 				error: function() {
-					alert('Network error while importing items.');
+					alert(t('importNetworkError', 'Network error while importing items.'));
 					$btn.prop('disabled', false);
 					$btn.siblings('.spinner').removeClass('is-active');
 				}

@@ -9,6 +9,23 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.9] - 2026-10-04
+
+### Fixed
+
+- Banner default texts no longer pass through `__()` (admin locale no longer contaminates EN packs / Add Language seeds).
+- Revoke consent now denies WP Consent API categories and fires `wpeu-consent-updated` so Google Consent Mode resets without relying on reload.
+- Google Ads / DoubleClick hosts moved from GTM/statistics to a dedicated marketing service.
+- Scanner rejects non–same-site URLs (SSRF) and classifies unknown items as marketing (manual review).
+- Opt-out mode enables optional categories by default; EU mode always shows Reject All.
+- Admin JS strings localized via `wp_localize_script`; clearer Banner tab site-wide vs per-language sections.
+- readme shortcodes corrected (`wpeu_cookie_table`, `wpeu_revoke_consent`).
+
+### Added
+
+- `Domain Path: /languages` and `load_plugin_textdomain()` for admin UI translations.
+- Google Consent Mode defaults for `personalization_storage` / `security_storage`.
+
 ## [1.3.8] - 2026-10-04
 
 ### Fixed
@@ -228,7 +245,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.8...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.9...HEAD
+[1.3.9]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.8...v1.3.9
 [1.3.8]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...v1.3.8
 [1.3.7]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...v1.3.7
 [1.3.6]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...v1.3.6

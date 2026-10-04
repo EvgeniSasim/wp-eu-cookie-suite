@@ -690,8 +690,11 @@ final class Admin {
 
 			$sanitized['privacy_policy_url'] = isset( $input['privacy_policy_url'] ) ? esc_url_raw( $input['privacy_policy_url'] ) : '';
 			$sanitized['cookie_policy_url']  = isset( $input['cookie_policy_url'] ) ? esc_url_raw( $input['cookie_policy_url'] ) : '';
-			$sanitized['show_reject_all']    = isset( $input['show_reject_all'] );
 			$sanitized['eu_mode']            = isset( $input['eu_mode'] );
+			$sanitized['show_reject_all']    = isset( $input['show_reject_all'] );
+			if ( ! empty( $sanitized['eu_mode'] ) ) {
+				$sanitized['show_reject_all'] = true;
+			}
 
 			if ( isset( $input['banner_texts'] ) && is_array( $input['banner_texts'] ) ) {
 				if ( ! isset( $sanitized['banner_texts'] ) || ! is_array( $sanitized['banner_texts'] ) ) {
@@ -811,6 +814,28 @@ final class Admin {
 			array( 'jquery', 'wp-color-picker' ),
 			WPEU_CS_VERSION,
 			true
+		);
+
+		wp_localize_script(
+			'wpeu-cs-admin',
+			'wpeuCsAdmin',
+			array(
+				'i18n' => array(
+					'initializingScan'   => __( 'Initializing scan...', 'privaro-cookie-consent-banner' ),
+					'noUrls'             => __( 'No URLs found to scan.', 'privaro-cookie-consent-banner' ),
+					'errorFetchingUrls'  => __( 'Error fetching URLs.', 'privaro-cookie-consent-banner' ),
+					'networkErrorUrls'   => __( 'Network error while fetching URLs.', 'privaro-cookie-consent-banner' ),
+					'scanComplete'       => __( 'Scan complete!', 'privaro-cookie-consent-banner' ),
+					/* translators: 1: current index, 2: total URLs, 3: URL being scanned */
+					'scanningProgress'   => __( 'Scanning (%1$d/%2$d): %3$s', 'privaro-cookie-consent-banner' ),
+					'updatingPreview'    => __( 'Updating...', 'privaro-cookie-consent-banner' ),
+					'refreshPreview'     => __( 'Refresh Preview', 'privaro-cookie-consent-banner' ),
+					'previewInvalid'     => __( 'Preview response invalid.', 'privaro-cookie-consent-banner' ),
+					'previewFailed'      => __( 'Preview failed to load.', 'privaro-cookie-consent-banner' ),
+					'importError'        => __( 'Error importing items.', 'privaro-cookie-consent-banner' ),
+					'importNetworkError' => __( 'Network error while importing items.', 'privaro-cookie-consent-banner' ),
+				),
+			)
 		);
 	}
 
@@ -1423,12 +1448,8 @@ final class Admin {
 			?>
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
 
-			<h3>
-			<?php
-			/* translators: %s: language label */
-			printf( esc_html__( 'Banner Settings (%s)', 'privaro-cookie-consent-banner' ), esc_html( $locales[ $current_lang ] ) );
-			?>
-			</h3>
+			<h3><?php esc_html_e( 'Site-wide banner settings', 'privaro-cookie-consent-banner' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'These options apply to every language. Policy URLs are site-wide (use your multilingual plugin’s translated pages if needed).', 'privaro-cookie-consent-banner' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'privaro-cookie-consent-banner' ); ?></th>
@@ -1463,24 +1484,33 @@ final class Admin {
 					<th scope="row"><?php esc_html_e( 'Show "Reject All"', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<label>
-							<input type="checkbox" name="wpeu_cs_settings[show_reject_all]" value="1" <?php checked( $show_reject_all ); ?>>
+							<input type="checkbox" name="wpeu_cs_settings[show_reject_all]" value="1" <?php checked( $show_reject_all || $eu_mode ); ?> <?php disabled( $eu_mode ); ?>>
 							<?php esc_html_e( 'Show the "Reject All" button in the banner.', 'privaro-cookie-consent-banner' ); ?>
 						</label>
+						<?php if ( $eu_mode ) : ?>
+							<p class="description"><?php esc_html_e( 'Required while Strict EU Mode (opt-in) is enabled.', 'privaro-cookie-consent-banner' ); ?></p>
+						<?php endif; ?>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Strict EU Mode', 'privaro-cookie-consent-banner' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Strict EU Mode (opt-in)', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="wpeu_cs_settings[eu_mode]" value="1" <?php checked( $eu_mode ); ?>>
-							<?php esc_html_e( 'Enable strict EU mode (block all non-necessary cookies until consent).', 'privaro-cookie-consent-banner' ); ?>
+							<?php esc_html_e( 'Block non-essential cookies until the visitor consents (recommended for GDPR / ePrivacy).', 'privaro-cookie-consent-banner' ); ?>
 						</label>
 					</td>
 				</tr>
 			</table>
 
 			<hr>
-			<h3><?php esc_html_e( 'Localized Texts', 'privaro-cookie-consent-banner' ); ?></h3>
+			<h3>
+			<?php
+			/* translators: %s: language label */
+			printf( esc_html__( 'Localized texts (%s)', 'privaro-cookie-consent-banner' ), esc_html( $locales[ $current_lang ] ) );
+			?>
+			</h3>
+			<p class="description"><?php esc_html_e( 'Edit banner copy for the language selected above, then Save Changes. Live Preview follows this language tab.', 'privaro-cookie-consent-banner' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Consent Modal Title', 'privaro-cookie-consent-banner' ); ?></th>
@@ -1620,6 +1650,7 @@ final class Admin {
 
 			<div class="wpeu-cs-preview-container">
 				<h3><?php esc_html_e( 'Live Preview', 'privaro-cookie-consent-banner' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Updates when you leave a text field or click Refresh. Follows the language tab selected above.', 'privaro-cookie-consent-banner' ); ?></p>
 				<div class="wpeu-cs-preview-frame-wrapper" style="border: 1px solid #ccd0d4; background: #f6f7f7;">
 					<iframe id="wpeu-cs-banner-preview" src="about:blank" width="100%" height="400" frameborder="0"></iframe>
 				</div>
@@ -2078,7 +2109,7 @@ final class Admin {
 		} elseif ( 'lang_removed' === $message ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		} elseif ( 'invalid_code' === $message ) {
-			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use 2-5 characters.', 'privaro-cookie-consent-banner' ) . '</p></div>';
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use a 2–3 letter ISO code such as ru, de, or fr (not ru-RU).', 'privaro-cookie-consent-banner' ) . '</p></div>';
 		}
 		?>
 
@@ -2353,6 +2384,7 @@ final class Admin {
 			wp_die( -1 );
 		}
 
+		\WPEU\CookieSuite\Frontend\Banner::set_preview_mode( true );
 		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
 			define( 'WPEU_CS_PREVIEW', true );
 		}
@@ -2371,23 +2403,43 @@ final class Admin {
 			);
 		}
 
-		// Mock settings for preview
+		// Minimal document chrome — skip admin-bar/emoji hooks that emit WP 6.4+ deprecations.
+		show_admin_bar( false );
+		remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+		remove_action( 'wp_print_styles', 'print_emoji_styles' );
+		remove_action( 'wp_head', 'wp_admin_bar_header' );
+		remove_action( 'wp_head', '_admin_bar_bump_cb' );
+
+		// Build preview settings once and short-circuit get_option.
+		$base_settings = get_option( 'wpeu_cs_settings', array() );
+		if ( ! is_array( $base_settings ) ) {
+			$base_settings = array();
+		}
+		$preview_settings = $base_settings;
+		if ( isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ) {
+			$preview_settings = $this->merge_preview_settings_from_post( $base_settings, wp_unslash( $_POST['settings'] ) );
+		}
+		remove_all_filters( 'pre_option_wpeu_cs_settings' );
 		add_filter(
-			'option_wpeu_cs_settings',
-			function ( $settings ) {
-				if ( ! isset( $_POST['settings'] ) || ! is_array( $_POST['settings'] ) ) {
-					return $settings;
-				}
-
-				if ( ! is_array( $settings ) ) {
-					$settings = array();
-				}
-
-				return $this->merge_preview_settings_from_post( $settings, wp_unslash( $_POST['settings'] ) );
+			'pre_option_wpeu_cs_settings',
+			static function () use ( $preview_settings ) {
+				return $preview_settings;
 			}
 		);
 
-		new \WPEU\CookieSuite\Frontend\Banner();
+		// Fresh script/style queues — PHPUnit reuses the process across AJAX calls.
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Isolated preview document.
+		$GLOBALS['wp_scripts'] = new \WP_Scripts();
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Isolated preview document.
+		$GLOBALS['wp_styles'] = new \WP_Styles();
+
+		// Instantiate and enqueue directly — on admin-ajax, wp_enqueue_scripts may already
+		// have fired, so hooking alone would leave the preview without banner assets.
+		$banner = new \WPEU\CookieSuite\Frontend\Banner();
+		remove_action( 'wp_enqueue_scripts', array( $banner, 'enqueue_assets' ) );
+		remove_action( 'wp_enqueue_scripts', array( $banner, 'attach_inline_assets' ), 100 );
+		$banner->enqueue_assets();
+		$banner->attach_inline_assets();
 
 		wp_register_style( 'wpeu-cs-preview-layout', false, array(), WPEU_CS_VERSION );
 		wp_enqueue_style( 'wpeu-cs-preview-layout' );
@@ -2417,7 +2469,8 @@ final class Admin {
 		</body>
 		</html>
 		<?php
-		exit;
+		// Use wp_die() so PHPUnit AJAX tests can catch it (bare exit aborts the suite).
+		wp_die( '', '', array( 'response' => 200 ) );
 	}
 
 	/**

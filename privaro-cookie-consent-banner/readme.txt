@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -42,7 +42,7 @@ Professional GDPR cookie consent for WordPress: opt-in banner, script blocking, 
 2. Configure the **Banner** tab (texts, colors, policy URLs).
 3. Enable **Integrations** → Google Consent Mode v2 and Script blocker if you use analytics/ads.
 4. Run the **Scanner** and save cookies to your inventory.
-5. Add `[wpeu_cookie_policy]` / `[wpeu_cookie_declaration]` to your legal pages and `[wpeu_manage_consent]` to the footer.
+5. Add `[wpeu_cookie_policy]` / `[wpeu_cookie_table]` to your legal pages and `[wpeu_manage_consent]` to the footer.
 6. Test in a private browser window — analytics tags should stay blocked until consent.
 
 **Legal note:** This plugin provides technical compliance tools, not legal advice. You are responsible for policy texts and regulatory compliance.
@@ -69,7 +69,7 @@ By default, the plugin does not collect or transmit any personal data to third-p
 1. Configure the **Banner** tab (appearance, texts, privacy/cookie policy URLs).
 2. Enable **Integrations** (Consent Mode v2, script blocker) if you use Google Analytics, GTM, or ads.
 3. Run the **Scanner** and review cookies in the **Cookies** tab.
-4. Add shortcodes to your site: `[wpeu_cookie_policy]`, `[wpeu_cookie_declaration]`, `[wpeu_manage_consent]`.
+4. Add shortcodes to your site: `[wpeu_cookie_policy]`, `[wpeu_cookie_table]`, `[wpeu_manage_consent]`, `[wpeu_revoke_consent]`.
 
 = Multisite =
 
@@ -165,6 +165,11 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.3.9 =
+* i18n: load textdomain, Domain Path, literal EN/DE banner defaults (no gettext contamination under RU admin).
+* Compliance: revoke resets GCM/WP Consent; Reject All forced in EU mode; Google Ads hosts gated by marketing; scanner same-site only.
+* Admin UI: clearer site-wide vs localized sections; localized admin.js strings; Live Preview help text.
 
 = 1.3.8 =
 * Fix frontend languages: CookieConsent now receives all configured translations and auto-detects from document lang (e.g. ru-RU → ru).

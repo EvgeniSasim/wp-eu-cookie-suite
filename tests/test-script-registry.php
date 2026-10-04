@@ -75,4 +75,23 @@ class Test_Script_Registry extends WP_UnitTestCase {
 
 		$this->assertNull( $category );
 	}
+
+	/**
+	 * Google Ads / DoubleClick hosts are marketing, not statistics.
+	 */
+	public function test_google_ads_hosts_are_marketing(): void {
+		$category = ScriptRegistry::find_category_for_script(
+			'https://googleads.g.doubleclick.net/pagead/viewthroughconversion',
+			''
+		);
+
+		$this->assertSame( Categories::MARKETING, $category );
+
+		$ads = ScriptRegistry::find_category_for_script(
+			'https://www.googleadservices.com/pagead/conversion.js',
+			''
+		);
+
+		$this->assertSame( Categories::MARKETING, $ads );
+	}
 }

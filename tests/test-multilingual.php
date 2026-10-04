@@ -224,4 +224,17 @@ class Test_Multilingual extends WP_UnitTestCase {
 		$this->assertSame( $defaults['consent_modal_title'], $strings['consent_modal_title'] );
 		$this->assertSame( 'Accept all custom', $strings['accept_all_btn'] );
 	}
+
+	/**
+	 * Defaults must stay English literals even when admin locale is Russian.
+	 */
+	public function test_get_defaults_not_contaminated_by_admin_locale(): void {
+		switch_to_locale( 'ru_RU' );
+		$en = BannerTexts::get_defaults( 'en' );
+		$de = BannerTexts::get_defaults( 'de' );
+		restore_previous_locale();
+
+		$this->assertSame( 'We use cookies', $en['consent_modal_title'] );
+		$this->assertSame( 'Wir verwenden Cookies', $de['consent_modal_title'] );
+	}
 }

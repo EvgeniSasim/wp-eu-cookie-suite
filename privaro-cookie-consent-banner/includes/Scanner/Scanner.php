@@ -99,7 +99,7 @@ final class Scanner {
 			}
 		}
 
-		$urls = array_unique( $urls );
+		$urls = array_unique( array_filter( $urls, array( $this, 'is_allowed_scan_url' ) ) );
 		return array_values( array_slice( $urls, 0, 50 ) );
 	}
 
@@ -114,8 +114,8 @@ final class Scanner {
 		}
 
 		$url = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '';
-		if ( empty( $url ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid URL.', 'privaro-cookie-consent-banner' ) ) );
+		if ( empty( $url ) || ! $this->is_allowed_scan_url( $url ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid URL. Only same-site URLs can be scanned.', 'privaro-cookie-consent-banner' ) ) );
 		}
 
 		$results = $this->scan_url( $url );
@@ -223,7 +223,47 @@ final class Scanner {
 			}
 		}
 
-		return \WPEU\CookieSuite\Consent\Categories::NECESSARY;
+		// Unknown items need manual review — do not treat as strictly necessary.
+		return \WPEU\CookieSuite\Consent\Categories::MARKETING;
+	}
+
+	/**
+	 * Whether a URL is safe to fetch for scanning (same site, public http(s)).
+	 *
+	 * @param string $url Candidate URL.
+	 */
+	private function is_allowed_scan_url( string $url ): bool {
+		if ( ! function_exists( 'wp_http_validate_url' ) || ! wp_http_validate_url( $url ) ) {
+			return false;
+		}
+
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( '' === $host ) {
+			return false;
+		}
+
+		$allowed = array();
+		foreach ( array( home_url(), site_url() ) as $base ) {
+			$base_host = strtolower( (string) wp_parse_url( $base, PHP_URL_HOST ) );
+			if ( '' !== $base_host ) {
+				$allowed[] = $base_host;
+			}
+		}
+		$allowed = array_unique( $allowed );
+
+		foreach ( $allowed as $site_host ) {
+			if ( $host === $site_host ) {
+				return true;
+			}
+			if ( str_starts_with( $host, 'www.' ) && substr( $host, 4 ) === $site_host ) {
+				return true;
+			}
+			if ( str_starts_with( $site_host, 'www.' ) && substr( $site_host, 4 ) === $host ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
