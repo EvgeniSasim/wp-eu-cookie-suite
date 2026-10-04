@@ -182,4 +182,46 @@ class Test_Multilingual extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'ru', $locales );
 		$this->assertArrayNotHasKey( 'ru-ru', $locales );
 	}
+
+	public function test_get_active_locale_uses_determine_locale(): void {
+		add_filter(
+			'locale',
+			static function () {
+				return 'ru_RU';
+			}
+		);
+
+		$this->assertSame( 'ru', BannerTexts::get_active_locale() );
+	}
+
+	public function test_get_active_locale_filter_overrides(): void {
+		add_filter(
+			'wpeu_cs_banner_locale',
+			static function () {
+				return 'de-DE';
+			}
+		);
+
+		$this->assertSame( 'de', BannerTexts::get_active_locale() );
+	}
+
+	public function test_get_strings_ignores_empty_saved_values(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'banner_texts' => array(
+					'en' => array(
+						'consent_modal_title' => '',
+						'accept_all_btn'      => 'Accept all custom',
+					),
+				),
+			)
+		);
+
+		$strings  = BannerTexts::get_strings( 'en' );
+		$defaults = BannerTexts::get_defaults( 'en' );
+
+		$this->assertSame( $defaults['consent_modal_title'], $strings['consent_modal_title'] );
+		$this->assertSame( 'Accept all custom', $strings['accept_all_btn'] );
+	}
 }

@@ -202,39 +202,25 @@ final class Banner {
 	 * @return array<string, mixed>
 	 */
 	private function get_config(): array {
-		$settings           = SettingsRepository::instance()->get_effective_settings();
-		$all_categories     = Categories::get_enabled_for_banner();
-		$enabled_categories = $settings['enabled_categories'] ?? array( 'preferences', 'statistics', 'marketing' );
-		$show_reject_all    = $settings['show_reject_all'] ?? true;
-		$privacy_url        = $settings['privacy_policy_url'] ?? '';
-		$cookie_url         = $settings['cookie_policy_url'] ?? '';
-		$eu_mode            = $settings['eu_mode'] ?? true;
+		$settings       = SettingsRepository::instance()->get_effective_settings();
+		$all_categories = Categories::get_enabled_for_banner();
+		$show_reject_all = $settings['show_reject_all'] ?? true;
+		$privacy_url    = $settings['privacy_policy_url'] ?? '';
+		$cookie_url     = $settings['cookie_policy_url'] ?? '';
+		$eu_mode        = $settings['eu_mode'] ?? true;
 
-		$banner_ui = $settings['banner_ui'] ?? array();
-		$layout    = in_array( $banner_ui['layout'] ?? 'box', array( 'box', 'bar' ), true ) ? $banner_ui['layout'] : 'box';
-		$position  = self::map_consent_modal_position( (string) ( $banner_ui['position'] ?? 'bottom-right' ) );
+		$banner_ui   = is_array( $settings['banner_ui'] ?? null ) ? $settings['banner_ui'] : array();
+		$layout_raw  = (string) ( $banner_ui['layout'] ?? 'box' );
+		$layout      = in_array( $layout_raw, array( 'box', 'bar' ), true ) ? $layout_raw : 'box';
+		$position    = self::map_consent_modal_position( (string) ( $banner_ui['position'] ?? 'bottom-right' ) );
 
 		$locale = BannerTexts::get_active_locale();
-		$texts  = BannerTexts::get_strings( $locale );
 
 		$categories_config = array();
-		$sections          = array(
-			array(
-				'title'       => $texts['preferences_intro_title'],
-				'description' => $texts['preferences_intro_description'],
-			),
-		);
-
 		foreach ( $all_categories as $id => $category ) {
 			$categories_config[ $id ] = array(
 				'readOnly' => $category['read_only'] ?? false,
 				'enabled'  => $category['enabled'] ?? false,
-			);
-
-			$sections[] = array(
-				'title'          => $texts[ $id . '_label' ] ?? $category['label'],
-				'description'    => $texts[ $id . '_description' ] ?? $category['description'],
-				'linkedCategory' => $id,
 			);
 		}
 
@@ -248,6 +234,36 @@ final class Banner {
 
 		$footer_html = implode( ' | ', $footer_links );
 
+		// Ship every configured locale so CookieConsent can match <html lang="ru-RU"> → ru.
+		$translations = array();
+		foreach ( array_keys( BannerTexts::get_locales() ) as $lang_code ) {
+			$translations[ $lang_code ] = $this->build_cc_translation(
+				BannerTexts::get_strings( $lang_code ),
+				$all_categories,
+				(bool) $show_reject_all,
+				$footer_html
+			);
+		}
+		if ( ! isset( $translations[ $locale ] ) ) {
+			$translations[ $locale ] = $this->build_cc_translation(
+				BannerTexts::get_strings( $locale ),
+				$all_categories,
+				(bool) $show_reject_all,
+				$footer_html
+			);
+		}
+
+		$language = array(
+			'default'      => $locale,
+			'translations' => $translations,
+		);
+
+		// Document lang (e.g. ru-RU) wins over PHP site locale when translations exist.
+		// Preview forces locale via filter — skip autoDetect so admin tab language is shown.
+		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
+			$language['autoDetect'] = 'document';
+		}
+
 		$cc_cookie = array(
 			'name'             => 'wpeu_cc',
 			'path'             => COOKIEPATH,
@@ -260,12 +276,12 @@ final class Banner {
 		}
 
 		$config = array(
-			'revision'          => max( 0, (int) ( $settings['consent_revision'] ?? 0 ) ),
-			'mode'              => $eu_mode ? 'opt-in' : 'opt-out',
-			'manageScriptTags'  => false,
-			'autoClearCookies'  => false,
-			'cookie'            => $cc_cookie,
-			'guiOptions'        => array(
+			'revision'         => max( 0, (int) ( $settings['consent_revision'] ?? 0 ) ),
+			'mode'             => $eu_mode ? 'opt-in' : 'opt-out',
+			'manageScriptTags' => false,
+			'autoClearCookies' => false,
+			'cookie'           => $cc_cookie,
+			'guiOptions'       => array(
 				'consentModal' => array(
 					'layout'             => $layout,
 					'position'           => $position,
@@ -280,29 +296,7 @@ final class Banner {
 				),
 			),
 			'categories' => $categories_config,
-			'language' => array(
-				'default'      => $locale,
-				'translations' => array(
-					$locale => array(
-						'consentModal' => array(
-							'title'              => $texts['consent_modal_title'],
-							'description'        => $texts['consent_modal_description'],
-							'acceptAllBtn'       => $texts['accept_all_btn'],
-							'acceptNecessaryBtn' => $show_reject_all ? $texts['accept_necessary_btn'] : '',
-							'showPreferencesBtn' => $texts['show_preferences_btn'],
-							'footer'             => $footer_html,
-						),
-						'preferencesModal' => array(
-							'title'              => $texts['preferences_modal_title'],
-							'acceptAllBtn'       => $texts['accept_all_btn'],
-							'acceptNecessaryBtn' => $show_reject_all ? $texts['accept_necessary_btn'] : '',
-							'savePreferencesBtn' => $texts['save_preferences_btn'],
-							'closeIconLabel'     => $texts['close_icon_label'],
-							'sections'           => $sections,
-						),
-					),
-				),
-			),
+			'language'   => $language,
 		);
 
 		if ( defined( 'WPEU_CS_PREVIEW' ) ) {
@@ -312,6 +306,51 @@ final class Banner {
 		}
 
 		return $config;
+	}
+
+	/**
+	 * Build one CookieConsent language translation block.
+	 *
+	 * @param array  $texts           Banner strings.
+	 * @param array  $all_categories  Enabled categories.
+	 * @param bool   $show_reject_all Whether reject button is shown.
+	 * @param string $footer_html     Consent modal footer HTML.
+	 * @return array<string, mixed>
+	 */
+	private function build_cc_translation( array $texts, array $all_categories, bool $show_reject_all, string $footer_html ): array {
+		$sections = array(
+			array(
+				'title'       => $texts['preferences_intro_title'] ?? '',
+				'description' => $texts['preferences_intro_description'] ?? '',
+			),
+		);
+
+		foreach ( $all_categories as $id => $category ) {
+			$sections[] = array(
+				'title'          => $texts[ $id . '_label' ] ?? ( $category['label'] ?? $id ),
+				'description'    => $texts[ $id . '_description' ] ?? ( $category['description'] ?? '' ),
+				'linkedCategory' => $id,
+			);
+		}
+
+		return array(
+			'consentModal' => array(
+				'title'              => $texts['consent_modal_title'] ?? '',
+				'description'        => $texts['consent_modal_description'] ?? '',
+				'acceptAllBtn'       => $texts['accept_all_btn'] ?? '',
+				'acceptNecessaryBtn' => $show_reject_all ? ( $texts['accept_necessary_btn'] ?? '' ) : '',
+				'showPreferencesBtn' => $texts['show_preferences_btn'] ?? '',
+				'footer'             => $footer_html,
+			),
+			'preferencesModal' => array(
+				'title'              => $texts['preferences_modal_title'] ?? '',
+				'acceptAllBtn'       => $texts['accept_all_btn'] ?? '',
+				'acceptNecessaryBtn' => $show_reject_all ? ( $texts['accept_necessary_btn'] ?? '' ) : '',
+				'savePreferencesBtn' => $texts['save_preferences_btn'] ?? '',
+				'closeIconLabel'     => $texts['close_icon_label'] ?? '',
+				'sections'           => $sections,
+			),
+		);
 	}
 
 	/**

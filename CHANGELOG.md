@@ -9,6 +9,15 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.3.8] - 2026-10-04
+
+### Fixed
+
+- Frontend banner languages: CookieConsent config now ships **all** configured locale translations and uses `language.autoDetect: 'document'`, so `<html lang="ru-RU">` picks `ru` texts even when the WordPress site locale is English.
+- PHP fallback locale uses `determine_locale()` (and non-empty Polylang/WPML codes) instead of only `get_locale()`.
+- Empty saved banner text fields no longer overwrite built-in defaults; saving a language removes legacy duplicate keys (`ru-ru` when saving `ru`).
+- Live Preview sets `<html lang>` to the selected admin language tab.
+
 ## [1.3.7] - 2026-10-02
 
 ### Fixed
@@ -219,7 +228,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.8...HEAD
+[1.3.8]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...v1.3.8
 [1.3.7]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.6...v1.3.7
 [1.3.6]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.4...v1.3.5

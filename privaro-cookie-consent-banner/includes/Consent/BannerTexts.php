@@ -140,18 +140,34 @@ final class BannerTexts {
 	/**
 	 * Get the active locale for the banner.
 	 *
+	 * Prefers Polylang / WPML when available; otherwise uses determine_locale()
+	 * (request/user-aware) rather than the site default from get_locale().
+	 *
+	 * CookieConsent also auto-detects from document.documentElement.lang when
+	 * multiple translations are shipped — this PHP locale is the fallback default.
+	 *
 	 * @return string
 	 */
 	public static function get_active_locale(): string {
-		$locale = 'en';
+		$locale = '';
 
 		if ( function_exists( 'pll_current_language' ) ) {
-			$locale = pll_current_language() ?: 'en';
-		} elseif ( has_filter( 'wpml_current_language' ) ) {
+			$pll = pll_current_language();
+			if ( is_string( $pll ) && '' !== $pll ) {
+				$locale = $pll;
+			}
+		}
+
+		if ( '' === $locale && has_filter( 'wpml_current_language' ) ) {
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML integration hook.
-			$locale = apply_filters( 'wpml_current_language', null ) ?: 'en';
-		} else {
-			$locale = get_locale();
+			$wpml = apply_filters( 'wpml_current_language', null );
+			if ( is_string( $wpml ) && '' !== $wpml && 'all' !== $wpml ) {
+				$locale = $wpml;
+			}
+		}
+
+		if ( '' === $locale ) {
+			$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
 		}
 
 		$locale = self::normalize_locale_code( (string) $locale ) ?: 'en';
@@ -176,7 +192,15 @@ final class BannerTexts {
 		$settings = SettingsRepository::instance()->get_effective_settings();
 		$saved    = self::find_banner_texts_for_locale( $settings, $locale );
 
-		$merged = array_merge( $defaults, $saved );
+		// Ignore empty saved values so blanks do not wipe defaults.
+		$saved_nonempty = array();
+		foreach ( $saved as $key => $value ) {
+			if ( is_string( $value ) && '' !== trim( $value ) ) {
+				$saved_nonempty[ $key ] = $value;
+			}
+		}
+
+		$merged = array_merge( $defaults, $saved_nonempty );
 
 		/**
 		 * Filter the banner texts for a locale.
