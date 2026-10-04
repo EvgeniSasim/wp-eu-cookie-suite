@@ -54,4 +54,24 @@ class Test_Functions extends WP_UnitTestCase {
 	public function test_user_has_consent_necessary_always_true(): void {
 		$this->assertTrue( wpeu_cs_user_has_consent( 'necessary' ) );
 	}
+
+	/**
+	 * Opt-in (EU): no cookie → optional categories denied.
+	 */
+	public function test_user_has_consent_opt_in_denies_without_cookie(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true ) );
+		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_consent'] );
+
+		$this->assertFalse( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
+
+	/**
+	 * Opt-out: no cookie → optional categories allowed.
+	 */
+	public function test_user_has_consent_opt_out_allows_without_cookie(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => false ) );
+		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_consent'] );
+
+		$this->assertTrue( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
 }

@@ -50,9 +50,13 @@ final class Categories {
 
 	/**
 	 * Validate a custom category slug.
+	 *
+	 * Rejects uppercase/spaces before sanitize_key() can normalize them into a valid slug.
 	 */
 	public static function is_valid_slug( string $slug ): bool {
-		$slug = sanitize_key( $slug );
+		if ( ! preg_match( '/^[a-z0-9_-]+$/', $slug ) ) {
+			return false;
+		}
 		if ( self::is_builtin_slug( $slug ) ) {
 			return false;
 		}
@@ -60,7 +64,7 @@ final class Categories {
 			return false;
 		}
 
-		return (bool) preg_match( '/^[a-z0-9_-]+$/', $slug );
+		return true;
 	}
 
 	/**

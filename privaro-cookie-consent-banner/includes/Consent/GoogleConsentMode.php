@@ -52,7 +52,8 @@ final class GoogleConsentMode {
 			'wpeu-cs-gcm-default',
 			'window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}'
 			. "gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',"
-			. "ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'denied',wait_for_update:500});"
+			. "ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'denied',"
+			. "personalization_storage:'denied',security_storage:'granted',wait_for_update:500});"
 		);
 
 		$integration_map = Categories::get_integration_map_by_slug();
@@ -76,11 +77,14 @@ final class GoogleConsentMode {
 			. "gtag('consent','update',{analytics_storage:flags.statistics?'granted':'denied',"
 			. "ad_storage:flags.marketing?'granted':'denied',ad_user_data:flags.marketing?'granted':'denied',"
 			. "ad_personalization:flags.marketing?'granted':'denied',"
-			. "functionality_storage:flags.preferences?'granted':'denied'});}"
+			. "functionality_storage:flags.preferences?'granted':'denied',"
+			. "personalization_storage:flags.preferences?'granted':'denied',"
+			. "security_storage:'granted'});}"
 			. 'function buildDetailFromCookieConsent(){const detail={};'
 			. 'if(typeof window.CookieConsent==="undefined"||typeof window.CookieConsent.acceptedCategory!=="function"){return detail;}'
 			. 'bannerSlugs.forEach(function(slug){detail[slug]=window.CookieConsent.acceptedCategory(slug);});return detail;}'
 			. 'document.addEventListener("wpeu-consent-updated",function(event){updateGoogleConsent(event.detail||{});});'
+			. 'document.addEventListener("wpeu-consent-revoked",function(){updateGoogleConsent({});});'
 			. 'window.addEventListener("load",function(){'
 			. 'if(typeof window.CookieConsent!=="undefined"&&typeof window.CookieConsent.validConsent==="function"'
 			. '&&!window.CookieConsent.validConsent()){return;}'

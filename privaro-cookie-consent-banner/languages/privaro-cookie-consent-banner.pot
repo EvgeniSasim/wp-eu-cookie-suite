@@ -1,0 +1,772 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Privaro Cookie Consent Banner 1.3.9\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/privaro-cookie-consent-banner\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: privaro-cookie-consent-banner\n"
+
+msgid "2–3 letter language code, e.g. ru (not ru-RU)"
+msgstr ""
+
+msgid "A category with this slug already exists."
+msgstr ""
+
+msgid "ACF Analytics Field Name"
+msgstr ""
+
+msgid "Accept All Button"
+msgstr ""
+
+msgid "Accept Cookies"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Active (native)"
+msgstr ""
+
+msgid "Active (polyfill)"
+msgstr ""
+
+msgid "Active Block Rules"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add Category"
+msgstr ""
+
+msgid "Add Custom Category"
+msgstr ""
+
+msgid "Add Language"
+msgstr ""
+
+msgid "Add New"
+msgstr ""
+
+msgid "Add New Cookie"
+msgstr ""
+
+msgid "After adding a language, open its tab above to edit banner and button texts, then click Save Changes."
+msgstr ""
+
+msgid "All Categories"
+msgstr ""
+
+msgid "All Events"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Are you sure you want to remove this language? Settings for this language will be deleted."
+msgstr ""
+
+msgid "Are you sure?"
+msgstr ""
+
+msgid "Audit trail of visitor consent interactions. Each entry stores a proof snapshot (banner texts, policy links, categories, content hash) for GDPR Art. 7(1) accountability."
+msgstr ""
+
+msgid "Automatically delete logs older than this many days."
+msgstr ""
+
+msgid "Available placeholders: {{intro}}, {{table}}, {{content}}"
+msgstr ""
+
+msgid "Back to Inventory"
+msgstr ""
+
+msgid "Banner"
+msgstr ""
+
+msgid "Banner and integration settings on those tabs are inherited from the network administrator. Cookies, Scanner, Consent Log, and site-specific tools stay editable on this site. Uncheck the option above and save to configure banner and integrations locally."
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
+msgid "Block Site Kit analytics tags until statistics consent (works with Consent Mode v2 above)."
+msgstr ""
+
+msgid "Block non-essential cookies until the visitor consents (recommended for GDPR / ePrivacy)."
+msgstr ""
+
+msgid "Blocker Status"
+msgstr ""
+
+msgid "Bottom Center"
+msgstr ""
+
+msgid "Bottom Left"
+msgstr ""
+
+msgid "Bottom Right"
+msgstr ""
+
+msgid "Box"
+msgstr ""
+
+msgid "Built-in"
+msgstr ""
+
+msgid "Built-in categories are always available. Add up to 5 custom categories for site-specific consent groups."
+msgstr ""
+
+msgid "Cannot modify categories while using network defaults."
+msgstr ""
+
+msgid "Cannot modify languages while using network defaults."
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "Center"
+msgstr ""
+
+msgid "Clears _ga cookies and blocks enqueued gtag scripts when statistics consent is not granted."
+msgstr ""
+
+msgid "Close Icon Label"
+msgstr ""
+
+msgid "Configured languages: %s"
+msgstr ""
+
+msgid "Consent API Status"
+msgstr ""
+
+msgid "Consent Log"
+msgstr ""
+
+msgid "Consent Logging"
+msgstr ""
+
+msgid "Consent Modal Description"
+msgstr ""
+
+msgid "Consent Modal Title"
+msgstr ""
+
+msgid "Consent logging is disabled in Tools → Consent Logging. Existing entries are shown below; new visits will not be recorded until logging is enabled."
+msgstr ""
+
+msgid "Consent revision"
+msgstr ""
+
+msgid "Consent revision is managed in network settings while using network defaults."
+msgstr ""
+
+msgid "Consent revision updated. Visitors will be prompted again."
+msgstr ""
+
+msgid "Contact Form 7 reCAPTCHA"
+msgstr ""
+
+msgid "Cookie Inventory"
+msgstr ""
+
+msgid "Cookie Policy Settings (%s)"
+msgstr ""
+
+msgid "Cookie Policy URL"
+msgstr ""
+
+msgid "Cookie Scanner"
+msgstr ""
+
+msgid "Cookie Settings Link Label"
+msgstr ""
+
+msgid "Cookie policy intro/template per language and network-wide consent revision."
+msgstr ""
+
+msgid "Cookie settings"
+msgstr ""
+
+msgid "Cookies"
+msgstr ""
+
+msgid "Could not encode export data."
+msgstr ""
+
+msgid "Counts as"
+msgstr ""
+
+msgid "Counts as (for blocking integrations)"
+msgstr ""
+
+msgid "Current revision:"
+msgstr ""
+
+msgid "Custom"
+msgstr ""
+
+msgid "Custom Block Rules"
+msgstr ""
+
+msgid "Custom category added."
+msgstr ""
+
+msgid "Custom category removed."
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Detected"
+msgstr ""
+
+msgid "Detected Category"
+msgstr ""
+
+msgid "Detected Items"
+msgstr ""
+
+msgid "Disclaimer:"
+msgstr ""
+
+msgid "Display Name"
+msgstr ""
+
+msgid "Domain"
+msgstr ""
+
+msgid "Download CSV"
+msgstr ""
+
+msgid "Download JSON"
+msgstr ""
+
+msgid "Download Snapshot"
+msgstr ""
+
+msgid "Download banner texts, integrations, script registry, and all plugin settings as JSON for backup or migration to another site."
+msgstr ""
+
+msgid "Download your cookie inventory as a CSV file."
+msgstr ""
+
+msgid "Duration"
+msgstr ""
+
+msgid "Each subsite manages its own cookie inventory, scanner runs, and consent log. Open the plugin on the subsite (Settings → Privaro Cookie Consent Banner) and use the Cookies, Scanner, and Consent Log tabs there."
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Edit Cookie"
+msgstr ""
+
+msgid "Edit banner copy for the language selected above, then Save Changes. Live Preview follows this language tab."
+msgstr ""
+
+msgid "Enable Logging"
+msgstr ""
+
+msgid "Enable automatic script blocking for these popular services."
+msgstr ""
+
+msgid "Enabled Categories"
+msgstr ""
+
+msgid "English"
+msgstr ""
+
+msgid "Enter one pattern per line to block custom scripts. Use -url- prefix to match only the src attribute."
+msgstr ""
+
+msgid "Enter the ISO language code only (ru, de, fr, pl). Do not use full locale tags like ru-RU or ru_RU — they are normalized to ru automatically."
+msgstr ""
+
+msgid "Error fetching URLs."
+msgstr ""
+
+msgid "Error importing items."
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Example: analytics.js or -url-my-script.js"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "Export Cookie Inventory"
+msgstr ""
+
+msgid "Export Settings"
+msgstr ""
+
+msgid "Export is missing script registry data."
+msgstr ""
+
+msgid "Export is missing settings data."
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+msgid "German"
+msgstr ""
+
+msgid "Go to Plugins"
+msgstr ""
+
+msgid "Google"
+msgstr ""
+
+msgid "Google Analytics cookie guard"
+msgstr ""
+
+msgid "Google Consent Mode v2"
+msgstr ""
+
+msgid "Google Site Kit"
+msgstr ""
+
+msgid "Heading above the category list in the preferences modal."
+msgstr ""
+
+msgid "IP Hash"
+msgstr ""
+
+msgid "Iframe Placeholders"
+msgstr ""
+
+msgid "Import JSON"
+msgstr ""
+
+msgid "Import Settings"
+msgstr ""
+
+msgid "Import failed: could not read the uploaded file."
+msgstr ""
+
+msgid "Import failed: invalid or incompatible export file."
+msgstr ""
+
+msgid "Import to Inventory"
+msgstr ""
+
+msgid "Imported %d items to inventory."
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated)."
+msgstr ""
+
+msgid "Initializing scan..."
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Integrations"
+msgstr ""
+
+msgid "Intercept ACF option field for analytics."
+msgstr ""
+
+msgid "Intro text shown under the heading in the preferences modal."
+msgstr ""
+
+msgid "Invalid JSON structure."
+msgstr ""
+
+msgid "Invalid URL. Only same-site URLs can be scanned."
+msgstr ""
+
+msgid "Invalid category slug. Use 2-32 lowercase letters, numbers, hyphens or underscores. Built-in slugs are reserved."
+msgstr ""
+
+msgid "Invalid integration map value."
+msgstr ""
+
+msgid "Invalid language code. Use a 2–3 letter ISO code such as ru, de, or fr (not ru-RU)."
+msgstr ""
+
+msgid "Label"
+msgstr ""
+
+msgid "Label for the [wpeu_manage_consent] shortcode link."
+msgstr ""
+
+msgid "Language added successfully."
+msgstr ""
+
+msgid "Language code"
+msgstr ""
+
+msgid "Language removed."
+msgstr ""
+
+msgid "Languages (switch EN/DE or add more), categories, banner texts, and UI."
+msgstr ""
+
+msgid "Languages are managed in Network Admin while this site uses network defaults. Disable “Use network defaults” to add languages on this site."
+msgstr ""
+
+msgid "Layout"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Live Preview"
+msgstr ""
+
+msgid "Locale"
+msgstr ""
+
+msgid "Localized texts (%s)"
+msgstr ""
+
+msgid "Logs (Last 30 days)"
+msgstr ""
+
+msgid "Manage Preferences Button"
+msgstr ""
+
+msgid "Manual"
+msgstr ""
+
+msgid "Marketing"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Name / Domain"
+msgstr ""
+
+msgid "Network default settings saved."
+msgstr ""
+
+msgid "Network defaults"
+msgstr ""
+
+msgid "Network defaults are not configured yet. Ask the network administrator to save settings under Network Admin → Settings → Privaro Cookie Consent Banner, or disable inheritance to configure this site individually."
+msgstr ""
+
+msgid "Network defaults are saved. Subsites with “Use network defaults” enabled inherit banner, integration, and policy settings from here."
+msgstr ""
+
+msgid "Network error while fetching URLs."
+msgstr ""
+
+msgid "Network error while importing items."
+msgstr ""
+
+msgid "No URLs found to scan."
+msgstr ""
+
+msgid "No consent log entries found."
+msgstr ""
+
+msgid "No cookies detected."
+msgstr ""
+
+msgid "No scan results found. Start a scan to find cookies and scripts."
+msgstr ""
+
+msgid "No scan results to import."
+msgstr ""
+
+msgid "Only load reCAPTCHA scripts after marketing consent."
+msgstr ""
+
+msgid "Output-buffer blocking for third-party scripts matched by the registry and custom rules."
+msgstr ""
+
+msgid "Overview"
+msgstr ""
+
+msgid "Page URL"
+msgstr ""
+
+msgid "Per-site tasks"
+msgstr ""
+
+msgid "Please accept %s cookies to view this content."
+msgstr ""
+
+msgid "Please wait at least one minute between scans."
+msgstr ""
+
+msgid "Plugin Version"
+msgstr ""
+
+msgid "Policy Intro Text"
+msgstr ""
+
+msgid "Policy Template"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Preferences"
+msgstr ""
+
+msgid "Preferences Intro Description"
+msgstr ""
+
+msgid "Preferences Intro Title"
+msgstr ""
+
+msgid "Preferences Modal Title"
+msgstr ""
+
+msgid "Preview failed to load."
+msgstr ""
+
+msgid "Preview response invalid."
+msgstr ""
+
+msgid "Primary Color"
+msgstr ""
+
+msgid "Privacy Policy URL"
+msgstr ""
+
+msgid "Privaro Cookie Consent Banner"
+msgstr ""
+
+msgid "Privaro Cookie Consent Banner detected active legacy plugin(s): %s. Please deactivate them from the Plugins screen to avoid conflicts."
+msgstr ""
+
+msgid "Privaro Cookie Consent Banner was not loaded because a legacy cookie consent plugin is already active. Deactivate wp-eu-cookie-suite or eu-cookie-consent-suite first, then activate Privaro Cookie Consent Banner."
+msgstr ""
+
+msgid "Refresh Preview"
+msgstr ""
+
+msgid "Reject All Button"
+msgstr ""
+
+msgid "Reload on revoke"
+msgstr ""
+
+msgid "Reload the page immediately after consent is revoked."
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Remove language"
+msgstr ""
+
+msgid "Remove this custom category?"
+msgstr ""
+
+msgid "Replace YouTube, Vimeo, and Google Maps iframes with placeholders."
+msgstr ""
+
+msgid "Required while Strict EU Mode (opt-in) is enabled."
+msgstr ""
+
+msgid "Reset all consents (bump revision)"
+msgstr ""
+
+msgid "Reset all visitor consents and show the banner again?"
+msgstr ""
+
+msgid "Retention (days)"
+msgstr ""
+
+msgid "Revision"
+msgstr ""
+
+msgid "Revoke Consent Label"
+msgstr ""
+
+msgid "Revoke cookie consent"
+msgstr ""
+
+msgid "Save Preferences Button"
+msgstr ""
+
+msgid "Save inheritance setting"
+msgstr ""
+
+msgid "Save your banner, integration, and policy defaults on the tabs below. Subsites that inherit network defaults will use these settings."
+msgstr ""
+
+msgid "Scan complete!"
+msgstr ""
+
+msgid "Scan your website to detect cookies and third-party scripts."
+msgstr ""
+
+msgid "Scanner"
+msgstr ""
+
+msgid "Scanning (%1$d/%2$d): %3$s"
+msgstr ""
+
+msgid "Script blocker enabled"
+msgstr ""
+
+msgid "Script blocking, Google Consent Mode, and integration toggles for the whole network."
+msgstr ""
+
+msgid "Search Cookies"
+msgstr ""
+
+msgid "Search Logs"
+msgstr ""
+
+msgid "Select which consent categories to display in the banner."
+msgstr ""
+
+msgid "Send default denied consent to gtag before analytics/marketing tags load."
+msgstr ""
+
+msgid "Service"
+msgstr ""
+
+msgid "Service Blocker"
+msgstr ""
+
+msgid "Settings imported successfully."
+msgstr ""
+
+msgid "Show \"Reject All\""
+msgstr ""
+
+msgid "Show the \"Reject All\" button in the banner."
+msgstr ""
+
+msgid "Site-wide banner settings"
+msgstr ""
+
+msgid "Slug"
+msgstr ""
+
+msgid "Snapshot not found."
+msgstr ""
+
+msgid "Social Media"
+msgstr ""
+
+msgid "Start Scan"
+msgstr ""
+
+msgid "Statistics"
+msgstr ""
+
+msgid "Store IP Hash"
+msgstr ""
+
+msgid "Store a salted SHA-256 hash of the visitor IP address for better accountability (Art. 7 GDPR)."
+msgstr ""
+
+msgid "Store an audit trail of consent events in the local database."
+msgstr ""
+
+msgid "Strict EU Mode (opt-in)"
+msgstr ""
+
+msgid "Strictly Necessary"
+msgstr ""
+
+msgid "The name of the ACF field used for analytics/tracking code."
+msgstr ""
+
+msgid "The template for the [wpeu_cookie_policy] shortcode."
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "Theme Analytics (ACF)"
+msgstr ""
+
+msgid "These cookies allow the website to remember choices you make."
+msgstr ""
+
+msgid "These cookies are essential for the website to function properly."
+msgstr ""
+
+msgid "These cookies are used to track visitors across websites to display relevant ads."
+msgstr ""
+
+msgid "These cookies help us understand how visitors interact with the website."
+msgstr ""
+
+msgid "These options apply to every language. Policy URLs are site-wide (use your multilingual plugin’s translated pages if needed)."
+msgstr ""
+
+msgid "Third-Party Integrations"
+msgstr ""
+
+msgid "This file is not a Privaro Cookie Consent Banner export."
+msgstr ""
+
+msgid "This plugin provides tools for cookie compliance but does not constitute legal advice."
+msgstr ""
+
+msgid "This section is not available yet."
+msgstr ""
+
+msgid "This site locale is %1$s → use code %2$s for matching banner texts on the frontend."
+msgstr ""
+
+msgid "This text is displayed at the beginning of your cookie policy."
+msgstr ""
+
+msgid "Tools"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Updates when you leave a text field or click Refresh. Follows the language tab selected above."
+msgstr ""
+
+msgid "Updating..."
+msgstr ""
+
+msgid "Upload a JSON export from another site. Cookie inventory is not replaced — only plugin settings are updated."
+msgstr ""
+
+msgid "Use network defaults"
+msgstr ""
+
+msgid "Visitor ID"
+msgstr ""
+
+msgid "What is managed here"
+msgstr ""
+
+msgid "You do not have permission to manage network options."
+msgstr ""

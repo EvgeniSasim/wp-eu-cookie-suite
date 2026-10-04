@@ -12,6 +12,11 @@ use WPEU\CookieSuite\Frontend\Banner;
  */
 class Test_Banner extends WP_UnitTestCase {
 
+	public function setUp(): void {
+		parent::setUp();
+		Banner::set_preview_mode( false );
+	}
+
 	/**
 	 * Center admin slug maps to CookieConsent middle center.
 	 */
@@ -85,9 +90,7 @@ class Test_Banner extends WP_UnitTestCase {
 	 * Admin Live Preview must not autoDetect document lang (forced by tab filter).
 	 */
 	public function test_get_config_preview_skips_autodetect(): void {
-		if ( ! defined( 'WPEU_CS_PREVIEW' ) ) {
-			define( 'WPEU_CS_PREVIEW', true );
-		}
+		Banner::set_preview_mode( true );
 
 		$banner = new Banner();
 		$method = new ReflectionMethod( Banner::class, 'get_config' );
@@ -97,5 +100,52 @@ class Test_Banner extends WP_UnitTestCase {
 
 		$this->assertArrayNotHasKey( 'autoDetect', $config['language'] );
 		$this->assertSame( 'wpeu_cs_preview_cc', $config['cookie']['name'] );
+
+		Banner::set_preview_mode( false );
+	}
+
+	/**
+	 * EU mode forces Reject All and keeps optional categories disabled (opt-in).
+	 */
+	public function test_get_config_eu_mode_forces_reject_and_opt_in_defaults(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'eu_mode'         => true,
+				'show_reject_all' => false,
+			)
+		);
+
+		$banner = new Banner();
+		$method = new ReflectionMethod( Banner::class, 'get_config' );
+		$method->setAccessible( true );
+		$config = $method->invoke( $banner );
+
+		$this->assertSame( 'opt-in', $config['mode'] );
+		$locale = $config['language']['default'];
+		$this->assertNotSame( '', $config['language']['translations'][ $locale ]['consentModal']['acceptNecessaryBtn'] );
+		$this->assertFalse( $config['categories']['statistics']['enabled'] );
+	}
+
+	/**
+	 * Opt-out mode enables optional categories by default.
+	 */
+	public function test_get_config_opt_out_enables_optional_categories(): void {
+		update_option(
+			'wpeu_cs_settings',
+			array(
+				'eu_mode' => false,
+			)
+		);
+
+		$banner = new Banner();
+		$method = new ReflectionMethod( Banner::class, 'get_config' );
+		$method->setAccessible( true );
+		$config = $method->invoke( $banner );
+
+		$this->assertSame( 'opt-out', $config['mode'] );
+		$this->assertTrue( $config['categories']['statistics']['enabled'] );
+		$this->assertTrue( $config['categories']['necessary']['enabled'] );
+		$this->assertTrue( $config['categories']['necessary']['readOnly'] );
 	}
 }

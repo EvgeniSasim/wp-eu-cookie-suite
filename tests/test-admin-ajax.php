@@ -67,8 +67,9 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 
 		try {
 			$this->_handleAjax( 'wpeu_cs_preview' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected for exit.
+		} catch ( WPAjaxDieStopException | WPAjaxDieContinueException $e ) {
+			// Expected for wp_die() after HTML body.
+			unset( $e );
 		}
 
 		$response = $this->_last_response;
@@ -80,7 +81,8 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 		$this->assertStringContainsString( 'cc--darkmode', $response );
 		$this->assertStringContainsString( '--cc-btn-primary-bg:#ff0000;', $response );
 		$this->assertStringContainsString( '"mode":"opt-in"', $response ); // eu_mode: true
-		$this->assertStringContainsString( '"acceptNecessaryBtn":""', $response ); // show_reject_all: false
+		// EU mode forces Reject All even if the checkbox was unchecked in the preview payload.
+		$this->assertStringNotContainsString( '"acceptNecessaryBtn":""', $response );
 		$this->assertStringContainsString( 'window.CookieConsent', $response );
 		$this->assertStringContainsString( 'cc.run(', $response );
 	}
@@ -111,13 +113,20 @@ class Test_Admin_Ajax extends WP_Ajax_UnitTestCase {
 
 		try {
 			$this->_handleAjax( 'wpeu_cs_preview' );
-		} catch ( WPAjaxDieStopException $e ) {
-			// Expected for exit.
+		} catch ( WPAjaxDieStopException | WPAjaxDieContinueException $e ) {
+			// Expected for wp_die() after HTML body.
+			unset( $e );
 		}
 
 		$response = $this->_last_response;
 
 		$this->assertStringContainsString( '<!DOCTYPE html>', $response );
 		$this->assertStringContainsString( 'window.CookieConsent', $response );
+	}
+
+	public function tearDown(): void {
+		\WPEU\CookieSuite\Frontend\Banner::set_preview_mode( false );
+		remove_all_filters( 'pre_option_wpeu_cs_settings' );
+		parent::tearDown();
 	}
 }
