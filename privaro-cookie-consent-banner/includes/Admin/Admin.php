@@ -694,7 +694,7 @@ final class Admin {
 			$sanitized['eu_mode']            = isset( $input['eu_mode'] );
 
 			if ( isset( $input['banner_texts'] ) && is_array( $input['banner_texts'] ) ) {
-				if ( ! isset( $sanitized['banner_texts'] ) ) {
+				if ( ! isset( $sanitized['banner_texts'] ) || ! is_array( $sanitized['banner_texts'] ) ) {
 					$sanitized['banner_texts'] = array();
 				}
 				foreach ( $input['banner_texts'] as $locale => $texts ) {
@@ -706,6 +706,14 @@ final class Admin {
 						continue;
 					}
 					$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+
+					// Drop legacy keys (ru-ru, ru_RU) that normalize to the same locale.
+					foreach ( array_keys( $sanitized['banner_texts'] ) as $existing_key ) {
+						$existing_key = (string) $existing_key;
+						if ( $existing_key !== $locale && BannerTexts::normalize_locale_code( $existing_key ) === $locale ) {
+							unset( $sanitized['banner_texts'][ $existing_key ] );
+						}
+					}
 				}
 			}
 
@@ -2391,9 +2399,14 @@ final class Admin {
 			. '.cc--resizer { display: none !important; }'
 		);
 
+		$html_lang = $preview_locale ? $preview_locale : BannerTexts::normalize_locale_code( get_bloginfo( 'language' ) );
+		if ( '' === $html_lang ) {
+			$html_lang = 'en';
+		}
+
 		?>
 		<!DOCTYPE html>
-		<html <?php language_attributes(); ?>>
+		<html lang="<?php echo esc_attr( $html_lang ); ?>">
 		<head>
 			<meta charset="<?php bloginfo( 'charset' ); ?>">
 			<?php wp_head(); ?>
