@@ -297,6 +297,39 @@ final class BannerTexts {
 	}
 
 	/**
+	 * Resolve privacy/cookie policy URLs for a locale (per-language with site-wide fallback).
+	 *
+	 * @param string                    $locale   Locale code.
+	 * @param array<string, mixed>|null $settings Optional settings; defaults to effective settings.
+	 * @return array{privacy_policy_url:string,cookie_policy_url:string}
+	 */
+	public static function resolve_policy_urls( string $locale, ?array $settings = null ): array {
+		if ( null === $settings ) {
+			$settings = SettingsRepository::instance()->get_effective_settings();
+		}
+
+		$locale = self::normalize_locale_code( $locale );
+		$texts  = is_array( $settings['banner_texts'][ $locale ] ?? null )
+			? $settings['banner_texts'][ $locale ]
+			: array();
+
+		$privacy = trim( (string) ( $texts['privacy_policy_url'] ?? '' ) );
+		$cookie  = trim( (string) ( $texts['cookie_policy_url'] ?? '' ) );
+
+		if ( '' === $privacy ) {
+			$privacy = (string) ( $settings['privacy_policy_url'] ?? '' );
+		}
+		if ( '' === $cookie ) {
+			$cookie = (string) ( $settings['cookie_policy_url'] ?? '' );
+		}
+
+		return array(
+			'privacy_policy_url' => $privacy,
+			'cookie_policy_url'  => $cookie,
+		);
+	}
+
+	/**
 	 * Get default policy template.
 	 *
 	 * @param string $locale Locale.

@@ -52,6 +52,12 @@ class Test_Consent_Snapshot extends WP_UnitTestCase {
 		$this->assertSame( 3, $snapshot['banner_revision'] );
 		$this->assertSame( 'https://example.com/privacy', $snapshot['policy_urls']['privacy_policy_url'] );
 		$this->assertSame( 'Custom title', $snapshot['banner_texts']['consent_modal_title'] );
+
+		$settings = get_option( 'wpeu_cs_settings' );
+		$settings['banner_texts']['en']['privacy_policy_url'] = 'https://example.com/en/privacy';
+		update_option( 'wpeu_cs_settings', $settings );
+		$localized = ConsentLogger::build_consent_snapshot( get_option( 'wpeu_cs_settings' ), 'en' );
+		$this->assertSame( 'https://example.com/en/privacy', $localized['policy_urls']['privacy_policy_url'] );
 		$this->assertSame( 'Policy intro text', $snapshot['policy_texts']['intro'] );
 		$this->assertArrayHasKey( 'statistics', $snapshot['categories'] );
 		$this->assertTrue( $snapshot['categories']['statistics']['enabled_in_banner'] );

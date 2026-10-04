@@ -708,7 +708,17 @@ final class Admin {
 					if ( ! BannerTexts::is_valid_locale_code( $locale ) ) {
 						continue;
 					}
-					$sanitized['banner_texts'][ $locale ] = array_map( 'sanitize_text_field', $texts );
+					$url_keys = array( 'privacy_policy_url', 'cookie_policy_url' );
+					$clean    = array();
+					foreach ( $texts as $key => $value ) {
+						$key = sanitize_key( (string) $key );
+						if ( in_array( $key, $url_keys, true ) ) {
+							$clean[ $key ] = esc_url_raw( (string) $value );
+						} else {
+							$clean[ $key ] = sanitize_text_field( (string) $value );
+						}
+					}
+					$sanitized['banner_texts'][ $locale ] = $clean;
 
 					// Drop legacy keys (ru-ru, ru_RU) that normalize to the same locale.
 					foreach ( array_keys( $sanitized['banner_texts'] ) as $existing_key ) {
@@ -729,8 +739,9 @@ final class Admin {
 				);
 			}
 		} elseif ( 'integrations' === $active_tab ) {
-			$sanitized['blocker_enabled']     = isset( $input['blocker_enabled'] );
-			$sanitized['google_consent_mode'] = isset( $input['google_consent_mode'] );
+			$sanitized['blocker_enabled']           = isset( $input['blocker_enabled'] );
+			$sanitized['block_unknown_third_party'] = isset( $input['block_unknown_third_party'] );
+			$sanitized['google_consent_mode']       = isset( $input['google_consent_mode'] );
 
 			$sanitized['enabled_services'] = array();
 			if ( isset( $input['enabled_services'] ) && is_array( $input['enabled_services'] ) ) {
@@ -1449,7 +1460,7 @@ final class Admin {
 			<input type="hidden" name="wpeu_cs_settings[active_tab]" value="banner">
 
 			<h3><?php esc_html_e( 'Site-wide banner settings', 'privaro-cookie-consent-banner' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'These options apply to every language. Policy URLs are site-wide (use your multilingual plugin’s translated pages if needed).', 'privaro-cookie-consent-banner' ); ?></p>
+			<p class="description"><?php esc_html_e( 'These options apply to every language. Default policy URLs below are used when a language has no URL of its own.', 'privaro-cookie-consent-banner' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enabled Categories', 'privaro-cookie-consent-banner' ); ?></th>
@@ -1469,15 +1480,17 @@ final class Admin {
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Privacy Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Default Privacy Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<input type="url" name="wpeu_cs_settings[privacy_policy_url]" value="<?php echo esc_url( $privacy_url ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Fallback when a language-specific URL is empty. Prefer per-language URLs in Localized texts below for multilingual sites.', 'privaro-cookie-consent-banner' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Cookie Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Default Cookie Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
 					<td>
 						<input type="url" name="wpeu_cs_settings[cookie_policy_url]" value="<?php echo esc_url( $cookie_url ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Fallback when a language-specific URL is empty.', 'privaro-cookie-consent-banner' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -1567,6 +1580,20 @@ final class Admin {
 					<td>
 						<input type="text" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][manage_consent_label]" value="<?php echo esc_attr( $texts['manage_consent_label'] ?? '' ); ?>" class="regular-text">
 						<p class="description"><?php esc_html_e( 'Label for the [wpeu_manage_consent] shortcode link.', 'privaro-cookie-consent-banner' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Privacy Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<input type="url" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][privacy_policy_url]" value="<?php echo esc_url( $texts['privacy_policy_url'] ?? '' ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Optional. Overrides the default Privacy Policy URL for this language only.', 'privaro-cookie-consent-banner' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Cookie Policy URL', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<input type="url" name="wpeu_cs_settings[banner_texts][<?php echo esc_attr( $current_lang ); ?>][cookie_policy_url]" value="<?php echo esc_url( $texts['cookie_policy_url'] ?? '' ); ?>" class="regular-text">
+						<p class="description"><?php esc_html_e( 'Optional. Overrides the default Cookie Policy URL for this language only.', 'privaro-cookie-consent-banner' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -1706,7 +1733,7 @@ final class Admin {
 		$settings     = $this->get_admin_settings();
 		$version      = $settings['version'] ?? WPEU_CS_VERSION;
 		$blocker      = $settings['blocker_enabled'] ?? false;
-		$consent_api  = defined( 'WP_CONSENT_API_VERSION' );
+		$base_url     = $this->get_plugin_admin_base_url();
 
 		$logger = new \WPEU\CookieSuite\Consent\ConsentLogger();
 		$logs_30_days = $logger->get_total_logs( array( 'start_date' => gmdate( 'Y-m-d', strtotime( '-30 days' ) ) ) );
@@ -1724,6 +1751,69 @@ final class Admin {
 
 		$total_rules = $services_count + $custom_rules_count;
 
+		$locales       = BannerTexts::get_locales();
+		$privacy_set   = '' !== trim( (string) ( $settings['privacy_policy_url'] ?? '' ) );
+		$cookie_set    = '' !== trim( (string) ( $settings['cookie_policy_url'] ?? '' ) );
+		foreach ( $settings['banner_texts'] ?? array() as $lang_texts ) {
+			if ( ! is_array( $lang_texts ) ) {
+				continue;
+			}
+			if ( '' !== trim( (string) ( $lang_texts['privacy_policy_url'] ?? '' ) ) ) {
+				$privacy_set = true;
+			}
+			if ( '' !== trim( (string) ( $lang_texts['cookie_policy_url'] ?? '' ) ) ) {
+				$cookie_set = true;
+			}
+		}
+
+		$scan_results   = get_option( 'wpeu_cs_scan_results', array() );
+		$has_scan       = ! empty( $scan_results['cookies'] ) || ! empty( $scan_results['scripts'] );
+		$eu_mode        = ! isset( $settings['eu_mode'] ) || ! empty( $settings['eu_mode'] );
+		$gcm_on         = ! isset( $settings['google_consent_mode'] ) || ! empty( $settings['google_consent_mode'] );
+		$logging_on     = ! array_key_exists( 'consent_logging_enabled', $settings ) || ! empty( $settings['consent_logging_enabled'] );
+		$unknown_block  = ! empty( $settings['block_unknown_third_party'] );
+
+		$checklist = array(
+			array(
+				'done'  => $eu_mode,
+				'label' => __( 'Strict EU Mode (opt-in) enabled', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'banner', $base_url ),
+				'cta'   => __( 'Open Banner', 'privaro-cookie-consent-banner' ),
+			),
+			array(
+				'done'  => $privacy_set && $cookie_set,
+				'label' => __( 'Privacy and cookie policy URLs set', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'banner', $base_url ),
+				'cta'   => __( 'Set policy URLs', 'privaro-cookie-consent-banner' ),
+			),
+			array(
+				'done'  => (bool) $blocker,
+				'label' => __( 'Script blocker active', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'integrations', $base_url ),
+				'cta'   => __( 'Open Integrations', 'privaro-cookie-consent-banner' ),
+			),
+			array(
+				'done'  => $gcm_on,
+				'label' => __( 'Google Consent Mode v2 enabled', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'integrations', $base_url ),
+				'cta'   => __( 'Configure Google', 'privaro-cookie-consent-banner' ),
+			),
+			array(
+				'done'  => $has_scan,
+				'label' => __( 'Cookie scanner run at least once', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'scanner', $base_url ),
+				'cta'   => __( 'Run Scanner', 'privaro-cookie-consent-banner' ),
+			),
+			array(
+				'done'  => $logging_on,
+				'label' => __( 'Consent logging enabled', 'privaro-cookie-consent-banner' ),
+				'url'   => add_query_arg( 'tab', 'tools', $base_url ) . '#wpeu-cs-tools-logging',
+				'cta'   => __( 'Open Tools', 'privaro-cookie-consent-banner' ),
+			),
+		);
+
+		$done_count = count( array_filter( array_column( $checklist, 'done' ) ) );
+
 		?>
 		<div class="wpeu-cs-dashboard-cards">
 			<div class="wpeu-cs-card">
@@ -1737,6 +1827,9 @@ final class Admin {
 					<span class="status <?php echo $blocker ? 'status-active' : 'status-inactive'; ?>">
 						<?php echo $blocker ? esc_html__( 'Active', 'privaro-cookie-consent-banner' ) : esc_html__( 'Inactive', 'privaro-cookie-consent-banner' ); ?>
 					</span>
+					<?php if ( $blocker && $unknown_block ) : ?>
+						<br><span class="description"><?php esc_html_e( 'Unknown third-party scripts blocked', 'privaro-cookie-consent-banner' ); ?></span>
+					<?php endif; ?>
 				</p>
 			</div>
 
@@ -1764,6 +1857,41 @@ final class Admin {
 				<h3><?php esc_html_e( 'Logs (Last 30 days)', 'privaro-cookie-consent-banner' ); ?></h3>
 				<p><?php echo (int) $logs_30_days; ?></p>
 			</div>
+		</div>
+
+		<div class="wpeu-cs-onboarding card">
+			<h2><?php esc_html_e( 'Getting started', 'privaro-cookie-consent-banner' ); ?></h2>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: 1: completed steps, 2: total steps, 3: language count */
+					esc_html__( '%1$d of %2$d setup steps done · %3$d language(s) configured', 'privaro-cookie-consent-banner' ),
+					(int) $done_count,
+					count( $checklist ),
+					count( $locales )
+				);
+				?>
+			</p>
+			<ol class="wpeu-cs-onboarding-list">
+				<?php foreach ( $checklist as $step ) : ?>
+					<li class="<?php echo $step['done'] ? 'is-done' : 'is-todo'; ?>">
+						<span class="wpeu-cs-onboarding-mark" aria-hidden="true"><?php echo $step['done'] ? '✓' : '○'; ?></span>
+						<span class="wpeu-cs-onboarding-label"><?php echo esc_html( $step['label'] ); ?></span>
+						<?php if ( ! $step['done'] ) : ?>
+							<a class="button button-small" href="<?php echo esc_url( $step['url'] ); ?>"><?php echo esc_html( $step['cta'] ); ?></a>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ol>
+			<p class="wpeu-cs-onboarding-links">
+				<a href="<?php echo esc_url( add_query_arg( 'tab', 'banner', $base_url ) ); ?>"><?php esc_html_e( 'Banner texts', 'privaro-cookie-consent-banner' ); ?></a>
+				·
+				<a href="<?php echo esc_url( add_query_arg( 'tab', 'cookies', $base_url ) ); ?>"><?php esc_html_e( 'Cookie inventory', 'privaro-cookie-consent-banner' ); ?></a>
+				·
+				<a href="<?php echo esc_url( add_query_arg( 'tab', 'tools', $base_url ) ); ?>"><?php esc_html_e( 'Tools', 'privaro-cookie-consent-banner' ); ?></a>
+				·
+				<a href="<?php echo esc_url( add_query_arg( 'tab', 'consent_log', $base_url ) ); ?>"><?php esc_html_e( 'Consent log', 'privaro-cookie-consent-banner' ); ?></a>
+			</p>
 		</div>
 		<?php
 	}
@@ -1876,6 +2004,16 @@ final class Admin {
 							<span class="slider round"></span>
 						</label>
 						<p class="description"><?php esc_html_e( 'Output-buffer blocking for third-party scripts matched by the registry and custom rules.', 'privaro-cookie-consent-banner' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Block unknown third-party scripts', 'privaro-cookie-consent-banner' ); ?></th>
+					<td>
+						<label class="switch">
+							<input type="checkbox" name="wpeu_cs_settings[block_unknown_third_party]" value="1" <?php checked( ! empty( $settings['block_unknown_third_party'] ) ); ?>>
+							<span class="slider round"></span>
+						</label>
+						<p class="description"><?php esc_html_e( 'When enabled, any script loaded from a different host than this site (and not matched by the service list or custom rules) is blocked as marketing until the visitor consents. Same-origin theme/plugin scripts stay unblocked. Off by default to avoid breaking unexpected CDNs.', 'privaro-cookie-consent-banner' ); ?></p>
 					</td>
 				</tr>
 				<?php foreach ( $services as $id => $service ) : ?>
@@ -2137,126 +2275,144 @@ final class Admin {
 			<p><strong><?php esc_html_e( 'Disclaimer:', 'privaro-cookie-consent-banner' ); ?></strong> <?php esc_html_e( 'This plugin provides tools for cookie compliance but does not constitute legal advice.', 'privaro-cookie-consent-banner' ); ?></p>
 		</div>
 
-		<?php
-		$this->render_language_selector( 'tools', $locales, $current_lang );
-		?>
+		<nav class="wpeu-cs-tools-nav" aria-label="<?php esc_attr_e( 'Tools sections', 'privaro-cookie-consent-banner' ); ?>">
+			<ul class="subsubsub">
+				<li><a href="#wpeu-cs-tools-policy"><?php esc_html_e( 'Cookie policy', 'privaro-cookie-consent-banner' ); ?></a> | </li>
+				<li><a href="#wpeu-cs-tools-logging"><?php esc_html_e( 'Consent logging', 'privaro-cookie-consent-banner' ); ?></a> | </li>
+				<li><a href="#wpeu-cs-tools-revision"><?php esc_html_e( 'Consent revision', 'privaro-cookie-consent-banner' ); ?></a> | </li>
+				<li><a href="#wpeu-cs-tools-transfer"><?php esc_html_e( 'Import / Export', 'privaro-cookie-consent-banner' ); ?></a></li>
+			</ul>
+			<br class="clear">
+		</nav>
 
-		<div class="card<?php echo $inheriting ? ' wpeu-cs-inherited' : ''; ?>">
-			<form method="post" action="<?php echo esc_url( $this->get_settings_form_action() ); ?>">
-				<?php $this->render_settings_form_header(); ?>
-				<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+		<section id="wpeu-cs-tools-policy" class="wpeu-cs-tools-section">
+			<?php
+			$this->render_language_selector( 'tools', $locales, $current_lang );
+			?>
 
-				<h3>
-				<?php
-				/* translators: %s: language label */
-				printf( esc_html__( 'Cookie Policy Settings (%s)', 'privaro-cookie-consent-banner' ), esc_html( $locales[ $current_lang ] ) );
-				?>
-				</h3>
+			<div class="card<?php echo $inheriting ? ' wpeu-cs-inherited' : ''; ?>">
+				<form method="post" action="<?php echo esc_url( $this->get_settings_form_action() ); ?>">
+					<?php $this->render_settings_form_header(); ?>
+					<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
 
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><label for="policy_intro"><?php esc_html_e( 'Policy Intro Text', 'privaro-cookie-consent-banner' ); ?></label></th>
-						<td>
-							<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][intro]" id="policy_intro" rows="5" class="large-text"><?php echo esc_textarea( $intro ); ?></textarea>
-							<p class="description"><?php esc_html_e( 'This text is displayed at the beginning of your cookie policy.', 'privaro-cookie-consent-banner' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="policy_template"><?php esc_html_e( 'Policy Template', 'privaro-cookie-consent-banner' ); ?></label></th>
-						<td>
-							<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][template]" id="policy_template" rows="10" class="large-text code"><?php echo esc_textarea( $template ); ?></textarea>
-							<p class="description">
-								<?php esc_html_e( 'The template for the [wpeu_cookie_policy] shortcode.', 'privaro-cookie-consent-banner' ); ?><br>
-								<?php esc_html_e( 'Available placeholders: {{intro}}, {{table}}, {{content}}', 'privaro-cookie-consent-banner' ); ?>
-							</p>
-						</td>
-					</tr>
-				</table>
-				<?php submit_button(); ?>
-			</form>
-		</div>
+					<h3>
+					<?php
+					/* translators: %s: language label */
+					printf( esc_html__( 'Cookie Policy Settings (%s)', 'privaro-cookie-consent-banner' ), esc_html( $locales[ $current_lang ] ) );
+					?>
+					</h3>
+					<p class="description"><?php esc_html_e( 'Shortcode content for [wpeu_cookie_policy]. Banner footer links to privacy/cookie pages are set per language under Banner → Localized texts.', 'privaro-cookie-consent-banner' ); ?></p>
 
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><label for="policy_intro"><?php esc_html_e( 'Policy Intro Text', 'privaro-cookie-consent-banner' ); ?></label></th>
+							<td>
+								<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][intro]" id="policy_intro" rows="5" class="large-text"><?php echo esc_textarea( $intro ); ?></textarea>
+								<p class="description"><?php esc_html_e( 'This text is displayed at the beginning of your cookie policy.', 'privaro-cookie-consent-banner' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="policy_template"><?php esc_html_e( 'Policy Template', 'privaro-cookie-consent-banner' ); ?></label></th>
+							<td>
+								<textarea name="wpeu_cs_settings[policy_texts][<?php echo esc_attr( $current_lang ); ?>][template]" id="policy_template" rows="10" class="large-text code"><?php echo esc_textarea( $template ); ?></textarea>
+								<p class="description">
+									<?php esc_html_e( 'The template for the [wpeu_cookie_policy] shortcode.', 'privaro-cookie-consent-banner' ); ?><br>
+									<?php esc_html_e( 'Available placeholders: {{intro}}, {{table}}, {{content}}', 'privaro-cookie-consent-banner' ); ?>
+								</p>
+							</td>
+						</tr>
+					</table>
+					<?php submit_button(); ?>
+				</form>
+			</div>
+		</section>
 
-		<div class="card">
-			<h3><?php esc_html_e( 'Consent Logging', 'privaro-cookie-consent-banner' ); ?></h3>
-			<form method="post" action="<?php echo esc_url( $this->get_settings_form_action() ); ?>">
-				<?php $this->render_settings_form_header(); ?>
-				<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
-				<input type="hidden" name="wpeu_cs_settings[wpeu_cs_site_local_tools]" value="1">
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Enable Logging', 'privaro-cookie-consent-banner' ); ?></th>
-						<td>
-							<label class="switch">
-								<input type="checkbox" name="wpeu_cs_settings[consent_logging_enabled]" value="1" <?php checked( ! empty( $settings['consent_logging_enabled'] ) ); ?>>
-								<span class="slider round"></span>
-							</label>
-							<p class="description"><?php esc_html_e( 'Store an audit trail of consent events in the local database.', 'privaro-cookie-consent-banner' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Retention (days)', 'privaro-cookie-consent-banner' ); ?></th>
-						<td>
-							<input type="number" name="wpeu_cs_settings[consent_log_retention]" value="<?php echo (int) ( $settings['consent_log_retention'] ?? 365 ); ?>" min="1" step="1" class="small-text">
-							<p class="description"><?php esc_html_e( 'Automatically delete logs older than this many days.', 'privaro-cookie-consent-banner' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Store IP Hash', 'privaro-cookie-consent-banner' ); ?></th>
-						<td>
-							<label class="switch">
-								<input type="checkbox" name="wpeu_cs_settings[consent_log_store_ip]" value="1" <?php checked( ! empty( $settings['consent_log_store_ip'] ) ); ?>>
-								<span class="slider round"></span>
-							</label>
-							<p class="description"><?php esc_html_e( 'Store a salted SHA-256 hash of the visitor IP address for better accountability (Art. 7 GDPR).', 'privaro-cookie-consent-banner' ); ?></p>
-						</td>
-					</tr>
-				</table>
-				<?php submit_button(); ?>
-			</form>
-		</div>
+		<section id="wpeu-cs-tools-logging" class="wpeu-cs-tools-section">
+			<div class="card">
+				<h3><?php esc_html_e( 'Consent Logging', 'privaro-cookie-consent-banner' ); ?></h3>
+				<form method="post" action="<?php echo esc_url( $this->get_settings_form_action() ); ?>">
+					<?php $this->render_settings_form_header(); ?>
+					<input type="hidden" name="wpeu_cs_settings[active_tab]" value="tools">
+					<input type="hidden" name="wpeu_cs_settings[wpeu_cs_site_local_tools]" value="1">
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Enable Logging', 'privaro-cookie-consent-banner' ); ?></th>
+							<td>
+								<label class="switch">
+									<input type="checkbox" name="wpeu_cs_settings[consent_logging_enabled]" value="1" <?php checked( ! empty( $settings['consent_logging_enabled'] ) ); ?>>
+									<span class="slider round"></span>
+								</label>
+								<p class="description"><?php esc_html_e( 'Store an audit trail of consent events in the local database.', 'privaro-cookie-consent-banner' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Retention (days)', 'privaro-cookie-consent-banner' ); ?></th>
+							<td>
+								<input type="number" name="wpeu_cs_settings[consent_log_retention]" value="<?php echo (int) ( $settings['consent_log_retention'] ?? 365 ); ?>" min="1" step="1" class="small-text">
+								<p class="description"><?php esc_html_e( 'Automatically delete logs older than this many days.', 'privaro-cookie-consent-banner' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Store IP Hash', 'privaro-cookie-consent-banner' ); ?></th>
+							<td>
+								<label class="switch">
+									<input type="checkbox" name="wpeu_cs_settings[consent_log_store_ip]" value="1" <?php checked( ! empty( $settings['consent_log_store_ip'] ) ); ?>>
+									<span class="slider round"></span>
+								</label>
+								<p class="description"><?php esc_html_e( 'Store a salted SHA-256 hash of the visitor IP address for better accountability (Art. 7 GDPR).', 'privaro-cookie-consent-banner' ); ?></p>
+							</td>
+						</tr>
+					</table>
+					<?php submit_button(); ?>
+				</form>
+			</div>
+		</section>
 
-		<div class="card<?php echo $inheriting ? ' wpeu-cs-inherited' : ''; ?>">
-			<h3><?php esc_html_e( 'Consent revision', 'privaro-cookie-consent-banner' ); ?></h3>
-			<p><?php esc_html_e( 'Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated).', 'privaro-cookie-consent-banner' ); ?></p>
-			<p><strong><?php esc_html_e( 'Current revision:', 'privaro-cookie-consent-banner' ); ?></strong> <?php echo (int) ( $settings['consent_revision'] ?? 0 ); ?></p>
-			<form method="post" action="<?php echo esc_url( $this->get_plugin_admin_base_url() . '&tab=tools' ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Reset all visitor consents and show the banner again?', 'privaro-cookie-consent-banner' ) ); ?>');">
-				<?php wp_nonce_field( 'wpeu_cs_bump_consent_revision', 'wpeu_cs_bump_revision_nonce' ); ?>
-				<input type="hidden" name="action" value="wpeu_cs_bump_consent_revision">
-				<?php submit_button( __( 'Reset all consents (bump revision)', 'privaro-cookie-consent-banner' ), 'delete', 'submit', false ); ?>
-			</form>
-		</div>
+		<section id="wpeu-cs-tools-revision" class="wpeu-cs-tools-section">
+			<div class="card<?php echo $inheriting ? ' wpeu-cs-inherited' : ''; ?>">
+				<h3><?php esc_html_e( 'Consent revision', 'privaro-cookie-consent-banner' ); ?></h3>
+				<p><?php esc_html_e( 'Increment the consent revision to re-prompt all visitors (existing consent cookies become outdated).', 'privaro-cookie-consent-banner' ); ?></p>
+				<p><strong><?php esc_html_e( 'Current revision:', 'privaro-cookie-consent-banner' ); ?></strong> <?php echo (int) ( $settings['consent_revision'] ?? 0 ); ?></p>
+				<form method="post" action="<?php echo esc_url( $this->get_plugin_admin_base_url() . '&tab=tools' ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Reset all visitor consents and show the banner again?', 'privaro-cookie-consent-banner' ) ); ?>');">
+					<?php wp_nonce_field( 'wpeu_cs_bump_consent_revision', 'wpeu_cs_bump_revision_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_bump_consent_revision">
+					<?php submit_button( __( 'Reset all consents (bump revision)', 'privaro-cookie-consent-banner' ), 'delete', 'submit', false ); ?>
+				</form>
+			</div>
+		</section>
 
-		<div class="card">
-			<h3><?php esc_html_e( 'Export Cookie Inventory', 'privaro-cookie-consent-banner' ); ?></h3>
-			<p><?php esc_html_e( 'Download your cookie inventory as a CSV file.', 'privaro-cookie-consent-banner' ); ?></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
-				<?php wp_nonce_field( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' ); ?>
-				<input type="hidden" name="action" value="wpeu_cs_export_csv">
-				<?php submit_button( __( 'Download CSV', 'privaro-cookie-consent-banner' ), 'primary', 'submit', false ); ?>
-			</form>
-		</div>
+		<section id="wpeu-cs-tools-transfer" class="wpeu-cs-tools-section">
+			<div class="card">
+				<h3><?php esc_html_e( 'Export Cookie Inventory', 'privaro-cookie-consent-banner' ); ?></h3>
+				<p><?php esc_html_e( 'Download your cookie inventory as a CSV file.', 'privaro-cookie-consent-banner' ); ?></p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+					<?php wp_nonce_field( 'wpeu_cs_export_csv', 'wpeu_cs_export_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_export_csv">
+					<?php submit_button( __( 'Download CSV', 'privaro-cookie-consent-banner' ), 'primary', 'submit', false ); ?>
+				</form>
+			</div>
 
-		<div class="card">
-			<h3><?php esc_html_e( 'Export Settings', 'privaro-cookie-consent-banner' ); ?></h3>
-			<p><?php esc_html_e( 'Download banner texts, integrations, script registry, and all plugin settings as JSON for backup or migration to another site.', 'privaro-cookie-consent-banner' ); ?></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
-				<?php wp_nonce_field( 'wpeu_cs_export_json', 'wpeu_cs_export_json_nonce' ); ?>
-				<input type="hidden" name="action" value="wpeu_cs_export_json">
-				<?php submit_button( __( 'Download JSON', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
-			</form>
-		</div>
+			<div class="card">
+				<h3><?php esc_html_e( 'Export Settings', 'privaro-cookie-consent-banner' ); ?></h3>
+				<p><?php esc_html_e( 'Download banner texts, integrations, script registry, and all plugin settings as JSON for backup or migration to another site.', 'privaro-cookie-consent-banner' ); ?></p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>">
+					<?php wp_nonce_field( 'wpeu_cs_export_json', 'wpeu_cs_export_json_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_export_json">
+					<?php submit_button( __( 'Download JSON', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
+				</form>
+			</div>
 
-		<div class="card">
-			<h3><?php esc_html_e( 'Import Settings', 'privaro-cookie-consent-banner' ); ?></h3>
-			<p><?php esc_html_e( 'Upload a JSON export from another site. Cookie inventory is not replaced — only plugin settings are updated.', 'privaro-cookie-consent-banner' ); ?></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>" enctype="multipart/form-data">
-				<?php wp_nonce_field( 'wpeu_cs_import_json', 'wpeu_cs_import_json_nonce' ); ?>
-				<input type="hidden" name="action" value="wpeu_cs_import_json">
-				<input type="file" name="wpeu_cs_import_file" accept="application/json,.json" required>
-				<?php submit_button( __( 'Import JSON', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
-			</form>
-		</div>
+			<div class="card">
+				<h3><?php esc_html_e( 'Import Settings', 'privaro-cookie-consent-banner' ); ?></h3>
+				<p><?php esc_html_e( 'Upload a JSON export from another site. Cookie inventory is not replaced — only plugin settings are updated.', 'privaro-cookie-consent-banner' ); ?></p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=tools' ) ); ?>" enctype="multipart/form-data">
+					<?php wp_nonce_field( 'wpeu_cs_import_json', 'wpeu_cs_import_json_nonce' ); ?>
+					<input type="hidden" name="action" value="wpeu_cs_import_json">
+					<input type="file" name="wpeu_cs_import_file" accept="application/json,.json" required>
+					<?php submit_button( __( 'Import JSON', 'privaro-cookie-consent-banner' ), 'secondary', 'submit', false ); ?>
+				</form>
+			</div>
+		</section>
 		<?php
 	}
 

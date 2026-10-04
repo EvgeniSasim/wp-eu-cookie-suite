@@ -241,9 +241,6 @@ final class Banner {
 		if ( $eu_mode ) {
 			$show_reject_all = true;
 		}
-		$privacy_url = $settings['privacy_policy_url'] ?? '';
-		$cookie_url  = $settings['cookie_policy_url'] ?? '';
-
 		$banner_ui  = is_array( $settings['banner_ui'] ?? null ) ? $settings['banner_ui'] : array();
 		$layout_raw = (string) ( $banner_ui['layout'] ?? 'box' );
 		$layout     = in_array( $layout_raw, array( 'box', 'bar' ), true ) ? $layout_raw : 'box';
@@ -265,21 +262,31 @@ final class Banner {
 		// Ship every configured locale so CookieConsent can match <html lang="ru-RU"> → ru.
 		$translations = array();
 		foreach ( array_keys( BannerTexts::get_locales() ) as $lang_code ) {
-			$texts = BannerTexts::get_strings( $lang_code );
+			$texts      = BannerTexts::get_strings( $lang_code );
+			$policy_urls = BannerTexts::resolve_policy_urls( $lang_code, $settings );
 			$translations[ $lang_code ] = $this->build_cc_translation(
 				$texts,
 				$all_categories,
 				$show_reject_all,
-				$this->build_footer_html( $privacy_url, $cookie_url, $texts )
+				$this->build_footer_html(
+					$policy_urls['privacy_policy_url'],
+					$policy_urls['cookie_policy_url'],
+					$texts
+				)
 			);
 		}
 		if ( ! isset( $translations[ $locale ] ) ) {
-			$texts = BannerTexts::get_strings( $locale );
+			$texts       = BannerTexts::get_strings( $locale );
+			$policy_urls = BannerTexts::resolve_policy_urls( $locale, $settings );
 			$translations[ $locale ] = $this->build_cc_translation(
 				$texts,
 				$all_categories,
 				$show_reject_all,
-				$this->build_footer_html( $privacy_url, $cookie_url, $texts )
+				$this->build_footer_html(
+					$policy_urls['privacy_policy_url'],
+					$policy_urls['cookie_policy_url'],
+					$texts
+				)
 			);
 		}
 
