@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-
 use WPEU\CookieSuite\Consent\Categories;
 use WPEU\CookieSuite\Settings\SettingsRepository;
 
@@ -21,6 +20,30 @@ use WPEU\CookieSuite\Settings\SettingsRepository;
  * Handles blocking and unblocking of third-party scripts.
  */
 final class ScriptBlocker {
+
+	/**
+	 * Plugin script id prefixes that must never be consent-blocked.
+	 *
+	 * @var list<string>
+	 */
+	private const OWN_SCRIPT_ID_PREFIXES = array(
+		'wpeu-cs-gcm-',
+		'wpeu-cs-blocker',
+		'wpeu-cs-cookieconsent',
+		'wpeu-cs-ga-guard',
+	);
+
+	/**
+	 * Non-executable script types left untouched.
+	 *
+	 * @var list<string>
+	 */
+	private const SKIP_SCRIPT_TYPES = array(
+		'application/ld+json',
+		'application/json',
+		'importmap',
+		'speculationrules',
+	);
 
 	/**
 	 * Constructor.
@@ -51,33 +74,33 @@ final class ScriptBlocker {
 	}
 
 	/**
-	 * Start a legacy output buffer and close it on shutdown in the same registration flow.
+	 * Start a legacy output buffer with a flush callback (nested-buffer safe).
+	 *
+	 * Nested buffers flush into this one; process_output runs when this buffer ends,
+	 * without requiring an exact ob_get_level() match on shutdown.
 	 */
 	public function start_legacy_output_buffer(): void {
 		if ( ! $this->should_process_frontend_output() ) {
 			return;
 		}
 
-		$depth_before = ob_get_level();
-		ob_start();
+		ob_start( array( $this, 'flush_legacy_output_buffer' ) );
+	}
 
-		add_action(
-			'shutdown',
-			function () use ( $depth_before ): void {
-				if ( ob_get_level() !== $depth_before + 1 ) {
-					return;
-				}
+	/**
+	 * Output-buffer callback for the legacy path.
+	 *
+	 * @param string $buffer Buffer contents.
+	 * @param int    $phase  PHP output handler phase flags.
+	 * @return string
+	 */
+	public function flush_legacy_output_buffer( string $buffer, int $phase = 0 ): string {
+		// Skip progressive flush chunks; still process final flush and ob_get_clean()/end.
+		if ( ( $phase & PHP_OUTPUT_HANDLER_FLUSH ) && ! ( $phase & PHP_OUTPUT_HANDLER_FINAL ) ) {
+			return $buffer;
+		}
 
-				$output = ob_get_clean();
-				if ( ! is_string( $output ) || '' === $output ) {
-					return;
-				}
-
-				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Full-page HTML is post-processed for consent blocking.
-				echo $this->process_output( $output );
-			},
-			0
-		);
+		return $this->process_output( $buffer );
 	}
 
 	/**
@@ -114,15 +137,15 @@ final class ScriptBlocker {
 		$settings = SettingsRepository::instance()->get_effective_settings();
 		$blocker  = ! empty( $settings['blocker_enabled'] );
 
-		if ( $blocker && str_contains( $output, '<script' ) ) {
+		if ( $blocker && str_contains( strtolower( $output ), '<script' ) ) {
 			$output = preg_replace_callback(
-				'/<script\b[^>]*>(.*?)<\/script>/is',
+				'/<script\b[^>]*>.*?<\/script>/is',
 				array( $this, 'process_script_tag' ),
 				$output
 			);
 		}
 
-		if ( $blocker && str_contains( $output, '<link' ) ) {
+		if ( $blocker && str_contains( strtolower( $output ), '<link' ) ) {
 			$output = preg_replace_callback(
 				'/<link\b[^>]*>/i',
 				array( $this, 'process_link_tag' ),
@@ -130,88 +153,133 @@ final class ScriptBlocker {
 			);
 		}
 
-		if ( str_contains( $output, '<iframe' ) ) {
+		if ( str_contains( strtolower( $output ), '<iframe' ) ) {
 			$output = IframeProcessor::process_iframes( $output );
 		}
 
-		return $output;
+		return is_string( $output ) ? $output : '';
 	}
 
 	/**
-	 * Process an individual script tag.
+	 * Process an individual script tag (attributes only — body never mutated).
 	 *
-	 * @param array $matches Regex matches.
+	 * @param array<int, string> $matches Regex matches.
 	 * @return string Modified script tag.
 	 */
 	private function process_script_tag( array $matches ): string {
 		$full_tag = $matches[0];
-		$content  = $matches[1];
+		$content  = '';
+		if ( preg_match( '/<script\b[^>]*>(.*)<\/script>/is', $full_tag, $parts ) ) {
+			$content = $parts[1];
+		}
+
+		// Idempotent: already inert for consent.
+		$existing_type = strtolower( (string) ( HtmlTagEditor::get_attribute( $full_tag, 'script', 'type' ) ?? '' ) );
+		$existing_cat  = HtmlTagEditor::get_attribute( $full_tag, 'script', 'data-category' );
+		if ( 'text/plain' === $existing_type && null !== $existing_cat && '' !== $existing_cat ) {
+			return $full_tag;
+		}
 
 		$category = $this->get_block_category( $full_tag, $content );
 
-		if ( $category && ! wpeu_cs_user_has_consent( $category ) ) {
-			// Change type to text/plain and add data-category.
-			if ( preg_match( '/type=["\']([^"\']+)["\']/i', $full_tag ) ) {
-				$full_tag = preg_replace( '/type=["\']([^"\']+)["\']/i', 'type="text/plain"', $full_tag );
-			} else {
-				$full_tag = preg_replace( '/^<script/i', '<script type="text/plain"', $full_tag );
-			}
-
-			// Add data-category if not present.
-			if ( ! str_contains( $full_tag, 'data-category=' ) ) {
-				$full_tag = preg_replace( '/^<script/i', '<script data-category="' . esc_attr( $category ) . '"', $full_tag );
-			}
+		if ( ! $category || wpeu_cs_user_has_consent( $category ) ) {
+			return $full_tag;
 		}
 
-		return $full_tag;
+		return HtmlTagEditor::edit(
+			$full_tag,
+			'script',
+			static function ( $processor ) use ( $category ): void {
+				$original_type = $processor->get_attribute( 'type' );
+				if ( null === $original_type || true === $original_type || '' === $original_type ) {
+					$processor->set_attribute( 'data-wpeu-original-type', 'text/javascript' );
+				} else {
+					$processor->set_attribute( 'data-wpeu-original-type', (string) $original_type );
+				}
+				$processor->set_attribute( 'type', 'text/plain' );
+				if ( null === $processor->get_attribute( 'data-category' ) ) {
+					$processor->set_attribute( 'data-category', $category );
+				}
+			}
+		);
 	}
 
 	/**
-	 * Process an individual link tag (stylesheets, preconnect, etc.).
+	 * Process an individual link tag into an inert consent-gated placeholder.
 	 *
-	 * @param array $matches Regex matches.
+	 * @param array<int, string> $matches Regex matches.
 	 * @return string Modified link tag.
 	 */
 	private function process_link_tag( array $matches ): string {
 		$full_tag = $matches[0];
+
+		$existing_href = HtmlTagEditor::get_attribute( $full_tag, 'link', 'data-wpeu-href' );
+		$existing_cat  = HtmlTagEditor::get_attribute( $full_tag, 'link', 'data-category' );
+		if ( null !== $existing_href && null !== $existing_cat && '' !== $existing_cat ) {
+			return $full_tag;
+		}
+
 		$category = $this->get_block_category( $full_tag, '' );
 
 		if ( ! $category || wpeu_cs_user_has_consent( $category ) ) {
 			return $full_tag;
 		}
 
-		if ( preg_match( '/type=["\']([^"\']+)["\']/i', $full_tag ) ) {
-			$full_tag = preg_replace( '/type=["\']([^"\']+)["\']/i', 'type="text/plain"', $full_tag );
-		} else {
-			$full_tag = preg_replace( '/^<link/i', '<link type="text/plain"', $full_tag );
-		}
+		return HtmlTagEditor::edit(
+			$full_tag,
+			'link',
+			static function ( $processor ) use ( $category ): void {
+				$href = $processor->get_attribute( 'href' );
+				$rel  = $processor->get_attribute( 'rel' );
+				$type = $processor->get_attribute( 'type' );
 
-		if ( ! str_contains( $full_tag, 'data-category=' ) ) {
-			$full_tag = preg_replace( '/^<link/i', '<link data-category="' . esc_attr( $category ) . '"', $full_tag );
-		}
+				if ( is_string( $href ) && '' !== $href ) {
+					$processor->set_attribute( 'data-wpeu-href', $href );
+				}
+				if ( is_string( $rel ) && '' !== $rel ) {
+					$processor->set_attribute( 'data-wpeu-original-rel', $rel );
+				}
+				if ( is_string( $type ) && '' !== $type ) {
+					$processor->set_attribute( 'data-wpeu-original-type', $type );
+				} elseif ( null === $type || true === $type ) {
+					$processor->set_attribute( 'data-wpeu-original-type', '' );
+				}
 
-		return $full_tag;
+				$processor->set_attribute( 'type', 'text/plain' );
+				$processor->set_attribute( 'rel', 'wpeu-blocked' );
+				$processor->remove_attribute( 'href' );
+				if ( null === $processor->get_attribute( 'data-category' ) ) {
+					$processor->set_attribute( 'data-category', $category );
+				}
+			}
+		);
 	}
 
 	/**
 	 * Get the consent category for a script if it should be blocked.
 	 *
-	 * @param string $tag Full script tag.
-	 * @param string $content Script content.
+	 * @param string $tag     Full script/link tag.
+	 * @param string $content Script content (empty for links).
 	 * @return string|null Category if it should be blocked, null otherwise.
 	 */
 	private function get_block_category( string $tag, string $content ): ?string {
-		$src = '';
-		if ( preg_match( '/(?:src|href)=["\']([^"\']+)["\']/i', $tag, $src_matches ) ) {
-			$src = $src_matches[1];
+		$tag_name = str_starts_with( strtolower( ltrim( $tag ) ), '<link' ) ? 'link' : 'script';
+
+		if ( 'script' === $tag_name && $this->is_own_plugin_script( $tag ) ) {
+			return null;
 		}
 
+		if ( 'script' === $tag_name && $this->is_non_executable_script_type( $tag ) ) {
+			return null;
+		}
+
+		$src = (string) ( HtmlTagEditor::get_attribute( $tag, $tag_name, 'script' === $tag_name ? 'src' : 'href' ) ?? '' );
+
 		// Whitelist WordPress core scripts.
-		if ( ! empty( $src ) ) {
+		if ( '' !== $src ) {
 			$local_host = wp_parse_url( home_url(), PHP_URL_HOST );
 			$src_host   = wp_parse_url( $src, PHP_URL_HOST );
 
-			// If it's a local script, check if it's core.
 			if ( ! $src_host || $src_host === $local_host ) {
 				if ( str_contains( $src, '/wp-includes/' ) || str_contains( $src, '/wp-admin/' ) ) {
 					return null;
@@ -239,11 +307,10 @@ final class ScriptBlocker {
 					continue;
 				}
 
-				// Complianz-style -url- marker.
 				if ( str_starts_with( $rule, '-url-' ) ) {
 					$pattern = substr( $rule, 5 );
-					if ( ! empty( $src ) && str_contains( $src, $pattern ) ) {
-						return 'marketing'; // Default to marketing for custom rules.
+					if ( '' !== $src && str_contains( $src, $pattern ) ) {
+						return 'marketing';
 					}
 				} elseif ( str_contains( $src, $rule ) || str_contains( $content, $rule ) ) {
 					return 'marketing';
@@ -251,13 +318,11 @@ final class ScriptBlocker {
 			}
 		}
 
-		// Apply filter for known script tags (array of regex or substring rules).
 		$known_tags = apply_filters( 'wpeu_known_script_tags', array() );
 		foreach ( $known_tags as $key => $value ) {
 			$pattern  = is_string( $key ) ? $key : $value;
 			$category = is_string( $key ) ? $value : 'marketing';
 
-			// Check if pattern is a regex.
 			if ( @preg_match( $pattern, '' ) !== false ) {
 				if ( preg_match( $pattern, $src ) || preg_match( $pattern, $content ) ) {
 					return $category;
@@ -267,7 +332,6 @@ final class ScriptBlocker {
 			}
 		}
 
-		// Opt-in: block unknown cross-origin scripts as marketing until consented.
 		if ( ! empty( $settings['block_unknown_third_party'] ) && $this->is_third_party_src( $src ) ) {
 			return 'marketing';
 		}
@@ -276,9 +340,49 @@ final class ScriptBlocker {
 	}
 
 	/**
-	 * Whether a script/link src points at a different host than this site.
+	 * Whether the script is a Privaro-owned handle/inline that must stay executable.
 	 *
-	 * Relative, same-host, data:, and blob: URLs are treated as first-party.
+	 * Matches WP script tag ids such as `wpeu-cs-gcm-default-js-after`.
+	 *
+	 * @param string $tag Script tag HTML.
+	 */
+	private function is_own_plugin_script( string $tag ): bool {
+		$id = (string) ( HtmlTagEditor::get_attribute( $tag, 'script', 'id' ) ?? '' );
+		if ( '' === $id ) {
+			return false;
+		}
+
+		foreach ( self::OWN_SCRIPT_ID_PREFIXES as $prefix ) {
+			if ( str_starts_with( $id, $prefix ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether the script type is a data/document type that must not be blocked.
+	 *
+	 * @param string $tag Script tag HTML.
+	 */
+	private function is_non_executable_script_type( string $tag ): bool {
+		$type = strtolower( (string) ( HtmlTagEditor::get_attribute( $tag, 'script', 'type' ) ?? '' ) );
+		if ( '' === $type ) {
+			return false;
+		}
+
+		foreach ( self::SKIP_SCRIPT_TYPES as $skip ) {
+			if ( $type === $skip || str_contains( $type, $skip ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether a script/link src points at a different host than this site.
 	 *
 	 * @param string $src Script or stylesheet URL.
 	 */
@@ -317,38 +421,25 @@ final class ScriptBlocker {
 		if ( ! $blocker && ! $iframes ) {
 			return;
 		}
+
 		$category_slugs = array_keys( Categories::get_all() );
-		wp_register_script( 'wpeu-cs-blocker', false, array(), WPEU_CS_VERSION, true );
-		wp_enqueue_script( 'wpeu-cs-blocker' );
-		wp_add_inline_script(
+		$reload         = ! empty( $settings['reload_on_revoke'] );
+
+		wp_enqueue_script(
 			'wpeu-cs-blocker',
-			'(function(){const allCategorySlugs=' . wp_json_encode( array_values( $category_slugs ) ) . ';'
-			. 'const activateScripts=function(consentData){'
-			. 'document.querySelectorAll(\'script[type="text/plain"][data-category]\').forEach(function(script){'
-			. 'const category=script.getAttribute("data-category");if(!consentData[category]){return;}'
-			. 'const newScript=document.createElement("script");'
-			. 'Array.from(script.attributes).forEach(function(attr){if(attr.name!=="type"&&attr.name!=="data-category"){newScript.setAttribute(attr.name,attr.value);}});'
-			. 'newScript.type="text/javascript";newScript.text=script.text;script.parentNode.insertBefore(newScript,script);script.parentNode.removeChild(script);});'
-			. 'document.querySelectorAll(\'link[type="text/plain"][data-category]\').forEach(function(link){'
-			. 'const category=link.getAttribute("data-category");if(!consentData[category]){return;}'
-			. 'const newLink=document.createElement("link");'
-			. 'Array.from(link.attributes).forEach(function(attr){if(attr.name!=="type"&&attr.name!=="data-category"){newLink.setAttribute(attr.name,attr.value);}});'
-			. 'link.parentNode.insertBefore(newLink,link);link.parentNode.removeChild(link);});'
-			. 'document.querySelectorAll(".wpeu-cs-iframe-placeholder[data-category]").forEach(function(placeholder){'
-			. 'const category=placeholder.getAttribute("data-category");if(!consentData[category]){return;}'
-			. 'const hiddenIframe=placeholder.querySelector(".wpeu-cs-hidden-iframe");if(!hiddenIframe){return;}'
-			. 'const originalTag=atob(hiddenIframe.textContent);const container=document.createElement("div");'
-			. 'container.innerHTML=originalTag;const iframe=container.firstChild;'
-			. 'placeholder.parentNode.insertBefore(iframe,placeholder);placeholder.parentNode.removeChild(placeholder);});};'
-			. 'document.addEventListener("wpeu-consent-updated",function(e){activateScripts(e.detail||{});});'
-			. 'document.addEventListener("click",function(e){if(e.target.classList.contains("wpeu-cs-accept-category")){'
-			. 'const category=e.target.getAttribute("data-category");'
-			. 'if(category&&window.CookieConsent&&typeof window.CookieConsent.acceptCategory==="function"){'
-			. 'window.CookieConsent.acceptCategory(category);}}});'
-			. 'window.addEventListener("load",function(){if(!window.CookieConsent||typeof window.CookieConsent.acceptedCategory!=="function"){return;}'
-			. 'if(typeof window.CookieConsent.validConsent==="function"&&!window.CookieConsent.validConsent()){return;}'
-			. 'const consentData={};allCategorySlugs.forEach(function(cat){consentData[cat]=window.CookieConsent.acceptedCategory(cat);});'
-			. 'activateScripts(consentData);});})();'
+			WPEU_CS_URL . 'assets/js/blocker-bootstrap.js',
+			array(),
+			WPEU_CS_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wpeu-cs-blocker',
+			'wpeuCsBlocker',
+			array(
+				'categories'       => array_values( $category_slugs ),
+				'reloadOnWithdraw' => $reload,
+			)
 		);
 	}
 }

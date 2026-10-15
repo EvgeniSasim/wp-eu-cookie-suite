@@ -62,7 +62,7 @@ class Test_Iframe_Processor extends WP_UnitTestCase {
 	 * Iframe is NOT replaced if user has consent.
 	 */
 	public function test_does_not_replace_with_consent(): void {
-		$_COOKIE['wpeu_marketing'] = '1';
+		wpeu_cs_test_set_consent_cookies( array( 'marketing' => true ) );
 
 		$iframe = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>';
 		$processed = IframeProcessor::process_iframes( $iframe );

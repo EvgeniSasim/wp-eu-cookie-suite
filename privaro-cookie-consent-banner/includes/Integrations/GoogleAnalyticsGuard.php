@@ -184,21 +184,22 @@ final class GoogleAnalyticsGuard {
 	 * @param string $category Consent category slug.
 	 */
 	private function rewrite_blocked_tag( string $tag, string $element, string $category ): string {
-		if ( preg_match( '/type=["\']([^"\']+)["\']/i', $tag ) ) {
-			$tag = preg_replace( '/type=["\']([^"\']+)["\']/i', 'type="text/plain"', $tag );
-		} else {
-			$tag = preg_replace( '/^<' . $element . '/i', '<' . $element . ' type="text/plain"', $tag );
-		}
-
-		if ( ! str_contains( $tag, 'data-category=' ) ) {
-			$tag = preg_replace(
-				'/^<' . $element . '/i',
-				'<' . $element . ' data-category="' . esc_attr( $category ) . '"',
-				$tag
-			);
-		}
-
-		return $tag;
+		return \WPEU\CookieSuite\Frontend\HtmlTagEditor::edit(
+			$tag,
+			$element,
+			static function ( $processor ) use ( $category ): void {
+				$original_type = $processor->get_attribute( 'type' );
+				if ( null === $original_type || true === $original_type || '' === $original_type ) {
+					$processor->set_attribute( 'data-wpeu-original-type', 'text/javascript' );
+				} else {
+					$processor->set_attribute( 'data-wpeu-original-type', (string) $original_type );
+				}
+				$processor->set_attribute( 'type', 'text/plain' );
+				if ( null === $processor->get_attribute( 'data-category' ) ) {
+					$processor->set_attribute( 'data-category', $category );
+				}
+			}
+		);
 	}
 
 	/**

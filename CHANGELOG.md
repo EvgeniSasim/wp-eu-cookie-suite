@@ -9,6 +9,21 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-16
+
+### Fixed
+
+- Script/link blocking edits **attributes only** via `WP_HTML_Tag_Processor` (no longer mutates JS bodies; supports unquoted `src`; idempotent).
+- Own Google Consent Mode / Privaro script ids are never consent-blocked.
+- Server-side consent checks require current **revision** + CookieConsent cookie (`wpeu_cc` / `wpeu_consent_rev`); stale helpers alone no longer unlock opt-in resources.
+- Legacy output buffer uses an `ob_start` callback (nested-buffer safe).
+- Blocked `<link>` resource hints become inert (`href` removed, `rel=wpeu-blocked`) until consent; original type restored on activate (incl. `module`).
+- Consent withdraw can re-placeholder iframes / inert links; optional reload when previously activated scripts are denied (`reload_on_revoke`).
+
+### Changed
+
+- Blocker bootstrap moved to static `assets/js/blocker-bootstrap.js` (avoids HTML processors corrupting inline `type="text/javascript"`).
+
 ## [1.4.0] - 2026-10-04
 
 ### Added
@@ -253,7 +268,8 @@ Breaking changes are summarized here and described in detail in [BREAKING_CHANGE
 - Settings JSON import/export, multilingual banner texts (EN/DE).
 - Admin live banner preview (CC-16.1).
 
-[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.9...v1.4.0
 [1.3.9]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.8...v1.3.9
 [1.3.8]: https://github.com/EvgeniSasim/wp-eu-cookie-suite/compare/v1.3.7...v1.3.8

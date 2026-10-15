@@ -40,9 +40,10 @@ class Test_Wp_Consent_Bridge extends WP_UnitTestCase {
 	 * wp_has_consent maps statistics category.
 	 */
 	public function test_wp_has_consent_statistics(): void {
+		wpeu_cs_test_set_consent_cookies( array( 'statistics' => true ) );
 		$_COOKIE['wpeu_statistics'] = 'allow';
 		$this->assertTrue( wp_has_consent( 'statistics' ) );
-		unset( $_COOKIE['wpeu_statistics'] );
+		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'], $_COOKIE['wpeu_consent'] );
 	}
 
 	/**

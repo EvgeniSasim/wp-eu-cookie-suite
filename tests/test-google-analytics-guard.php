@@ -75,8 +75,8 @@ class Test_Google_Analytics_Guard extends WP_UnitTestCase {
 	 * Guard allows when statistics consent is granted.
 	 */
 	public function test_should_not_block_with_statistics_consent(): void {
-		$_COOKIE['wpeu_statistics'] = '1';
-		$guard                        = new GoogleAnalyticsGuard();
+		wpeu_cs_test_set_consent_cookies( array( 'statistics' => true ) );
+		$guard = new GoogleAnalyticsGuard();
 
 		$this->assertFalse( $guard->should_block() );
 	}

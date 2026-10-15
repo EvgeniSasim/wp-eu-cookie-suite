@@ -144,24 +144,30 @@ class Test_Categories extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Consent helper reads per-category cookie.
+	 * Consent helper reads per-category cookie when revision is current.
 	 */
 	public function test_user_has_consent_from_category_cookie(): void {
-		$_COOKIE['wpeu_statistics'] = '1';
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 0 ) );
+		$_COOKIE['wpeu_cc']           = wp_json_encode( array( 'revision' => 0 ) );
+		$_COOKIE['wpeu_consent_rev']  = '0';
+		$_COOKIE['wpeu_statistics']   = '1';
 		$this->assertTrue( wpeu_cs_user_has_consent( 'statistics' ) );
 
-		unset( $_COOKIE['wpeu_statistics'] );
+		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'] );
 		$this->assertFalse( wpeu_cs_user_has_consent( 'statistics' ) );
 	}
 
 	/**
-	 * Consent helper reads JSON consent blob.
+	 * Consent helper reads JSON consent blob when revision is current.
 	 */
 	public function test_user_has_consent_from_json_cookie(): void {
-		$_COOKIE['wpeu_consent'] = rawurlencode( wp_json_encode( array( 'marketing' => true ) ) );
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 0 ) );
+		$_COOKIE['wpeu_cc']          = wp_json_encode( array( 'revision' => 0 ) );
+		$_COOKIE['wpeu_consent_rev'] = '0';
+		$_COOKIE['wpeu_consent']     = rawurlencode( wp_json_encode( array( 'marketing' => true ) ) );
 		$this->assertTrue( wpeu_cs_user_has_consent( 'marketing' ) );
 
-		unset( $_COOKIE['wpeu_consent'] );
+		unset( $_COOKIE['wpeu_consent'], $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'] );
 		$this->assertFalse( wpeu_cs_user_has_consent( 'marketing' ) );
 	}
 
@@ -169,7 +175,10 @@ class Test_Categories extends WP_UnitTestCase {
 	 * Unknown keys in consent JSON are ignored.
 	 */
 	public function test_user_has_consent_ignores_unknown_json_keys(): void {
-		$_COOKIE['wpeu_consent'] = rawurlencode(
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 0 ) );
+		$_COOKIE['wpeu_cc']          = wp_json_encode( array( 'revision' => 0 ) );
+		$_COOKIE['wpeu_consent_rev'] = '0';
+		$_COOKIE['wpeu_consent']     = rawurlencode(
 			wp_json_encode(
 				array(
 					'marketing' => true,
@@ -199,8 +208,8 @@ class Test_Categories extends WP_UnitTestCase {
 			)
 		);
 
-		$_COOKIE['wpeu_social'] = '1';
+		wpeu_cs_test_set_consent_cookies( array( 'social' => true ) );
 		$this->assertTrue( wp_has_consent( 'marketing' ) );
-		unset( $_COOKIE['wpeu_social'] );
+		unset( $_COOKIE['wpeu_social'], $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'], $_COOKIE['wpeu_consent'] );
 	}
 }
