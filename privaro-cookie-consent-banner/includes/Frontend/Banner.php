@@ -116,6 +116,7 @@ final class Banner {
 		$wp_consent_map   = Categories::get_wp_consent_map();
 		$locale           = BannerTexts::get_active_locale();
 		$reload_on_revoke = ! empty( $settings['reload_on_revoke'] );
+		$consent_revision = max( 0, (int) ( $settings['consent_revision'] ?? 0 ) );
 		$cookie_path_js   = wp_json_encode( COOKIEPATH );
 		$cookie_domain_js = wp_json_encode( COOKIE_DOMAIN );
 
@@ -180,11 +181,13 @@ final class Banner {
 			. 'const secureAttr=' . $secure_js . ';const wpConsentState={};'
 			. 'Object.keys(mapping).forEach(function(slug){const wpCat=mapping[slug];'
 			. 'if(wpCat&&typeof wpConsentState[wpCat]==="undefined"){wpConsentState[wpCat]=false;}});'
+			. 'const consentRevision=' . (int) $consent_revision . ';'
 			. 'categories.forEach(function(cat){const accepted=!!cc.acceptedCategory(cat);consentData[cat]=accepted;'
 			. 'document.cookie="wpeu_"+cat+"="+(accepted?"1":"0")+cookieMaxAge(31536000,secureAttr);'
 			. 'const wpCat=mapping[cat];if(wpCat&&accepted){wpConsentState[wpCat]=true;}});'
 			. 'Object.keys(wpConsentState).forEach(function(wpCat){window.wp_set_consent(wpCat,wpConsentState[wpCat]?"allow":"deny");});'
 			. 'document.cookie="wpeu_consent="+encodeURIComponent(JSON.stringify(consentData))+cookieMaxAge(31536000,secureAttr);'
+			. 'document.cookie="wpeu_consent_rev="+String(consentRevision)+cookieMaxAge(31536000,secureAttr);'
 			. 'document.dispatchEvent(new CustomEvent("wpeu-consent-updated",{detail:consentData}));return consentData;};'
 			. 'const logConsentFromState=function(consentData){const categories=Object.keys(cc.getConfig().categories);'
 			. 'let eventType="save_preferences";const allEnabled=categories.filter(function(c){return !cc.getConfig().categories[c].readOnly;});'
@@ -207,6 +210,7 @@ final class Banner {
 			. 'Object.keys(mapping).forEach(function(slug){const wpCat=mapping[slug];if(wpCat){wpConsentState[wpCat]=false;}});'
 			. 'categories.forEach(function(cat){deniedDetail[cat]=false;document.cookie="wpeu_"+cat+"="+revokeAttrs;});'
 			. 'document.cookie="wpeu_consent="+revokeAttrs;'
+			. 'document.cookie="wpeu_consent_rev="+revokeAttrs;'
 			. 'document.cookie="wpeu_consent_uuid="+revokeAttrs;'
 			. 'Object.keys(wpConsentState).forEach(function(wpCat){if(typeof window.wp_set_consent==="function"){window.wp_set_consent(wpCat,"deny");}});'
 			. 'cc.reset(true);wpeuUuid="";'

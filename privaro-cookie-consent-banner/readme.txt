@@ -4,7 +4,7 @@ Tags: cookies, gdpr, cookie-consent, privacy, eu
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 Network: Yes
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,6 +165,11 @@ Script blocking patterns in `ScriptRegistry` match known third-party domains; th
 4. Integrations — Google Consent Mode v2, script blocker, Site Kit, and iframe placeholders.
 
 == Changelog ==
+
+= 1.4.1 =
+* Fix script blocking so JS bodies / data-type attrs are not mutated; unquoted src supported.
+* Do not block Privaro Google Consent Mode scripts; validate consent revision server-side.
+* Inert link hints until consent; nested-buffer-safe legacy OB; external blocker bootstrap JS.
 
 = 1.4.0 =
 * Integrations: optional “Block unknown third-party scripts” (cross-origin → marketing until consent; off by default).

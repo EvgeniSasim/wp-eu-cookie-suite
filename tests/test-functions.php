@@ -70,8 +70,55 @@ class Test_Functions extends WP_UnitTestCase {
 	 */
 	public function test_user_has_consent_opt_out_allows_without_cookie(): void {
 		update_option( 'wpeu_cs_settings', array( 'eu_mode' => false ) );
-		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_consent'] );
+		unset( $_COOKIE['wpeu_statistics'], $_COOKIE['wpeu_consent'], $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'] );
 
 		$this->assertTrue( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
+
+	/**
+	 * Opt-in: helper cookies without current revision do not unlock resources.
+	 */
+	public function test_user_has_consent_rejects_stale_revision(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 2 ) );
+		$_COOKIE['wpeu_cc']          = wp_json_encode( array( 'revision' => 1 ) );
+		$_COOKIE['wpeu_consent_rev'] = '1';
+		$_COOKIE['wpeu_statistics']  = '1';
+
+		$this->assertFalse( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
+
+	/**
+	 * Opt-in: helper cookies alone (CookieConsent cookie missing) are ignored.
+	 */
+	public function test_user_has_consent_rejects_orphaned_helpers(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 0 ) );
+		unset( $_COOKIE['wpeu_cc'], $_COOKIE['wpeu_consent_rev'] );
+		$_COOKIE['wpeu_statistics'] = '1';
+
+		$this->assertFalse( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
+
+	/**
+	 * Opt-in: matching revision + CookieConsent cookie unlocks the category.
+	 */
+	public function test_user_has_consent_accepts_current_revision(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 3 ) );
+		$_COOKIE['wpeu_cc']          = wp_json_encode( array( 'revision' => 3 ) );
+		$_COOKIE['wpeu_consent_rev'] = '3';
+		$_COOKIE['wpeu_statistics']  = '1';
+
+		$this->assertTrue( wpeu_cs_user_has_consent( 'statistics' ) );
+	}
+
+	/**
+	 * Legacy cookies without revision marker are stale under opt-in.
+	 */
+	public function test_user_has_consent_rejects_legacy_cookies_without_revision(): void {
+		update_option( 'wpeu_cs_settings', array( 'eu_mode' => true, 'consent_revision' => 0 ) );
+		$_COOKIE['wpeu_cc']         = wp_json_encode( array( 'categories' => array( 'statistics' ) ) );
+		$_COOKIE['wpeu_statistics'] = '1';
+		unset( $_COOKIE['wpeu_consent_rev'] );
+
+		$this->assertFalse( wpeu_cs_user_has_consent( 'statistics' ) );
 	}
 }

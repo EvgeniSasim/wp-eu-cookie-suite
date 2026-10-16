@@ -10,6 +10,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'wpeu_cs_current_consent_revision' ) ) {
+	/**
+	 * Current consent revision from plugin settings.
+	 */
+	function wpeu_cs_current_consent_revision(): int {
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::instance()->get_effective_settings();
+		return max( 0, (int) ( $settings['consent_revision'] ?? 0 ) );
+	}
+}
+
 if ( ! function_exists( 'wpeu_cs_parse_consent_cookie' ) ) {
 	/**
 	 * Parse and validate the wpeu_consent JSON cookie into category booleans.
@@ -53,6 +63,65 @@ if ( ! function_exists( 'wpeu_cs_parse_consent_cookie' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wpeu_cs_get_stored_consent_revision' ) ) {
+	/**
+	 * Revision stored with the visitor's consent cookies, if any.
+	 *
+	 * Prefers dedicated `wpeu_consent_rev`, then CookieConsent `wpeu_cc` JSON.
+	 * Returns null when no revision marker is present (legacy cookies).
+	 */
+	function wpeu_cs_get_stored_consent_revision(): ?int {
+		if ( isset( $_COOKIE['wpeu_consent_rev'] ) ) {
+			$raw = sanitize_text_field( wp_unslash( (string) $_COOKIE['wpeu_consent_rev'] ) );
+			if ( '' !== $raw && ctype_digit( $raw ) ) {
+				return (int) $raw;
+			}
+		}
+
+		if ( ! isset( $_COOKIE['wpeu_cc'] ) ) {
+			return null;
+		}
+
+		$raw = wp_unslash( (string) $_COOKIE['wpeu_cc'] );
+		$raw = wp_check_invalid_utf8( $raw, true );
+		if ( '' === $raw || strlen( $raw ) > 8192 ) {
+			return null;
+		}
+
+		$decoded = json_decode( rawurldecode( $raw ), true );
+		if ( ! is_array( $decoded ) ) {
+			$decoded = json_decode( $raw, true );
+		}
+		if ( ! is_array( $decoded ) || ! array_key_exists( 'revision', $decoded ) ) {
+			return null;
+		}
+
+		return max( 0, (int) $decoded['revision'] );
+	}
+}
+
+if ( ! function_exists( 'wpeu_cs_consent_cookies_are_current' ) ) {
+	/**
+	 * Whether helper / CookieConsent cookies match the current policy revision.
+	 *
+	 * Legacy cookies without a revision marker are treated as stale so a revision
+	 * bump cannot silently keep optional resources unlocked in opt-in mode.
+	 * CookieConsent's own cookie must also still be present (helpers alone are not enough).
+	 */
+	function wpeu_cs_consent_cookies_are_current(): bool {
+		if ( ! isset( $_COOKIE['wpeu_cc'] ) || '' === (string) ( $_COOKIE['wpeu_cc'] ?? '' ) ) {
+			return false;
+		}
+
+		$stored = wpeu_cs_get_stored_consent_revision();
+		if ( null === $stored ) {
+			return false;
+		}
+
+		return wpeu_cs_current_consent_revision() === $stored;
+	}
+}
+
 if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 	/**
 	 * Check if the user has consented to a specific category.
@@ -65,6 +134,15 @@ if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 			return true;
 		}
 
+		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::instance()->get_effective_settings();
+		$eu_mode  = ! isset( $settings['eu_mode'] ) || ! empty( $settings['eu_mode'] );
+
+		// Missing / stale revision / expired CookieConsent cookie:
+		// opt-in → deny optional; opt-out → treat as no decision (allow).
+		if ( ! wpeu_cs_consent_cookies_are_current() ) {
+			return ! $eu_mode;
+		}
+
 		$cookie_name = 'wpeu_' . sanitize_key( $category );
 		if ( isset( $_COOKIE[ $cookie_name ] ) ) {
 			$value = sanitize_text_field( wp_unslash( (string) $_COOKIE[ $cookie_name ] ) );
@@ -74,13 +152,6 @@ if ( ! function_exists( 'wpeu_cs_user_has_consent' ) ) {
 		$consent_data = wpeu_cs_parse_consent_cookie();
 		if ( array_key_exists( $category, $consent_data ) ) {
 			return (bool) $consent_data[ $category ];
-		}
-
-		// Opt-out: no decision yet → treat optional categories as allowed.
-		$settings = \WPEU\CookieSuite\Settings\SettingsRepository::instance()->get_effective_settings();
-		$eu_mode  = ! isset( $settings['eu_mode'] ) || ! empty( $settings['eu_mode'] );
-		if ( ! $eu_mode ) {
-			return true;
 		}
 
 		return false;
